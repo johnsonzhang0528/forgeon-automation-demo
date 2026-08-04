@@ -35,7 +35,14 @@ export const siteConfig = {
   siteUrl: import.meta.env.PUBLIC_SITE_URL || 'https://forgeon-demo.yegou.studio',
 
   rfqEndpoint: import.meta.env.PUBLIC_RFQ_ENDPOINT || '',
-  ga4Id: import.meta.env.PUBLIC_GA4_ID || '',
+  // PUBLIC_GA4_ID was removed (spec 4.2): it was declared end-to-end
+  // (config, env.d.ts, .env.example, README) but never actually consumed
+  // by any script-injection code path — only gtmId is. An unused env var
+  // that looks wired up is misleading, so it's gone rather than kept as
+  // dead config. GTM is the one documented, working analytics path; wire a
+  // GA4 tag inside GTM, or reintroduce a real GA4 gtag.js injection block
+  // in BaseLayout.astro alongside a real ga4Id if a direct (non-GTM) GA4
+  // integration is ever needed.
   gtmId: import.meta.env.PUBLIC_GTM_ID || '',
 } as const;
 

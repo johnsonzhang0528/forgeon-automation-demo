@@ -46,7 +46,7 @@ const locale = 'en' as const;
 
       <h2>Cookies and tracking</h2>
       <p class="measure">
-        No real GA4/GTM tracking ID is wired into this codebase (<code>PUBLIC_GA4_ID</code>/<code>PUBLIC_GTM_ID</code> are blank in the example environment file). The site has an account-agnostic event layer (<code>window.dataLayer</code>) that only loads any tracking script once a site operator sets a real Analytics ID; during this portfolio demonstration phase, no third-party tracking service is loaded and no cookies are set.
+        No real GTM tracking ID is wired into this codebase (<code>PUBLIC_GTM_ID</code> is blank in the example environment file — it is also the only analytics script path this codebase actually loads). The site has an account-agnostic event layer (<code>window.dataLayer</code>) that only loads any tracking script once a site operator sets a real GTM container ID; during this portfolio demonstration phase, no third-party tracking service is loaded and no cookies are set.
       </p>
 
       <h2>Contact</h2>

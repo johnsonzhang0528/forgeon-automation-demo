@@ -231,3 +231,11 @@ const otherLocalePath = `/zh-tw/solutions/${d.entrySlug}/`;
     }
   }
 </style>
+
+<script define:vars={{ slug: d.entrySlug, locale }}>
+  // solution_view was defined in src/utils/analytics.ts but never actually
+  // fired anywhere (spec 4.2) — this is the fix.
+  window.dispatchEvent(new CustomEvent('forgeon:analytics', {
+    detail: { event: 'solution_view', payload: { slug, locale } },
+  }));
+</script>

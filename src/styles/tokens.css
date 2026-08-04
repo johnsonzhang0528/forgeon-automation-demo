@@ -45,10 +45,24 @@
   --color-invert-muted: #9aa3ad;
   --color-invert-border: #2a323c;
 
-  /* ---- Typography ---- */
-  --font-display: 'Space Grotesk', 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
-  --font-body: 'IBM Plex Sans', 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  /* ---- Typography ----
+   * Font decision (spec P1.2, option B — see docs/REMEDIATION_PLAN.md):
+   * these were previously declared as 'Space Grotesk' / 'IBM Plex Sans' /
+   * 'JetBrains Mono' with no font file, CDN link, or Fontsource package
+   * anywhere in the build — every visitor's browser was silently falling
+   * back to whatever the next name in the stack resolved to, meaning the
+   * declared brand fonts were never actually loaded. This sandbox has no
+   * network access to fetch real font binaries and download+vendor font
+   * files without being able to verify licensing/hashes was judged riskier
+   * than being honest about the fallback. The stacks below are real,
+   * deliberately-chosen system font stacks (not "whatever's left after
+   * Space Grotesk fails to load") that keep the "not Inter, has some
+   * engineering-grade personality" intent from DESIGN.md without claiming
+   * a webfont that was never shipped.
+   */
+  --font-display: -apple-system, 'Segoe UI', 'Century Gothic', 'Avenir Next', 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  --font-body: -apple-system, 'Segoe UI', 'Helvetica Neue', Roboto, 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'SFMono-Regular', 'Cascadia Code', Consolas, Menlo, monospace;
 
   --fs-xs: 0.8125rem;
   --fs-sm: 0.9375rem;

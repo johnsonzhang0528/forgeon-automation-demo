@@ -35,7 +35,7 @@ const dict = getDictionary(locale);
         <div class="contact-info">
           <h2>直接聯絡窗口</h2>
           <ul>
-            <li><strong>Email</strong><a href={`mailto:${siteConfig.contact.emailZh}`}>{siteConfig.contact.emailZh}</a></li>
+            <li><strong>Email</strong><a href={`mailto:${siteConfig.contact.emailZh}`} data-track="contact_click" data-source="contact-page-direct">{siteConfig.contact.emailZh}</a></li>
             <li><strong>電話</strong><span>{siteConfig.contact.phone}</span></li>
             <li><strong>地址</strong><span>{siteConfig.contact.addressZh}</span></li>
           </ul>

@@ -68,7 +68,7 @@ const productLinks = [
     <div class="site-footer__col">
       <h2 class="site-footer__heading">{dict.footer.contactHeading}</h2>
       <ul>
-        <li><a href={`mailto:${siteConfig.contact.emailEn}`}>{siteConfig.contact.emailEn}</a></li>
+        <li><a href={`mailto:${siteConfig.contact.emailEn}`} data-track="contact_click" data-source="footer">{siteConfig.contact.emailEn}</a></li>
         <li>{siteConfig.contact.phone}</li>
         <li>{locale === 'zh-tw' ? siteConfig.contact.addressZh : siteConfig.contact.addressEn}</li>
       </ul>

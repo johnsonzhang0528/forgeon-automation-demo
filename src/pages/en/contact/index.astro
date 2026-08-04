@@ -35,7 +35,7 @@ const dict = getDictionary(locale);
         <div class="contact-info">
           <h2>Direct Contact</h2>
           <ul>
-            <li><strong>Email</strong><a href={`mailto:${siteConfig.contact.emailEn}`}>{siteConfig.contact.emailEn}</a></li>
+            <li><strong>Email</strong><a href={`mailto:${siteConfig.contact.emailEn}`} data-track="contact_click" data-source="contact-page-direct">{siteConfig.contact.emailEn}</a></li>
             <li><strong>Phone</strong><span>{siteConfig.contact.phone}</span></li>
             <li><strong>Address</strong><span>{siteConfig.contact.addressEn}</span></li>
           </ul>

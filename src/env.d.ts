@@ -4,7 +4,6 @@
 interface ImportMetaEnv {
   readonly PUBLIC_SITE_URL: string;
   readonly PUBLIC_RFQ_ENDPOINT: string;
-  readonly PUBLIC_GA4_ID: string;
   readonly PUBLIC_GTM_ID: string;
   /** 'false' opts out of Demo Mode. Any other value (including unset) keeps
    * Demo Mode on — see src/config/site.ts `isDemoMode`. */
