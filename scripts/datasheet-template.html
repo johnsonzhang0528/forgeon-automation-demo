@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8" />
+<title>AXM-400 Datasheet</title>
+<style>
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", "IBM Plex Sans", Arial, sans-serif;
+    color: #12181f;
+    background: #ffffff;
+  }
+  .page {
+    width: 210mm;
+    height: 297mm;
+    padding: 18mm 16mm;
+    position: relative;
+    page-break-after: always;
+    display: flex;
+    flex-direction: column;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  .mono { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; }
+
+  .footer-strip {
+    position: absolute;
+    bottom: 12mm;
+    left: 16mm;
+    right: 16mm;
+    display: flex;
+    justify-content: space-between;
+    font-size: 8pt;
+    color: #636b75;
+    border-top: 0.5pt solid #e2e0da;
+    padding-top: 3mm;
+  }
+
+  /* ---- Cover page ---- */
+  .cover {
+    background: #12181f;
+    color: #f7f5f1;
+  }
+  .cover .eyebrow {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10pt;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #c06f39;
+    margin: 0 0 6mm;
+  }
+  .cover .brand {
+    font-size: 15pt;
+    font-weight: 700;
+    margin: 0 0 30mm;
+  }
+  .cover .model {
+    font-size: 42pt;
+    font-weight: 700;
+    margin: 0 0 6mm;
+    letter-spacing: 0.01em;
+  }
+  .cover .tagline {
+    font-size: 14pt;
+    color: #cbd0d6;
+    max-width: 120mm;
+    margin: 0 0 12mm;
+    line-height: 1.5;
+  }
+  .cover .concept-flag {
+    display: inline-block;
+    align-self: flex-start;
+    border: 1pt solid #c06f39;
+    color: #e6a377;
+    font-size: 9pt;
+    padding: 2mm 4mm;
+    border-radius: 2mm;
+    margin-top: auto;
+  }
+  .cover .diagram-wrap {
+    margin-top: 10mm;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* ---- Generic content page ---- */
+  .kicker {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #a34c1f;
+    margin: 0 0 3mm;
+  }
+  h1.page-title {
+    font-size: 20pt;
+    margin: 0 0 8mm;
+    border-bottom: 1.5pt solid #12181f;
+    padding-bottom: 4mm;
+  }
+  h2.section-title {
+    font-size: 13pt;
+    margin: 8mm 0 4mm;
+    color: #12181f;
+  }
+  p {
+    font-size: 10pt;
+    line-height: 1.6;
+    color: #2a323c;
+    margin: 0 0 4mm;
+  }
+  ul.feature-list {
+    margin: 0 0 5mm;
+    padding-left: 5mm;
+  }
+  ul.feature-list li {
+    font-size: 10pt;
+    line-height: 1.7;
+    color: #2a323c;
+    margin-bottom: 2mm;
+  }
+  .two-col {
+    display: flex;
+    gap: 10mm;
+  }
+  .two-col > div { flex: 1; }
+
+  table.spec-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 3mm 0 6mm;
+  }
+  table.spec-table th, table.spec-table td {
+    text-align: left;
+    padding: 3mm 2mm;
+    font-size: 9.5pt;
+    border-bottom: 0.5pt solid #e2e0da;
+  }
+  table.spec-table th {
+    color: #636b75;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 8pt;
+    letter-spacing: 0.05em;
+    border-bottom: 1pt solid #12181f;
+  }
+  table.spec-table td.value {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9.5pt;
+  }
+
+  .badge-demo {
+    display: inline-block;
+    background: #fff8f2;
+    color: #873e18;
+    border: 1pt solid #c06f39;
+    font-size: 8pt;
+    padding: 1mm 3mm;
+    border-radius: 2mm;
+    margin-bottom: 4mm;
+  }
+
+  .disclaimer-box {
+    background: #f7f5f1;
+    border: 1pt solid #c9c6bd;
+    border-radius: 3mm;
+    padding: 6mm;
+    margin-top: 6mm;
+  }
+  .disclaimer-box p { color: #12181f; }
+  .disclaimer-box .disclaimer-title {
+    font-weight: 700;
+    font-size: 11pt;
+    margin-bottom: 2mm;
+  }
+
+  .checklist-item {
+    display: flex;
+    gap: 3mm;
+    margin-bottom: 3mm;
+    align-items: flex-start;
+  }
+  .checklist-item .box {
+    width: 4mm;
+    height: 4mm;
+    border: 1pt solid #12181f;
+    margin-top: 1mm;
+    flex-shrink: 0;
+  }
+  .checklist-item p { margin: 0; }
+
+  .concept-page {
+    background: #fff8f2;
+    border: 2pt solid #a34c1f;
+  }
+  .concept-page h1.page-title {
+    border-bottom-color: #a34c1f;
+    color: #873e18;
+  }
+  .concept-page .warning-icon {
+    font-size: 22pt;
+    color: #a34c1f;
+    margin-bottom: 4mm;
+  }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: Cover -->
+<section class="page cover">
+  <p class="eyebrow">CONCEPT DEMONSTRATION DATASHEET</p>
+  <p class="brand">鋒岳自動化 FORGEON AUTOMATION</p>
+  <p class="model mono">AXM-400</p>
+  <p class="tagline">高剛性精密線性模組 — High-Rigidity Precision Linear Module</p>
+  <div class="diagram-wrap">{{COVER_DIAGRAM}}</div>
+  <span class="concept-flag">概念展示資料 · Concept / Fictional Data — 詳見第 6 頁聲明</span>
+</section>
+
+<!-- PAGE 2: Product positioning -->
+<section class="page">
+  <p class="kicker">PRODUCT POSITIONING · 產品定位</p>
+  <h1 class="page-title">AXM-400 適合什麼情況</h1>
+  <span class="badge-demo">概念展示資料 Concept Demonstration Data</span>
+  <p>AXM-400 是鋒岳自動化模組化產品線中的精密線性運動模組，設計目標是為需要穩定重複定位精度的加工、檢測與組裝站點提供結構化的運動基礎。此為概念產品，以下定位說明用於展示產品頁應如何清楚陳述「適合情境」而非單純條列規格。</p>
+  <h2 class="section-title">What AXM-400 Is For</h2>
+  <p>Built for stations needing stable, repeatable positioning accuracy in machining, inspection, or assembly — configurable with servo motors so stroke and speed can be tuned to the actual process, rather than sold as a one-size-fits-all module.</p>
+  <h2 class="section-title">適用情境 Use Cases</h2>
+  <ul class="feature-list">
+    <li>精密加工站的工件定位 — Workpiece positioning in precision machining stations</li>
+    <li>檢測站的取放與對位 — Pick-and-place and alignment in inspection stations</li>
+    <li>組裝站的重複性直線運動 — Repetitive linear motion in assembly stations</li>
+    <li>既有產線瓶頸站點的局部自動化升級 — Localized automation upgrades at existing line bottlenecks</li>
+  </ul>
+  <h2 class="section-title">何時不適合 When It Might Not Fit</h2>
+  <p>需要非線性（旋轉、多軸協調）運動路徑的應用、需要超出標準行程配置範圍的超長行程需求，或現場環境要求防爆／特殊介質相容認證但尚未經工程確認者，應先與技術團隊討論可行性，而非直接採用標準配置。</p>
+  <div class="footer-strip">
+    <span>FORGEON AUTOMATION · AXM-400 Datasheet</span>
+    <span>Concept Data · Page 2 / 6</span>
+  </div>
+</section>
+
+<!-- PAGE 3: Features + structural diagram -->
+<section class="page">
+  <p class="kicker">FEATURES &amp; STRUCTURE · 特性與結構</p>
+  <h1 class="page-title">特性與結構示意 Features &amp; Structural Diagram</h1>
+  <div class="two-col">
+    <div>
+      <h2 class="section-title">特性 Features</h2>
+      <ul class="feature-list">
+        <li>高剛性結構設計，降低高速運行時的振動 — High-rigidity structure reduces vibration during high-speed operation</li>
+        <li>適合精密定位應用，重複定位精度可依配置調整 — Repeatable accuracy configurable per setup</li>
+        <li>可搭配多種伺服馬達與驅動器 — Compatible with a range of servo motors and drivers</li>
+        <li>模組化安裝介面，便於整合至既有機構 — Modular mounting interface simplifies integration</li>
+        <li>支援多種行程長度配置 — Available in multiple stroke length configurations</li>
+      </ul>
+    </div>
+    <div>
+      <h2 class="section-title">結構示意 Structural Diagram</h2>
+      {{STRUCTURE_DIAGRAM}}
+      <p style="font-size:8pt;color:#636b75;margin-top:2mm;">示意圖僅表示結構關係，非精確工程圖 — Diagram indicates structural relationships only, not to engineering scale.</p>
+    </div>
+  </div>
+  <div class="footer-strip">
+    <span>FORGEON AUTOMATION · AXM-400 Datasheet</span>
+    <span>Concept Data · Page 3 / 6</span>
+  </div>
+</section>
+
+<!-- PAGE 4: Spec table -->
+<section class="page">
+  <p class="kicker">TECHNICAL SPECIFICATIONS · 技術規格</p>
+  <h1 class="page-title">技術規格表 Technical Specifications</h1>
+  <table class="spec-table">
+    <thead>
+      <tr><th>項目 / Item</th><th>規格 / Value</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>結構型式 / Structure Type</td><td class="value">滾珠螺桿式線性模組 / Ball-screw linear module</td></tr>
+      <tr><td>行程長度 / Stroke Length</td><td class="value">100mm–1000mm（依配置，Demo 數值）/ per configuration, demo value</td></tr>
+      <tr><td>最大負載 / Max Payload</td><td class="value">依配置評估（Demo 數值）/ evaluated per configuration, demo value</td></tr>
+      <tr><td>重複定位精度 / Repeatability</td><td class="value">依配置與工程確認（Demo 數值）/ per configuration, engineering-confirmed, demo value</td></tr>
+      <tr><td>驅動方式 / Drive Type</td><td class="value">伺服馬達（可選配）/ Servo motor (optional)</td></tr>
+      <tr><td>安裝介面 / Mounting Interface</td><td class="value">標準化模組介面 / Standardized modular interface</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:8.5pt;color:#636b75;">本頁技術規格為概念展示資料，實際產品需依工程條件確認。Specifications shown are fictional demonstration data; actual configurations require engineering review. Figures on this page are identical to and internally consistent with src/content/products/axm-400.md, the site's canonical spec source.</p>
+  <h2 class="section-title">選配項目 Optional Configurations</h2>
+  <ul class="feature-list">
+    <li>伺服馬達與驅動器套件 — Servo motor and driver kit</li>
+    <li>防塵防護等級升級 — Upgraded dust protection rating</li>
+    <li>客製安裝支架 — Custom mounting brackets</li>
+    <li>線性尺回饋模組 — Linear encoder feedback module</li>
+  </ul>
+  <div class="footer-strip">
+    <span>FORGEON AUTOMATION · AXM-400 Datasheet</span>
+    <span>Concept Data · Page 4 / 6</span>
+  </div>
+</section>
+
+<!-- PAGE 5: What to prepare before RFQ -->
+<section class="page">
+  <p class="kicker">BEFORE YOU REQUEST A QUOTE · 詢價前準備</p>
+  <h1 class="page-title">詢價前需準備的資料 What to Prepare Before Requesting a Quote</h1>
+  <p>為了讓技術團隊能在第一輪溝通就給出有意義的評估，建議在提交 RFQ 前先準備以下資訊：</p>
+  <div class="checklist-item"><span class="box"></span><p><strong>工件圖面／CAD 檔案</strong> — Workpiece drawings or CAD files, including critical tolerances.</p></div>
+  <div class="checklist-item"><span class="box"></span><p><strong>製程節拍需求</strong> — Target cycle time / takt time for the station.</p></div>
+  <div class="checklist-item"><span class="box"></span><p><strong>既有設備介面條件</strong> — Interface constraints of existing equipment the module will integrate with.</p></div>
+  <div class="checklist-item"><span class="box"></span><p><strong>現場空間與安裝限制</strong> — On-site space and mounting constraints.</p></div>
+  <div class="checklist-item"><span class="box"></span><p><strong>環境條件</strong> — Environmental conditions (dust, temperature, cleanroom class if applicable).</p></div>
+  <div class="checklist-item"><span class="box"></span><p><strong>是否已有初步技術規格或保密協議需求</strong> — Whether you already have draft specifications, and whether an NDA is required before sharing them.</p></div>
+  <p style="margin-top:6mm;">可透過網站 <span class="mono">/zh-tw/contact/</span> 或 <span class="mono">/en/contact/</span> 的 RFQ 表單提交上述資訊；本網站為作品集概念案例，表單目前運作於 Demo Mode，資料不會實際送出。</p>
+  <div class="footer-strip">
+    <span>FORGEON AUTOMATION · AXM-400 Datasheet</span>
+    <span>Concept Data · Page 5 / 6</span>
+  </div>
+</section>
+
+<!-- PAGE 6: Concept / fictional data disclaimer -->
+<section class="page concept-page">
+  <p class="kicker" style="color:#873e18;">DISCLAIMER · 聲明</p>
+  <div class="warning-icon">&#9888;</div>
+  <h1 class="page-title">Concept / Fictional Data Disclaimer 概念／虛構資料聲明</h1>
+  <div class="disclaimer-box">
+    <p class="disclaimer-title">中文</p>
+    <p>本文件是頁構所（Yegou Studio）為市場驗證作品集所建立的概念展示資料，「鋒岳自動化 FORGEON AUTOMATION」與「AXM-400」均為虛構品牌與虛構產品，並非真實販售中的商品。文件中所有技術規格數值（行程長度、最大負載、重複定位精度等）皆為示範用途編造的概念數字，僅用來展示一份完整技術資料表應具備的資訊架構與排版方式，不代表任何實際產品的真實效能或已驗證的工程數據。</p>
+    <p>本文件<strong>不包含任何真實或暗示性的第三方認證、專利、獎項或合格標章</strong>（例如 CE、ISO、UL 等），也未使用任何真實客戶案例、真實產線照片或真實測試報告。若日後有真實產品需要製作正式技術資料表，應由實際工程與品保團隊依真實測試數據重新撰寫，本文件不得作為真實技術文件使用或引用。</p>
+  </div>
+  <div class="disclaimer-box" style="margin-top:4mm;">
+    <p class="disclaimer-title">English</p>
+    <p>This document is fictional demonstration content created by Yegou Studio (頁構所) for a market-validation portfolio piece. "FORGEON AUTOMATION" and "AXM-400" are a fictional brand and a fictional product, not a real item for sale. Every technical figure in this document (stroke length, max payload, repeatability, etc.) is invented for demonstration purposes only, intended to show the information architecture and layout a real datasheet should have — none of it represents actual, verified engineering performance of a real product.</p>
+    <p>This document contains <strong>no real or implied third-party certification, patent, award, or compliance mark</strong> (e.g. CE, ISO, UL), and uses no real customer cases, real production-line photography, or real test reports. Should a real product ever require an official datasheet, it must be authored by an actual engineering and quality-assurance team using real, verified test data — this document must not be used or cited as real technical documentation.</p>
+  </div>
+  <div class="footer-strip">
+    <span>FORGEON AUTOMATION · AXM-400 Datasheet</span>
+    <span>Concept Data · Page 6 / 6</span>
+  </div>
+</section>
+
+</body>
+</html>
