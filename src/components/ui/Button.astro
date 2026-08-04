@@ -2,7 +2,7 @@
 export interface Props {
   href?: string;
   type?: 'button' | 'submit';
-  variant?: 'primary' | 'secondary' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'secondary-invert' | 'ghost';
   size?: 'md' | 'lg';
   class?: string;
   id?: string;
@@ -88,6 +88,29 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
   .btn--secondary:hover {
     border-color: var(--color-ink);
     background: var(--color-surface-alt);
+  }
+  /*
+   * secondary-invert: a real, typed variant for the one recurring case
+   * where a secondary button sits on a dark/inverted surface (CTABanner,
+   * which always renders on --color-ink). This is a genuine bug fix found
+   * via real-browser screenshot review (not caught by static code review):
+   * plain "secondary" used `color: var(--color-ink)`, which on a
+   * --color-ink background rendered completely invisible text — only the
+   * border was visible, making the button look empty. See
+   * docs/IMPECCABLE_REVIEW_LOG.md.
+   */
+  .btn--secondary-invert {
+    background: transparent;
+    color: var(--color-invert-text);
+    /* --color-invert-border (#2a323c) is only 1.38:1 against --color-ink —
+       fine for a subtle section divider, not enough for a UI-boundary
+       button border (needs 3:1 per WCAG 1.4.11). --color-invert-muted
+       clears it at 6.99:1. See docs/CONTRAST_AUDIT.md. */
+    border-color: var(--color-invert-muted);
+  }
+  .btn--secondary-invert:hover {
+    border-color: var(--color-invert-text);
+    background: color-mix(in srgb, var(--color-invert-text) 8%, transparent);
   }
   .btn--ghost {
     background: transparent;
