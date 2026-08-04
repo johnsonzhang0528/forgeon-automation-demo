@@ -16,6 +16,7 @@ public/fonts/** export-ignore
 # Third-party skill packages under .claude/skills/ are installed tooling,
 # not this project's own source — excluded from --full archives so a
 # review bundle stays scoped to the actual site. Their documentation also
-# legitimately discusses env-var names like API_KEY/ACCESS_TOKEN as
-# examples, which otherwise trips the bundle script's secret-content scan.
+# legitimately discusses several credential-related env-var name patterns
+# as examples, which otherwise trips the bundle script's secret-content
+# scan (see scripts/create-review-bundle.sh's FORBIDDEN_CONTENT_PATTERNS).
 .claude/skills/** export-ignore

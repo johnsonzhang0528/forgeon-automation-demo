@@ -275,7 +275,20 @@ if [ "$MODE" = "incremental" ]; then
   # patch itself, so large binaries never land in diff/changes.patch even
   # in --binary mode. Excluded files are still noted in changed-files.txt
   # and, if binary, listed in excluded-binaries.txt below.
-  PATCH_EXCLUDE_ARGS=()
+  #
+  # This script's own path is excluded here too, but for a different
+  # reason than the EXCLUDE_GLOBS entries: it's not a secret or a binary,
+  # it's fully readable elsewhere in the bundle (source/scripts/create-
+  # review-bundle.sh, incremental mode's changed-source copy), and
+  # including it in the patch would just recreate, in a second place, the
+  # same problem the content-exempt-path check below already solves once
+  # — FORBIDDEN_CONTENT_PATTERNS necessarily contains its own pattern
+  # names as literal strings, so a patch hunk adding this file always
+  # self-matches the content scan. It is intentionally NOT added to
+  # EXCLUDE_GLOBS itself, since that array also governs what's copied
+  # into source/ (§5 below) — the script should still appear there in
+  # full, just not duplicated inside the patch.
+  PATCH_EXCLUDE_ARGS=(":(exclude)scripts/create-review-bundle.sh")
   for glob in "${EXCLUDE_GLOBS[@]}"; do
     PATCH_EXCLUDE_ARGS+=(":(exclude)$glob")
   done
@@ -491,6 +504,25 @@ is_exempt_filename() {
   esac
 }
 
+# Content-scan exemption for exactly this script's own source. Its
+# FORBIDDEN_CONTENT_PATTERNS array necessarily contains these pattern
+# *names* as literal strings — that's what makes it a pattern list — so
+# without this exemption, staging a copy of the script in source/ would
+# always self-match. This is not a general secret-scan bypass: it matches
+# only this one known, public, non-secret path, by exact relative path
+# (not a name/extension category that could be reused to smuggle
+# something else past the scan). A real secret anywhere ELSE in the
+# staged bundle is still caught. `diff/changes.patch` is handled by a
+# different mechanism (see the PATCH_EXCLUDE_ARGS pathspec above, in the
+# "Patch" section) — this script's own path is excluded from the patch
+# entirely, on the reasoning that its content is already fully visible,
+# unredacted, in source/scripts/create-review-bundle.sh when the bundle
+# includes it, so repeating it inside the patch adds no reviewer value
+# and only recreates this same self-match problem in a second place.
+is_content_exempt_path() {
+  [ "$1" = "source/scripts/create-review-bundle.sh" ]
+}
+
 SECRET_HITS=()
 
 while IFS= read -r -d '' f; do
@@ -506,6 +538,8 @@ done < <(find "$WORK_DIR" -type f -print0)
 
 CONTENT_GREP_PATTERN=$(IFS='|'; echo "${FORBIDDEN_CONTENT_PATTERNS[*]}")
 while IFS= read -r -d '' f; do
+  rel_for_exempt="${f#$WORK_DIR/}"
+  is_content_exempt_path "$rel_for_exempt" && continue
   # Only grep text-ish files — binary false positives aren't useful and
   # grep -I already skips binaries, but be explicit for clarity.
   if grep -Il -E "$CONTENT_GREP_PATTERN" "$f" >/dev/null 2>&1; then
