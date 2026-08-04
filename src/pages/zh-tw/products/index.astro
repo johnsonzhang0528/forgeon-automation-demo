@@ -43,7 +43,134 @@ const products = await getSortedProducts();
     </div>
   </section>
 
+  <!-- Selection criteria -->
+  <section class="section section--tight section--alt">
+    <div class="container container--narrow">
+      <SectionHeading
+        eyebrow="選型條件"
+        title="如何判斷該從哪個產品開始"
+        description="三款產品解決不同層次的問題，可單獨導入，也可組合使用。"
+      />
+      <div class="criteria-list">
+        <div class="criteria-item">
+          <h3>先確認：問題是「定位精度」還是「辨識與檢測」</h3>
+          <p>若製程瓶頸在於工件的重複定位精度（例如取放、加工基準點），從 <a href="/zh-tw/products/axm-400/">AXM-400</a> 開始評估；若瓶頸在於辨識工件角度、瑕疵或條碼，從 <a href="/zh-tw/products/vision-x2/">VISION-X2</a> 開始評估。</p>
+        </div>
+        <div class="criteria-item">
+          <h3>再確認：是否需要完整組裝站點，而非單一模組</h3>
+          <p>若需求是一整個中小批量、多款式的組裝站點（而非單一運動或視覺模組），<a href="/zh-tw/products/flexcell-m/">FLEXCELL-M</a> 可作為系統框架，內部再選配 AXM-400 與 VISION-X2 的組合。</p>
+        </div>
+        <div class="criteria-item">
+          <h3>系統相容關係</h3>
+          <p>AXM-400 與 VISION-X2 可獨立使用，也可整合為視覺引導定位系統；FLEXCELL-M 可選配 VISION-X2 視覺整合套件，三者之間的相容性需依實際工程條件確認，非任意組合皆適用。</p>
+        </div>
+      </div>
+
+      <div class="compare-table-wrap">
+        <table class="compare-table">
+          <caption>三款產品比較（Demo 數值，實際規格需依工程條件確認）</caption>
+          <thead>
+            <tr>
+              <th scope="col">比較項目</th>
+              <th scope="col">AXM-400</th>
+              <th scope="col">VISION-X2</th>
+              <th scope="col">FLEXCELL-M</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">解決的問題</th>
+              <td>重複定位精度</td>
+              <td>辨識與檢測</td>
+              <td>完整組裝站點</td>
+            </tr>
+            <tr>
+              <th scope="row">部署方式</th>
+              <td>獨立模組或整合於站點</td>
+              <td>獨立設站或整合於自動化系統</td>
+              <td>系統框架，內部可選配前兩者</td>
+            </tr>
+            <tr>
+              <th scope="row">典型應用</th>
+              <td>加工／檢測站的工件定位</td>
+              <td>瑕疵檢測、條碼辨識、視覺引導</td>
+              <td>中小批量多款式組裝</td>
+            </tr>
+            <tr>
+              <th scope="row">可否單獨採用</th>
+              <td>可</td>
+              <td>可</td>
+              <td>可（內部模組依需求選配）</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
   <div class="container">
     <CTABanner locale={locale} title="需要協助挑選合適的產品組合？" description="提供您的工件與製程資訊，我們會協助評估適合的產品配置。" />
   </div>
 </BaseLayout>
+
+<style>
+  .container--narrow {
+    max-width: 860px;
+  }
+  .criteria-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-xl);
+  }
+  .criteria-item {
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--color-border);
+  }
+  .criteria-item h3 {
+    font-size: var(--fs-md);
+    margin: 0 0 var(--space-2xs);
+  }
+  .criteria-item p {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-normal);
+  }
+  .criteria-item a {
+    color: var(--color-accent);
+  }
+  .compare-table-wrap {
+    overflow-x: auto;
+  }
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--fs-sm);
+  }
+  .compare-table caption {
+    text-align: left;
+    font-size: var(--fs-xs);
+    color: var(--color-muted);
+    margin-bottom: var(--space-sm);
+  }
+  .compare-table th,
+  .compare-table td {
+    text-align: left;
+    padding: var(--space-sm) var(--space-sm);
+    border-bottom: 1px solid var(--color-border);
+    white-space: nowrap;
+  }
+  .compare-table thead th {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+    border-bottom: 2px solid var(--color-ink);
+  }
+  .compare-table tbody th {
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+</style>

@@ -43,7 +43,134 @@ const products = await getSortedProducts();
     </div>
   </section>
 
+  <!-- Selection criteria -->
+  <section class="section section--tight section--alt">
+    <div class="container container--narrow">
+      <SectionHeading
+        eyebrow="Selection Criteria"
+        title="How to Decide Where to Start"
+        description="The three products solve problems at different levels. Deploy them standalone, or combine them."
+      />
+      <div class="criteria-list">
+        <div class="criteria-item">
+          <h3>First: is the problem positioning accuracy, or recognition and inspection?</h3>
+          <p>If the bottleneck is repeatable positioning accuracy (pick-and-place, machining reference points), start with <a href="/en/products/axm-400/">AXM-400</a>. If the bottleneck is recognizing part orientation, defects, or barcodes, start with <a href="/en/products/vision-x2/">VISION-X2</a>.</p>
+        </div>
+        <div class="criteria-item">
+          <h3>Then: do you need a full assembly cell, not a single module?</h3>
+          <p>If the requirement is a complete small-to-mid batch, multi-variant assembly cell rather than a single motion or vision module, <a href="/en/products/flexcell-m/">FLEXCELL-M</a> serves as the system frame, with AXM-400 and VISION-X2 available as internal options.</p>
+        </div>
+        <div class="criteria-item">
+          <h3>System compatibility</h3>
+          <p>AXM-400 and VISION-X2 can run independently or combine into a vision-guided positioning system; FLEXCELL-M can optionally integrate VISION-X2. Compatibility between the three depends on actual engineering conditions, so not every combination applies by default.</p>
+        </div>
+      </div>
+
+      <div class="compare-table-wrap">
+        <table class="compare-table">
+          <caption>Product comparison (demo values; actual specifications require engineering review)</caption>
+          <thead>
+            <tr>
+              <th scope="col">Criteria</th>
+              <th scope="col">AXM-400</th>
+              <th scope="col">VISION-X2</th>
+              <th scope="col">FLEXCELL-M</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Problem solved</th>
+              <td>Repeatable positioning accuracy</td>
+              <td>Recognition and inspection</td>
+              <td>Complete assembly cell</td>
+            </tr>
+            <tr>
+              <th scope="row">Deployment</th>
+              <td>Standalone module or integrated into a station</td>
+              <td>Standalone station or integrated into an automated system</td>
+              <td>System frame, with the two above as internal options</td>
+            </tr>
+            <tr>
+              <th scope="row">Typical use</th>
+              <td>Positioning for machining/inspection stations</td>
+              <td>Defect inspection, barcode recognition, vision guidance</td>
+              <td>Small-to-mid batch, multi-variant assembly</td>
+            </tr>
+            <tr>
+              <th scope="row">Standalone deployment</th>
+              <td>Yes</td>
+              <td>Yes</td>
+              <td>Yes (internal modules selected per need)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
   <div class="container">
     <CTABanner locale={locale} title="Need help choosing the right product combination?" description="Share your part and process information, and we'll help evaluate the right configuration." />
   </div>
 </BaseLayout>
+
+<style>
+  .container--narrow {
+    max-width: 860px;
+  }
+  .criteria-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-xl);
+  }
+  .criteria-item {
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--color-border);
+  }
+  .criteria-item h3 {
+    font-size: var(--fs-md);
+    margin: 0 0 var(--space-2xs);
+  }
+  .criteria-item p {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-normal);
+  }
+  .criteria-item a {
+    color: var(--color-accent);
+  }
+  .compare-table-wrap {
+    overflow-x: auto;
+  }
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--fs-sm);
+  }
+  .compare-table caption {
+    text-align: left;
+    font-size: var(--fs-xs);
+    color: var(--color-muted);
+    margin-bottom: var(--space-sm);
+  }
+  .compare-table th,
+  .compare-table td {
+    text-align: left;
+    padding: var(--space-sm) var(--space-sm);
+    border-bottom: 1px solid var(--color-border);
+    white-space: nowrap;
+  }
+  .compare-table thead th {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+    border-bottom: 2px solid var(--color-ink);
+  }
+  .compare-table tbody th {
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+</style>

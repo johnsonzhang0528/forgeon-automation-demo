@@ -152,6 +152,69 @@ const otherLocalePath = `/en/solutions/${d.entrySlug}/`;
     </section>
   )}
 
+  {isFullDetail && d.entrySlug === 'vision-guided-assembly' && (
+    <section class="section section--tight">
+      <div class="container container--narrow">
+        <SectionHeading eyebrow="適合評估" title="這套方案適合／不適合什麼情況" />
+        <div class="fit-grid">
+          <div class="fit-card fit-card--yes">
+            <h3>適合的情況</h3>
+            <ul>
+              <li>工件公差偏移或來料方向不固定，固定機構治具已無法穩定對位</li>
+              <li>同一產線需生產多款式，且款式間需要快速切換辨識參數</li>
+              <li>希望在組裝的同時完成外觀或特徵檢測，減少站點數量</li>
+              <li>已能提供工件實際尺寸圖與公差範圍，可供工程團隊評估相機與光源配置</li>
+            </ul>
+          </div>
+          <div class="fit-card fit-card--no">
+            <h3>暫時不適合的情況</h3>
+            <ul>
+              <li>工件材質為高反光或透明特性，且尚未確認可用的特殊光源方案</li>
+              <li>現場光線環境劇烈變動，且無法調整或加裝穩定光源</li>
+              <li>僅需單一固定款式、公差極小的定位需求，固定機構治具可能已足夠，不需要視覺系統的額外成本</li>
+              <li>尚未確認現場空間是否足以安裝相機與光源模組</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  )}
+
+  {isFullDetail && d.entrySlug === 'vision-guided-assembly' && (
+    <section class="section section--tight section--alt">
+      <div class="container container--narrow">
+        <SectionHeading eyebrow="示範專案情境 · Concept Scenario" title="一個虛構的專案情境示範" description="以下情境為完全虛構的示範內容，用於展示從問題到交付的完整流程，不代表任何真實客戶或專案。" />
+        <div class="scenario-block">
+          <div class="scenario-item">
+            <h3>虛構問題背景</h3>
+            <p>一間虛構的電子代工廠在既有產線上以固定治具進行連接器組裝，近期因供應商調整導致來料方向不再一致，固定治具的對位失敗率明顯上升，產線主管需要評估是否導入視覺定位。</p>
+          </div>
+          <div class="scenario-item">
+            <h3>使用者角色</h3>
+            <p>製程工程師負責提供工件圖面與產線節拍資料；採購窗口負責確認預算區間與導入時程；兩者皆可能是實際送出 RFQ 表單的角色。</p>
+          </div>
+          <div class="scenario-item">
+            <h3>資料輸入</h3>
+            <p>工件尺寸圖、目前產線節拍時間、既有治具是否可沿用、現場光線環境描述、目標良率。</p>
+          </div>
+          <div class="scenario-item">
+            <h3>方案選擇</h3>
+            <p>依據上述輸入，評估方向為視覺定位自動化組裝方案，搭配 VISION-X2 負責辨識與定位、AXM-400 負責後續對位運動。</p>
+          </div>
+          <div class="scenario-item">
+            <h3>交付物（示範用途，非真實承諾）</h3>
+            <p>技術評估報告、系統架構圖、初步報價區間、建議導入時程。這些項目為示範本站 RFQ 流程「應該收集到什麼資訊、應該產出什麼」的參考，不代表任何真實交付紀錄。</p>
+          </div>
+          <div class="scenario-item">
+            <h3>驗收方式（示範用途）</h3>
+            <p>依約定的定位精度與良率指標進行現場測試驗收，測試結果與現場條件相關，實際指標由專案合約另行約定，本頁不做預先承諾。</p>
+          </div>
+        </div>
+        <p class="scenario-disclaimer">本情境不包含任何真實成果百分比、營收數字或客戶推薦內容，純粹用於展示網站資訊架構與 RFQ 流程設計。</p>
+      </div>
+    </section>
+  )}
+
   {compatibleProducts.length > 0 && (
     <section class="section section--tight">
       <div class="container">
@@ -210,6 +273,74 @@ const otherLocalePath = `/en/solutions/${d.entrySlug}/`;
   .two-col p {
     color: var(--color-muted);
     margin: 0;
+  }
+  .fit-grid {
+    display: grid;
+    gap: var(--space-lg);
+    grid-template-columns: 1fr;
+  }
+  .fit-card {
+    background: var(--color-card);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    border-top: 3px solid var(--color-border-strong);
+  }
+  .fit-card--yes {
+    border-top-color: var(--color-success);
+  }
+  .fit-card--no {
+    border-top-color: var(--color-muted);
+  }
+  .fit-card h3 {
+    margin: 0 0 var(--space-sm);
+    font-size: var(--fs-md);
+  }
+  .fit-card ul {
+    margin: 0;
+    padding-left: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  .fit-card li {
+    color: var(--color-ink-soft);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-normal);
+  }
+  @media (min-width: 720px) {
+    .fit-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .scenario-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+  .scenario-item {
+    padding: var(--space-md);
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+  }
+  .scenario-item h3 {
+    font-size: var(--fs-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-accent);
+    margin: 0 0 var(--space-2xs);
+  }
+  .scenario-item p {
+    margin: 0;
+    color: var(--color-ink-soft);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-normal);
+  }
+  .scenario-disclaimer {
+    margin-top: var(--space-md);
+    font-size: var(--fs-xs);
+    color: var(--color-muted);
+    font-style: italic;
   }
   .plain-list {
     list-style: none;

@@ -167,6 +167,63 @@ const whyReasons = [
     </div>
   </section>
 
+  <!-- Fit / not-fit -->
+  <section class="section section--tight section--alt">
+    <div class="container">
+      <SectionHeading
+        eyebrow="適合評估"
+        title="鋒岳自動化適合什麼情況，不適合什麼情況"
+        description="在提交詢價前，先確認您的專案背景是否落在我們實際能提供價值的範圍內。"
+      />
+      <div class="fit-grid">
+        <div class="fit-card fit-card--yes">
+          <h3>適合的情況</h3>
+          <ul>
+            <li>加工、檢測或組裝站點需要穩定的重複定位精度，且已能描述工件尺寸與節拍需求</li>
+            <li>既有產線有明確瓶頸站點，希望局部自動化升級而非整線重建</li>
+            <li>需要視覺定位或瑕疵檢測，且製程條件（光源、工件表面特性）大致明確</li>
+            <li>專案規模足以支撐工程評估與客製設計（非單一標準品採購）</li>
+          </ul>
+        </div>
+        <div class="fit-card fit-card--no">
+          <h3>暫時不適合的情況</h3>
+          <ul>
+            <li>僅需採購單一標準零組件，不需要整合工程或客製設計</li>
+            <li>製程條件尚未確認（例如工件規格、節拍、現場空間都還在變動），建議先完成內部評估</li>
+            <li>時程要求在標準工程評估週期內無法完成（例如兩週內需要完整方案定案）</li>
+            <li>需要防爆、無塵室特殊等級或其他尚未經過工程確認的特殊環境認證</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Two browsing paths -->
+  <section class="section section--tight">
+    <div class="container">
+      <SectionHeading
+        eyebrow="從這裡開始"
+        title="依您的角色選擇瀏覽路徑"
+        description="兩種最常見的進站情境，各自對應不同的下一步。"
+        align="center"
+      />
+      <div class="path-grid">
+        <a href="/zh-tw/industries/" class="path-card">
+          <span class="path-card__label">海外採購／工廠管理者</span>
+          <h3>先確認產業與能力是否對應</h3>
+          <p>依產業別瀏覽常見製程問題與適合的解決方案，快速判斷是否值得深入了解。</p>
+          <span class="path-card__cta">瀏覽產業應用 →</span>
+        </a>
+        <a href="/zh-tw/products/" class="path-card">
+          <span class="path-card__label">自動化／製程工程師</span>
+          <h3>先確認產品規格與系統相容性</h3>
+          <p>直接查看三款核心產品的完整規格表、選配項目與相容方案，評估技術可行性。</p>
+          <span class="path-card__cta">瀏覽產品規格 →</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
   <!-- Process -->
   <section class="section section--tight section--alt">
     <div class="container container--narrow">
@@ -302,8 +359,94 @@ const whyReasons = [
     font-size: var(--fs-sm);
   }
 
+  .fit-grid {
+    display: grid;
+    gap: var(--space-lg);
+    grid-template-columns: 1fr;
+  }
+  .fit-card {
+    background: var(--color-card);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    border-top: 3px solid var(--color-border-strong);
+  }
+  .fit-card--yes {
+    border-top-color: var(--color-success);
+  }
+  .fit-card--no {
+    border-top-color: var(--color-muted);
+  }
+  .fit-card h3 {
+    margin: 0 0 var(--space-sm);
+    font-size: var(--fs-md);
+  }
+  .fit-card ul {
+    margin: 0;
+    padding-left: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  .fit-card li {
+    color: var(--color-ink-soft);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-normal);
+  }
+
+  .path-grid {
+    display: grid;
+    gap: var(--space-lg);
+    grid-template-columns: 1fr;
+  }
+  .path-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color var(--duration-fast) var(--ease-standard),
+      box-shadow var(--duration-fast) var(--ease-standard);
+  }
+  .path-card:hover {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-md);
+  }
+  .path-card__label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+  .path-card h3 {
+    margin: var(--space-2xs) 0;
+    font-size: var(--fs-lg);
+  }
+  .path-card p {
+    margin: 0 0 var(--space-sm);
+    color: var(--color-muted);
+    font-size: var(--fs-sm);
+  }
+  .path-card__cta {
+    color: var(--color-accent);
+    font-weight: 600;
+    font-size: var(--fs-sm);
+    margin-top: auto;
+  }
+
   @media (min-width: 720px) {
     .capability-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .fit-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .path-grid {
       grid-template-columns: repeat(2, 1fr);
     }
   }

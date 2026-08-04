@@ -152,6 +152,69 @@ const otherLocalePath = `/zh-tw/solutions/${d.entrySlug}/`;
     </section>
   )}
 
+  {isFullDetail && d.entrySlug === 'vision-guided-assembly' && (
+    <section class="section section--tight">
+      <div class="container container--narrow">
+        <SectionHeading eyebrow="Fit Check" title="When This Solution Fits, and When It Doesn't" />
+        <div class="fit-grid">
+          <div class="fit-card fit-card--yes">
+            <h3>Good Fit</h3>
+            <ul>
+              <li>Part tolerance offset or inconsistent incoming orientation means fixed mechanical fixtures can no longer align reliably</li>
+              <li>The same line produces multiple variants that need fast recognition-parameter changeover</li>
+              <li>You want visual or feature inspection to happen alongside assembly, reducing station count</li>
+              <li>You can already provide actual dimensional drawings and tolerance ranges for the engineering team to evaluate camera and lighting configuration</li>
+            </ul>
+          </div>
+          <div class="fit-card fit-card--no">
+            <h3>Not a Fit Yet</h3>
+            <ul>
+              <li>Parts are highly reflective or transparent, and no viable specialized lighting approach has been confirmed</li>
+              <li>On-site lighting conditions fluctuate significantly with no way to adjust or add stable lighting</li>
+              <li>You only need positioning for a single fixed variant with very tight tolerance; a fixed mechanical fixture may already be sufficient, without the added cost of a vision system</li>
+              <li>You haven't yet confirmed whether the floor space can accommodate camera and lighting modules</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  )}
+
+  {isFullDetail && d.entrySlug === 'vision-guided-assembly' && (
+    <section class="section section--tight section--alt">
+      <div class="container container--narrow">
+        <SectionHeading eyebrow="Concept Scenario" title="A Fictional Project Scenario" description="The scenario below is entirely fictional demonstration content, shown to illustrate the full flow from problem to deliverable. It does not represent any real customer or project." />
+        <div class="scenario-block">
+          <div class="scenario-item">
+            <h3>Fictional Problem Background</h3>
+            <p>A fictional electronics contract manufacturer runs connector assembly on an existing line using fixed fixtures. A recent supplier change means incoming parts no longer arrive in consistent orientation, and the fixed fixture's alignment failure rate has risen noticeably. The line manager needs to evaluate whether to introduce vision-guided positioning.</p>
+          </div>
+          <div class="scenario-item">
+            <h3>User Roles</h3>
+            <p>A process engineer provides part drawings and line takt-time data; a procurement contact confirms budget range and target timeline. Either role could be the one who actually submits the RFQ form.</p>
+          </div>
+          <div class="scenario-item">
+            <h3>Data Inputs</h3>
+            <p>Part dimensional drawings, current line takt time, whether existing fixtures can be reused, a description of on-site lighting conditions, and target yield.</p>
+          </div>
+          <div class="scenario-item">
+            <h3>Solution Selected</h3>
+            <p>Based on the inputs above, the evaluated direction is the vision-guided automated assembly solution, pairing VISION-X2 for recognition and positioning with AXM-400 for the subsequent alignment motion.</p>
+          </div>
+          <div class="scenario-item">
+            <h3>Deliverables (demonstration only, not a real commitment)</h3>
+            <p>A technical evaluation report, a system architecture diagram, a preliminary quote range, and a recommended implementation timeline. These items illustrate what this site's RFQ flow is designed to collect and produce; they do not represent any real delivery record.</p>
+          </div>
+          <div class="scenario-item">
+            <h3>Acceptance Criteria (demonstration only)</h3>
+            <p>On-site testing against agreed positioning accuracy and yield targets. Results depend on actual site conditions; real targets would be set in a project contract, and this page makes no advance commitment.</p>
+          </div>
+        </div>
+        <p class="scenario-disclaimer">This scenario includes no real outcome percentages, revenue figures, or customer testimonials. It exists solely to demonstrate the site's information architecture and RFQ flow design.</p>
+      </div>
+    </section>
+  )}
+
   {compatibleProducts.length > 0 && (
     <section class="section section--tight">
       <div class="container">
@@ -210,6 +273,74 @@ const otherLocalePath = `/zh-tw/solutions/${d.entrySlug}/`;
   .two-col p {
     color: var(--color-muted);
     margin: 0;
+  }
+  .fit-grid {
+    display: grid;
+    gap: var(--space-lg);
+    grid-template-columns: 1fr;
+  }
+  .fit-card {
+    background: var(--color-card);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    border-top: 3px solid var(--color-border-strong);
+  }
+  .fit-card--yes {
+    border-top-color: var(--color-success);
+  }
+  .fit-card--no {
+    border-top-color: var(--color-muted);
+  }
+  .fit-card h3 {
+    margin: 0 0 var(--space-sm);
+    font-size: var(--fs-md);
+  }
+  .fit-card ul {
+    margin: 0;
+    padding-left: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  .fit-card li {
+    color: var(--color-ink-soft);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-normal);
+  }
+  @media (min-width: 720px) {
+    .fit-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .scenario-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+  .scenario-item {
+    padding: var(--space-md);
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+  }
+  .scenario-item h3 {
+    font-size: var(--fs-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-accent);
+    margin: 0 0 var(--space-2xs);
+  }
+  .scenario-item p {
+    margin: 0;
+    color: var(--color-ink-soft);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-normal);
+  }
+  .scenario-disclaimer {
+    margin-top: var(--space-md);
+    font-size: var(--fs-xs);
+    color: var(--color-muted);
+    font-style: italic;
   }
   .plain-list {
     list-style: none;

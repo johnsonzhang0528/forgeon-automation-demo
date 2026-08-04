@@ -84,7 +84,7 @@ export const en: Dictionary = {
       'Demo mode: this page demonstrates the full RFQ form validation flow. Nothing you enter is sent or stored, and there is no reply commitment. See README for production API setup.',
     demoModeSubmitTitle: 'Validation flow demonstrated',
     demoModeSubmitBody:
-      'Form validation passed, demonstrating the complete RFQ validation experience. Because this is a demo environment, no data was actually sent or stored, and no one will follow up — that is expected behavior for a portfolio showcase site, not an error.',
+      'Form validation passed, demonstrating the complete RFQ validation experience. Because this is a demo environment, no data was actually sent or stored, and no one will follow up. That is expected behavior for a portfolio showcase site, not an error.',
     errorTitle: 'Submission Failed',
     errorBody: 'Please try again later, or email our engineering team directly.',
   },
