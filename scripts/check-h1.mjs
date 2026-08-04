@@ -8,7 +8,13 @@
  *    content of its own — it exists purely to bounce the visitor to
  *    /zh-tw/ or /en/ via <meta http-equiv="refresh"> + a JS
  *    location.replace() fallback, and intentionally has zero headings.
- * 2. robots.txt / sitemap.xml are not HTML at all and are naturally
+ * 2. The root-level 404 fallback (dist/404.html, from src/pages/404.astro).
+ *    Same shape as #1: a bare <meta http-equiv="refresh"> to /zh-tw/404,
+ *    used only when a request can't be matched to any locale segment at
+ *    all. The real, content-bearing 404 pages are dist/zh-tw/404/index.html
+ *    and dist/en/404/index.html, which DO have an <h1> and are NOT
+ *    excluded — only this locale-less redirect shim is skipped.
+ * 3. robots.txt / sitemap.xml are not HTML at all and are naturally
  *    excluded by the *.html glob; listed here only for documentation.
  *
  * Every other HTML file in dist/, including both locales' 404 pages, is
@@ -19,11 +25,13 @@
  */
 import { readdir, readFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const DIST_DIR = new URL('../dist/', import.meta.url).pathname;
+const DIST_DIR = fileURLToPath(new URL('../dist/', import.meta.url));
 
 const EXCLUDED_RELATIVE_PATHS = new Set([
   'index.html', // root locale-redirect page — see file header
+  '404.html', // root locale-less 404 redirect shim — see file header
 ]);
 
 async function walk(dir) {

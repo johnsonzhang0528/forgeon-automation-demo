@@ -3,6 +3,17 @@ import { locales } from '../config/site';
 import { getSortedSolutions, getSortedProducts, getSortedIndustries, getSortedInsights } from '../utils/content';
 import { absoluteUrl } from '../utils/seo';
 
+/**
+ * Demo Mode note (spec P0.4): this sitemap keeps generating in every mode.
+ * The actual crawl gate is robots.txt's `Disallow: /` in Demo Mode (see
+ * robots.txt.ts) plus per-page `noindex,nofollow` meta (see SEOHead.astro).
+ * A sitemap.xml existing on disk is not itself a submission — no code path
+ * in this project pings Google/Bing's sitemap ping endpoints or a Search
+ * Console API, so nothing here "actively submits" the sitemap. It stays
+ * available as a technical artifact/portfolio deliverable so a reviewer (or
+ * a future Production Mode deployment) can see the full URL structure.
+ */
+
 export const GET: APIRoute = async () => {
   const solutions = await getSortedSolutions();
   const products = await getSortedProducts();

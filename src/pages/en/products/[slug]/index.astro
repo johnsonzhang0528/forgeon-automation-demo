@@ -29,7 +29,10 @@ const otherLocalePath = `/zh-tw/products/${d.entrySlug}/`;
 ---
 
 <BaseLayout locale={locale} path={path} otherLocalePath={otherLocalePath} title={d.seoTitle.en} description={d.seoDescription.en}>
-  <StructuredData breadcrumbs={[{ name: 'Products', path: '/en/products/' }, { name: d.name, path }]} />
+  <StructuredData
+    breadcrumbs={[{ name: 'Products', path: '/en/products/' }, { name: d.name, path }]}
+    product={{ name: d.name, description: d.shortDescription.en, path }}
+  />
 
   <div class="container section--tight">
     <Breadcrumb locale={locale} items={[{ label: 'Products', path: '/en/products/' }, { label: d.name, path }]} />

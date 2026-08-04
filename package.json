@@ -10,7 +10,13 @@
     "build:noCheck": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:h1": "node scripts/check-h1.mjs",
+    "check:links": "node scripts/check-links.mjs",
+    "check:locale-routes": "node scripts/check-locale-routes.mjs",
+    "build:datasheet": "node scripts/build-datasheet.mjs",
+    "test:e2e": "playwright test",
+    "test:axe": "playwright test tests/e2e/axe.spec.ts"
   },
   "dependencies": {
     "astro": "^4.16.0"

@@ -3,6 +3,7 @@ import type { Locale } from '../../config/site';
 import { siteConfig, legalNoticeZh, legalNoticeEn } from '../../config/site';
 import { getDictionary } from '../../utils/i18n';
 import Logo from '../ui/Logo.astro';
+import DemoModeBadge from './DemoModeBadge.astro';
 
 export interface Props {
   locale: Locale;
@@ -82,6 +83,7 @@ const productLinks = [
         {locale === 'zh-tw' ? '作品集 Demo by 頁構所' : 'Portfolio demo by Yegou Studio (頁構所)'}
       </span>
     </p>
+    <DemoModeBadge locale={locale} />
   </div>
 </footer>
 

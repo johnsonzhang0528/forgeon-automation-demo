@@ -1,0 +1,41 @@
+---
+/**
+ * Visible "Concept Project" badge (spec P0.4). Renders only in Demo Mode —
+ * a small, non-intrusive marker so a human visitor (not just a crawler
+ * reading robots.txt/meta robots) can tell at a glance this is a portfolio
+ * concept, not a real company's live site. Lives in the footer credit line
+ * next to the existing "作品集 Demo by 頁構所" text so it reads as part of
+ * the same disclosure rather than a separate interruption.
+ */
+import { isDemoMode } from '../../config/site';
+import type { Locale } from '../../config/site';
+
+export interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+---
+
+{isDemoMode && (
+  <span class="demo-mode-badge" title={locale === 'zh-tw' ? '本網站為虛構概念案例，未對搜尋引擎開放索引。' : 'This is a fictional concept site and is not open to search engine indexing.'}>
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.2"/>
+      <path d="M6 4v2.5M6 8.2v.1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>
+    {locale === 'zh-tw' ? '概念專案 · 未開放搜尋索引' : 'Concept Project · Not Indexed'}
+  </span>
+)}
+
+<style>
+  .demo-mode-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    font-size: var(--fs-xs);
+    color: var(--color-invert-muted);
+    border: 1px solid var(--color-invert-border);
+    border-radius: var(--radius-sm);
+    padding: 0.2em 0.55em;
+    white-space: nowrap;
+  }
+</style>

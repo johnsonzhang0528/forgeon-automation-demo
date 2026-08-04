@@ -8,7 +8,7 @@ import Footer from '../components/layout/Footer.astro';
 import AnalyticsBridge from '../components/layout/AnalyticsBridge.astro';
 import SEOHead from '../components/seo/SEOHead.astro';
 import StructuredData from '../components/seo/StructuredData.astro';
-import { siteConfig } from '../config/site';
+import { siteConfig, allowIndexing } from '../config/site';
 
 export interface Props {
   locale: Locale;
@@ -17,6 +17,10 @@ export interface Props {
   description: string;
   otherLocalePath?: string;
   ogImage?: string;
+  /** Explicit per-page override. When unset, falls back to the Demo Mode
+   * gate (`!allowIndexing`) so noindex is the default everywhere unless a
+   * page opts out AND the site is in Production Mode — see P0.4 in
+   * docs/REMEDIATION_PLAN.md and src/config/site.ts. */
   noindex?: boolean;
   bodyClass?: string;
 }
@@ -31,6 +35,8 @@ const {
   noindex,
   bodyClass = '',
 } = Astro.props;
+
+const resolvedNoindex = noindex ?? !allowIndexing;
 
 const skipLabel = locale === 'zh-tw' ? '跳到主要內容' : 'Skip to content';
 const gtmId = siteConfig.gtmId;
@@ -50,7 +56,7 @@ const gtmId = siteConfig.gtmId;
       description={description}
       otherLocalePath={otherLocalePath}
       ogImage={ogImage}
-      noindex={noindex}
+      noindex={resolvedNoindex}
     />
     <StructuredData organization website />
 

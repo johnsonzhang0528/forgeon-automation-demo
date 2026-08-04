@@ -39,6 +39,28 @@ export const siteConfig = {
   gtmId: import.meta.env.PUBLIC_GTM_ID || '',
 } as const;
 
+/**
+ * Demo Mode gate (spec P0.4 / §12 "建立 Demo 索引安全機制").
+ *
+ * This is a fictional portfolio concept site, not a real company. Left
+ * indexable, it risks being treated by search engines (and by anyone who
+ * stumbles onto it) as a real business called FORGEON AUTOMATION. Demo Mode
+ * defaults ON so that every environment this code is deployed to — unless
+ * someone deliberately opts in to Production Mode with a real domain — ships
+ * noindex, Disallow: /, and a visible "Concept Project" badge.
+ *
+ * - `PUBLIC_DEMO_MODE` defaults to `true` when unset (fail-safe: an empty
+ *   env var must never accidentally make the site indexable).
+ * - `PUBLIC_ALLOW_INDEXING` defaults to `false` and is a second, explicit
+ *   gate: even outside Demo Mode, indexing is opt-in, not opt-out.
+ *
+ * Production Mode (real client site) = set BOTH
+ * `PUBLIC_DEMO_MODE=false` AND `PUBLIC_ALLOW_INDEXING=true`.
+ */
+export const isDemoMode: boolean = import.meta.env.PUBLIC_DEMO_MODE !== 'false';
+export const allowIndexing: boolean =
+  !isDemoMode && import.meta.env.PUBLIC_ALLOW_INDEXING === 'true';
+
 export const legalNoticeZh =
   '本網站為作品集概念案例，品牌、產品、規格及專案資料均為虛構內容。';
 export const legalNoticeEn =

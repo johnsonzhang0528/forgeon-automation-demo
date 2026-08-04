@@ -3,12 +3,19 @@
  * JSON-LD structured data. Only renders schemas whose facts are actually
  * true on this page (spec §21: "只有內容真正符合時才輸出 Schema").
  */
-import { siteConfig } from '../../config/site';
+import { siteConfig, isDemoMode } from '../../config/site';
 import { absoluteUrl } from '../../utils/seo';
 
 export interface BreadcrumbItem {
   name: string;
   path: string;
+}
+
+export interface ProductSchemaInput {
+  name: string;
+  description: string;
+  path: string;
+  image?: string;
 }
 
 export interface Props {
@@ -22,12 +29,23 @@ export interface Props {
     datePublished: string;
     path: string;
   };
+  product?: ProductSchemaInput;
 }
 
-const { organization = false, website = false, breadcrumbs, faq, article } = Astro.props;
+const { organization = false, website = false, breadcrumbs, faq, article, product } = Astro.props;
 
 const schemas: Record<string, unknown>[] = [];
 
+/**
+ * Demo Mode gate (spec P0.4 + §21): in Demo Mode the Organization schema is
+ * marked explicitly as a fictional concept entity via `@type: ["Organization",
+ * "Fictional"]`-style `additionalType`/`disambiguatingDescription` fields
+ * rather than being suppressed outright — a reviewer/crawler that does
+ * parse it will see it self-identify as non-real, which is a stronger
+ * signal than silently omitting the schema (omission alone doesn't stop a
+ * search engine from inferring org identity from on-page text). In
+ * Production Mode this would carry the real organization's facts.
+ */
 if (organization) {
   schemas.push({
     '@context': 'https://schema.org',
@@ -35,6 +53,9 @@ if (organization) {
     name: siteConfig.brandNameEn,
     alternateName: siteConfig.brandNameZh,
     url: siteConfig.siteUrl,
+    disambiguatingDescription: isDemoMode
+      ? 'Concept Project: fictional portfolio demonstration company. Not a real, operating business — no real products, certifications, or customer relationships exist.'
+      : undefined,
     description:
       'Fictional portfolio concept company for demonstration purposes only. Not a real business.',
   });
@@ -89,6 +110,34 @@ if (article) {
       '@type': 'Organization',
       name: siteConfig.brandNameEn,
     },
+  });
+}
+
+/**
+ * Product schema (spec §21 / 4.1): only rendered when the caller passes
+ * `product` at all — product detail pages decide whether to pass it based
+ * on isDemoMode (see [slug]/index.astro). No `offers`/`AggregateRating`/
+ * `review` field is ever included, on purpose: this is fictional demo
+ * content, and Offer/AggregateRating would misrepresent it as a real,
+ * purchasable, reviewed product to any search engine or shopping surface
+ * that parses Product schema. `disambiguatingDescription` mirrors the
+ * Organization schema's Demo Mode self-identification above.
+ */
+if (product) {
+  schemas.push({
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description,
+    url: absoluteUrl(product.path),
+    image: product.image ? absoluteUrl(product.image) : undefined,
+    brand: {
+      '@type': 'Brand',
+      name: siteConfig.brandNameEn,
+    },
+    disambiguatingDescription: isDemoMode
+      ? 'Concept Project: fictional demonstration product. Specifications are conceptual, not a real purchasable item. No price, availability, or review data is asserted.'
+      : undefined,
   });
 }
 ---
