@@ -1,0 +1,48 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHeading from '../../../components/ui/SectionHeading.astro';
+import IndustryCard from '../../../components/ui/IndustryCard.astro';
+import Breadcrumb from '../../../components/navigation/Breadcrumb.astro';
+import CTABanner from '../../../components/sections/CTABanner.astro';
+import { getSortedIndustries } from '../../../utils/content';
+
+const locale = 'en' as const;
+const industries = await getSortedIndustries();
+---
+
+<BaseLayout
+  locale={locale}
+  path="/en/industries/"
+  otherLocalePath="/zh-tw/industries/"
+  title="Industries | FORGEON AUTOMATION"
+  description="FORGEON AUTOMATION serves semiconductor & electronics assembly, automotive components, precision metal machining, and packaging & logistics, with automation configured to each industry's process."
+>
+  <div class="container section--tight">
+    <Breadcrumb locale={locale} items={[{ label: 'Industries', path: '/en/industries/' }]} />
+  </div>
+
+  <section class="section section--tight">
+    <div class="container">
+      <SectionHeading
+        eyebrow="Industries"
+        title="Industries We Serve"
+        description="Each industry has different process challenges. Below are common problems, suitable solutions, and what to prepare before evaluation."
+      />
+      <div class="grid-auto">
+        {industries.map((ind) => (
+          <IndustryCard
+            locale={locale}
+            slug={ind.data.entrySlug as any}
+            name={ind.data.name.en}
+            description={ind.data.shortDescription.en}
+            hasDetailPage={ind.data.hasDetailPage}
+          />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <CTABanner locale={locale} title="Want to know which solution fits your industry?" description="Submit your industry and process background for a preliminary assessment." />
+  </div>
+</BaseLayout>

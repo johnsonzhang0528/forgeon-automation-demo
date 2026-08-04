@@ -1,0 +1,58 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Button from '../../components/ui/Button.astro';
+
+const locale = 'en' as const;
+---
+
+<BaseLayout
+  locale={locale}
+  path="/en/404"
+  title="Page Not Found | FORGEON AUTOMATION"
+  description="The page you're looking for doesn't exist or has moved. Return to the homepage or browse our solutions."
+  noindex
+>
+  <section class="not-found section">
+    <div class="container not-found__inner">
+      <p class="not-found__code mono">404</p>
+      <h1>Page Not Found</h1>
+      <p class="measure">
+        The page you were looking for may have moved, the URL may be
+        mistyped, or it no longer exists. You can return to the homepage, or
+        browse our solutions overview directly.
+      </p>
+      <div class="not-found__actions">
+        <Button href="/en/">Back to Home</Button>
+        <Button href="/en/solutions/" variant="secondary">View Solutions</Button>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .not-found__inner {
+    text-align: center;
+    padding-block: var(--space-3xl);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+  .not-found__code {
+    font-size: var(--fs-4xl);
+    color: var(--color-accent);
+    font-weight: 700;
+    margin: 0;
+  }
+  .not-found__inner p.measure {
+    color: var(--color-muted);
+    margin-inline: auto;
+  }
+  .not-found__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+  }
+</style>

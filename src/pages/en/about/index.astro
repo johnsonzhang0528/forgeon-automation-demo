@@ -1,0 +1,105 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHeading from '../../../components/ui/SectionHeading.astro';
+import Breadcrumb from '../../../components/navigation/Breadcrumb.astro';
+import FeatureList from '../../../components/ui/FeatureList.astro';
+import ProcessTimeline from '../../../components/ui/ProcessTimeline.astro';
+import CTABanner from '../../../components/sections/CTABanner.astro';
+
+const locale = 'en' as const;
+
+const qualitySteps = [
+  { title: 'Requirements Confirmation', description: 'Clarify part conditions, process constraints, and implementation goals to avoid directional gaps later.' },
+  { title: 'Engineering Feasibility Review', description: 'Evaluate mechanical, vision, and control approaches against actual data, without promises made ahead of confirmation.' },
+  { title: 'Design Review', description: 'Internal review of mechanical design, component selection, and safety considerations against the design spec.' },
+  { title: 'Testing & Validation', description: 'Functional testing after module and system integration, confirming the build matches the design spec before handoff.' },
+  { title: 'Post-Deployment Follow-Up', description: 'Operating documentation delivered after on-site acceptance, with follow-up on early-stage operation.' },
+];
+
+const capabilities = [
+  'Mechanical design and linear transmission system selection',
+  'Industrial image processing and recognition algorithm development',
+  'Motion control and servo system integration',
+  'Custom fixture and workstation design',
+  'Signal and mechanical interface assessment for existing equipment',
+  'Bilingual technical communication for cross-border projects',
+];
+---
+
+<BaseLayout
+  locale={locale}
+  path="/en/about/"
+  otherLocalePath="/zh-tw/about/"
+  title="About Us | FORGEON AUTOMATION"
+  description="FORGEON AUTOMATION is a concept automation equipment and precision motion system supplier based in central Taiwan. Learn about our engineering-led approach, working process, and quality practices."
+>
+  <div class="container section--tight">
+    <Breadcrumb locale={locale} items={[{ label: 'About', path: '/en/about/' }]} />
+  </div>
+
+  <section class="section section--tight">
+    <div class="container container--narrow">
+      <SectionHeading
+        eyebrow="About FORGEON AUTOMATION"
+        title="Turning Precision Motion and Vision Integration Into Deployable Automation"
+        description="FORGEON AUTOMATION is based in central Taiwan, focused on precision linear motion modules, vision-guided inspection, and automated assembly integration for overseas procurement staff, factory managers, and system integrators."
+      />
+      <p class="measure">
+        Every proposal starts from an actual process problem: part tolerance, line takt
+        time, and existing equipment interface constraints are the starting point of every
+        evaluation. Rather than deciding what to sell first, we confirm what solution
+        actually solves the problem.
+      </p>
+    </div>
+  </section>
+
+  <section class="section section--tight section--alt">
+    <div class="container container--narrow">
+      <SectionHeading eyebrow="Engineering-Led Approach" title="Feasibility First, Design Second" />
+      <p class="measure">
+        The most common gap in automation projects comes from moving into design before
+        requirements are fully clarified. Our process requires gathering sufficient part
+        drawings, line data, and on-site conditions before any formal proposal, so the
+        resulting design is built on actual conditions rather than assumptions.
+      </p>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="container container--narrow">
+      <SectionHeading eyebrow="How We Work" title="A Standard Process From Requirements to Deployment" />
+      <ProcessTimeline steps={qualitySteps} />
+    </div>
+  </section>
+
+  <section class="section section--tight section--alt">
+    <div class="container container--narrow">
+      <SectionHeading eyebrow="Technical Capability" title="Types of Engineering Capability We Cover" />
+      <FeatureList items={capabilities} />
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="container container--narrow">
+      <SectionHeading eyebrow="Quality & Verification" title="How We Confirm a Solution Is Reliable" />
+      <p class="measure">
+        Every project goes through an internal design review and functional testing before
+        delivery, confirming actual operation matches the design spec. We do not claim any
+        specific international certification or award here. This site is a portfolio
+        concept case, and all company information, products, and specifications are
+        demonstration content. Actual verification standards for a real project would be
+        confirmed under the terms of that engagement.
+      </p>
+    </div>
+  </section>
+
+  <div class="container">
+    <CTABanner locale={locale} title="Want to learn more about how we work?" description="Submit your project background and our engineering team will follow up." />
+  </div>
+</BaseLayout>
+
+<style>
+  .container--narrow {
+    max-width: 860px;
+  }
+</style>

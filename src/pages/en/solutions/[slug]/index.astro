@@ -1,0 +1,233 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import SectionHeading from '../../../../components/ui/SectionHeading.astro';
+import Breadcrumb from '../../../../components/navigation/Breadcrumb.astro';
+import FeatureList from '../../../../components/ui/FeatureList.astro';
+import ProcessTimeline from '../../../../components/ui/ProcessTimeline.astro';
+import FAQAccordion from '../../../../components/ui/FAQAccordion.astro';
+import CTABanner from '../../../../components/sections/CTABanner.astro';
+import Badge from '../../../../components/ui/Badge.astro';
+import ProductCard from '../../../../components/ui/ProductCard.astro';
+import StructuredData from '../../../../components/seo/StructuredData.astro';
+import { getSortedSolutions, getSortedProducts } from '../../../../utils/content';
+
+export async function getStaticPaths() {
+  const solutions = await getSortedSolutions();
+  return solutions.map((s) => ({ params: { slug: s.data.entrySlug }, props: { solution: s } }));
+}
+
+const { solution } = Astro.props;
+const locale = 'en' as const;
+const d = solution.data;
+const allProducts = await getSortedProducts();
+const compatibleProducts = allProducts.filter((p) => d.compatibleProducts.includes(p.data.entrySlug));
+const isFullDetail = d.hasDetailPage;
+
+const path = `/en/solutions/${d.entrySlug}/`;
+const otherLocalePath = `/zh-tw/solutions/${d.entrySlug}/`;
+---
+
+<BaseLayout
+  locale={locale}
+  path={path}
+  otherLocalePath={otherLocalePath}
+  title={d.seoTitle.en}
+  description={d.seoDescription.en}
+>
+  {isFullDetail && d.faq && (
+    <StructuredData
+      breadcrumbs={[
+        { name: 'Solutions', path: '/en/solutions/' },
+        { name: d.name.en, path },
+      ]}
+      faq={d.faq.map((f) => ({ question: f.question.en, answer: f.answer.en }))}
+    />
+  )}
+  {!isFullDetail && (
+    <StructuredData breadcrumbs={[{ name: 'Solutions', path: '/en/solutions/' }, { name: d.name.en, path }]} />
+  )}
+
+  <div class="container section--tight">
+    <Breadcrumb locale={locale} items={[{ label: 'Solutions', path: '/en/solutions/' }, { label: d.name.en, path }]} />
+  </div>
+
+  <section class="section section--tight">
+    <div class="container container--narrow">
+      <Badge variant="demo">Concept Demonstration Content</Badge>
+      <h1 class="detail-title">{d.name.en}</h1>
+      <p class="detail-summary measure">{d.heroSummary.en}</p>
+    </div>
+  </section>
+
+  <section class="section section--tight section--alt">
+    <div class="container container--narrow two-col">
+      <div>
+        <h2>The Problem</h2>
+        <p>{d.problem.en}</p>
+      </div>
+      <div>
+        <h2>The Approach</h2>
+        <p>{d.approach.en}</p>
+      </div>
+    </div>
+  </section>
+
+  {isFullDetail && d.background && (
+    <section class="section section--tight">
+      <div class="container container--narrow">
+        <SectionHeading eyebrow="Background" title="Why Vision Guidance Matters" />
+        <p class="measure">{d.background.en}</p>
+      </div>
+    </section>
+  )}
+
+  {isFullDetail && d.scenarios && (
+    <section class="section section--tight section--alt">
+      <div class="container container--narrow">
+        <SectionHeading eyebrow="Applicable Scenarios" title="When This Solution Fits" />
+        <FeatureList items={d.scenarios.en} />
+      </div>
+    </section>
+  )}
+
+  {isFullDetail && d.systemComponents && (
+    <section class="section section--tight">
+      <div class="container container--narrow">
+        <SectionHeading eyebrow="System Components" title="What the Solution Includes" />
+        <FeatureList items={d.systemComponents.en} />
+      </div>
+    </section>
+  )}
+
+  {isFullDetail && d.workflow && (
+    <section class="section section--tight section--alt">
+      <div class="container container--narrow">
+        <SectionHeading eyebrow="Workflow" title="How It Works" />
+        <ProcessTimeline
+          steps={d.workflow.map((w) => ({ title: w.title.en, description: w.description.en }))}
+        />
+      </div>
+    </section>
+  )}
+
+  <section class="section section--tight">
+    <div class="container container--narrow two-col">
+      <div>
+        <h2>Key Benefits</h2>
+        <FeatureList items={d.keyBenefits.en} />
+      </div>
+      <div>
+        <h2>Applicable Industries</h2>
+        <ul class="plain-list">
+          {d.applicableIndustries.en.map((ind) => <li>{ind}</li>)}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  {isFullDetail && d.integrableEquipment && (
+    <section class="section section--tight section--alt">
+      <div class="container container--narrow">
+        <SectionHeading eyebrow="Integrable Equipment" title="Compatible Equipment Types" />
+        <FeatureList items={d.integrableEquipment.en} />
+      </div>
+    </section>
+  )}
+
+  {isFullDetail && d.advantages && (
+    <section class="section section--tight">
+      <div class="container container--narrow">
+        <SectionHeading eyebrow="Advantages" title="Why This Approach Works" />
+        <FeatureList items={d.advantages.en} />
+      </div>
+    </section>
+  )}
+
+  {isFullDetail && d.prerequisites && (
+    <section class="section section--tight section--alt">
+      <div class="container container--narrow">
+        <SectionHeading eyebrow="Before You Start" title="What to Prepare Before Evaluation" />
+        <FeatureList items={d.prerequisites.en} />
+      </div>
+    </section>
+  )}
+
+  {compatibleProducts.length > 0 && (
+    <section class="section section--tight">
+      <div class="container">
+        <SectionHeading eyebrow="Compatible Products" title="Related Products" />
+        <div class="grid-auto">
+          {compatibleProducts.map((p) => (
+            <ProductCard
+              locale={locale}
+              slug={p.data.entrySlug as 'axm-400' | 'vision-x2' | 'flexcell-m'}
+              name={p.data.name}
+              positioning={p.data.positioning.en}
+              description={p.data.shortDescription.en}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  {isFullDetail && d.faq && (
+    <section class="section section--tight section--alt">
+      <div class="container container--narrow">
+        <SectionHeading eyebrow="FAQ" title="Frequently Asked Questions" />
+        <FAQAccordion
+          idPrefix="solution-faq"
+          items={d.faq.map((f) => ({ question: f.question.en, answer: f.answer.en }))}
+        />
+      </div>
+    </section>
+  )}
+
+  <div class="container">
+    <CTABanner locale={locale} title="Want to discuss this solution further?" description="Submit your process background and our engineering team will help evaluate feasibility." />
+  </div>
+</BaseLayout>
+
+<style>
+  .detail-title {
+    margin: var(--space-sm) 0 var(--space-md);
+  }
+  .detail-summary {
+    color: var(--color-muted);
+    font-size: var(--fs-md);
+  }
+  .container--narrow {
+    max-width: 860px;
+  }
+  .two-col {
+    display: grid;
+    gap: var(--space-xl);
+  }
+  .two-col h2 {
+    font-size: var(--fs-lg);
+    margin: 0 0 var(--space-sm);
+  }
+  .two-col p {
+    color: var(--color-muted);
+    margin: 0;
+  }
+  .plain-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    color: var(--color-ink-soft);
+    font-size: var(--fs-sm);
+  }
+  .plain-list li {
+    padding-left: var(--space-sm);
+    border-left: 2px solid var(--color-accent-light);
+  }
+  @media (min-width: 720px) {
+    .two-col {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

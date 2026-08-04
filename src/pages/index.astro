@@ -1,0 +1,23 @@
+---
+// Root redirect: sends visitors to the default locale homepage.
+// Spec §8: language switching must never route to a non-existent page, and
+// the root path itself has no content of its own — it exists purely to
+// route into /zh-tw/ (the defaultLocale) or /en/ if the browser prefers it.
+---
+
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="0; url=/zh-tw/" />
+    <title>FORGEON AUTOMATION / 鋒岳自動化</title>
+    <script>
+      // Prefer the visitor's browser language when available, before the
+      // meta-refresh fallback fires.
+      const preferred = navigator.language?.toLowerCase().startsWith('en') ? '/en/' : '/zh-tw/';
+      window.location.replace(preferred);
+    </script>
+  </head>
+  <body>
+    <p>Redirecting to <a href="/zh-tw/">鋒岳自動化</a> / <a href="/en/">FORGEON AUTOMATION</a>…</p>
+  </body>
+</html>

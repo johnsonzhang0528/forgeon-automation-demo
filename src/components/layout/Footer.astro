@@ -1,0 +1,170 @@
+---
+import type { Locale } from '../../config/site';
+import { siteConfig, legalNoticeZh, legalNoticeEn } from '../../config/site';
+import { getDictionary } from '../../utils/i18n';
+import Logo from '../ui/Logo.astro';
+
+export interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const dict = getDictionary(locale);
+const legal = locale === 'zh-tw' ? legalNoticeZh : legalNoticeEn;
+const year = new Date().getFullYear();
+
+const solutionLinks = [
+  { zh: '視覺定位自動化組裝', en: 'Vision-Guided Assembly', slug: 'vision-guided-assembly' },
+  { zh: '精密定位與傳動', en: 'Precision Positioning', slug: 'precision-positioning' },
+  { zh: '自動化組裝工作站', en: 'Assembly Cells', slug: 'assembly-cells' },
+];
+const productLinks = [
+  { name: 'AXM-400', slug: 'axm-400' },
+  { name: 'VISION-X2', slug: 'vision-x2' },
+  { name: 'FLEXCELL-M', slug: 'flexcell-m' },
+];
+---
+
+<footer class="site-footer">
+  <div class="container site-footer__grid">
+    <div class="site-footer__brand">
+      <Logo locale={locale} variant="invert" />
+      <p class="site-footer__tagline">
+        {locale === 'zh-tw' ? siteConfig.taglineZh : siteConfig.taglineEn}
+      </p>
+    </div>
+
+    <div class="site-footer__col">
+      <h2 class="site-footer__heading">{dict.footer.solutionsHeading}</h2>
+      <ul>
+        {solutionLinks.map((s) => (
+          <li><a href={`/${locale}/solutions/${s.slug}/`}>{locale === 'zh-tw' ? s.zh : s.en}</a></li>
+        ))}
+        <li><a href={`/${locale}/solutions/`}>{locale === 'zh-tw' ? '查看全部方案' : 'View all solutions'}</a></li>
+      </ul>
+    </div>
+
+    <div class="site-footer__col">
+      <h2 class="site-footer__heading">{dict.footer.productsHeading}</h2>
+      <ul>
+        {productLinks.map((p) => (
+          <li><a href={`/${locale}/products/${p.slug}/`}>{p.name}</a></li>
+        ))}
+        <li><a href={`/${locale}/products/`}>{locale === 'zh-tw' ? '查看全部產品' : 'View all products'}</a></li>
+      </ul>
+    </div>
+
+    <div class="site-footer__col">
+      <h2 class="site-footer__heading">{dict.footer.companyHeading}</h2>
+      <ul>
+        <li><a href={`/${locale}/about/`}>{dict.nav.about}</a></li>
+        <li><a href={`/${locale}/industries/`}>{dict.nav.industries}</a></li>
+        <li><a href={`/${locale}/insights/`}>{dict.nav.insights}</a></li>
+        <li><a href={`/${locale}/contact/`}>{dict.nav.contact}</a></li>
+      </ul>
+    </div>
+
+    <div class="site-footer__col">
+      <h2 class="site-footer__heading">{dict.footer.contactHeading}</h2>
+      <ul>
+        <li><a href={`mailto:${siteConfig.contact.emailEn}`}>{siteConfig.contact.emailEn}</a></li>
+        <li>{siteConfig.contact.phone}</li>
+        <li>{locale === 'zh-tw' ? siteConfig.contact.addressZh : siteConfig.contact.addressEn}</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="container site-footer__bottom">
+    <p class="site-footer__legal">{legal}</p>
+    <p class="site-footer__rights">
+      &copy; {year} {siteConfig.brandNameEn}. {dict.footer.rights}.
+      <span class="site-footer__credit">
+        {locale === 'zh-tw' ? '作品集 Demo by 頁構所' : 'Portfolio demo by Yegou Studio (頁構所)'}
+      </span>
+    </p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--color-invert-bg);
+    color: var(--color-invert-text);
+    margin-top: var(--space-3xl);
+  }
+  .site-footer__grid {
+    display: grid;
+    gap: var(--space-xl) var(--space-lg);
+    grid-template-columns: 1fr;
+    padding-block: var(--space-2xl) var(--space-xl);
+  }
+  .site-footer__brand {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+  .site-footer__tagline {
+    color: var(--color-invert-muted);
+    font-size: var(--fs-sm);
+    max-width: 32ch;
+  }
+  .site-footer__heading {
+    font-family: var(--font-body);
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-invert-muted);
+    font-weight: 600;
+    margin: 0 0 var(--space-sm);
+  }
+  .site-footer__col ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  .site-footer__col a {
+    color: var(--color-invert-text);
+    text-decoration: none;
+    font-size: var(--fs-sm);
+  }
+  .site-footer__col a:hover {
+    color: var(--color-accent-light);
+  }
+  .site-footer__col li {
+    color: var(--color-invert-muted);
+    font-size: var(--fs-sm);
+  }
+  .site-footer__bottom {
+    border-top: 1px solid var(--color-invert-border);
+    padding-block: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+  }
+  .site-footer__legal {
+    font-size: var(--fs-xs);
+    color: var(--color-invert-muted);
+    max-width: none;
+  }
+  .site-footer__rights {
+    font-size: var(--fs-xs);
+    color: var(--color-invert-muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs) var(--space-sm);
+    max-width: none;
+  }
+
+  @media (min-width: 640px) {
+    .site-footer__grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (min-width: 960px) {
+    .site-footer__grid {
+      grid-template-columns: 1.4fr repeat(4, 1fr);
+    }
+  }
+</style>

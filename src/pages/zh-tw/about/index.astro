@@ -1,0 +1,100 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHeading from '../../../components/ui/SectionHeading.astro';
+import Breadcrumb from '../../../components/navigation/Breadcrumb.astro';
+import FeatureList from '../../../components/ui/FeatureList.astro';
+import ProcessTimeline from '../../../components/ui/ProcessTimeline.astro';
+import CTABanner from '../../../components/sections/CTABanner.astro';
+
+const locale = 'zh-tw' as const;
+
+const qualitySteps = [
+  { title: '需求確認', description: '釐清工件條件、製程限制與導入目標，避免方向性落差。' },
+  { title: '工程可行性評估', description: '依實際資料評估機構、視覺與控制方案的可行性，不做未經確認的承諾。' },
+  { title: '設計審查', description: '內部審查機構設計、選型與安全考量，確認符合設計條件。' },
+  { title: '測試與驗證', description: '模組與系統整合後進行功能測試，確認符合設計規格再交付。' },
+  { title: '導入後追蹤', description: '現場驗收後提供操作說明，並追蹤初期運行狀況。' },
+];
+
+const capabilities = [
+  '機構設計與線性傳動系統選型',
+  '工業影像處理與辨識演算法開發',
+  '運動控制與伺服系統整合',
+  '客製治具與工作站設計',
+  '既有設備訊號與機構介面評估',
+  '跨國專案的中英文技術溝通',
+];
+---
+
+<BaseLayout
+  locale={locale}
+  path="/zh-tw/about/"
+  otherLocalePath="/en/about/"
+  title="關於我們｜鋒岳自動化"
+  description="鋒岳自動化是位於台灣中部的自動化設備與精密運動系統供應商概念案例，說明我們的工程導向理念、合作方式與品質驗證流程。"
+>
+  <div class="container section--tight">
+    <Breadcrumb locale={locale} items={[{ label: '關於我們', path: '/zh-tw/about/' }]} />
+  </div>
+
+  <section class="section section--tight">
+    <div class="container container--narrow">
+      <SectionHeading
+        eyebrow="關於鋒岳自動化"
+        title="將精密運動與視覺整合，轉化為可導入的自動化方案"
+        description="鋒岳自動化位於台灣中部，專注於精密線性運動模組、視覺定位檢測與自動化組裝整合，服務對象包含海外設備採購人員、工廠管理者與系統整合商。"
+      />
+      <p class="measure">
+        我們的方案設計從實際製程問題出發：工件的公差、產線的節拍時間、既有設備的介面
+        限制，都是評估的起點。比起先決定要賣什麼設備，我們更重視先確認什麼方案真正
+        能解決問題。
+      </p>
+    </div>
+  </section>
+
+  <section class="section section--tight section--alt">
+    <div class="container container--narrow">
+      <SectionHeading eyebrow="工程導向理念" title="先確認可行性，再進入設計" />
+      <p class="measure">
+        自動化專案最常見的落差，來自需求釐清不完整就直接進入設計。我們的流程要求
+        在提出正式方案前，先取得足夠的工件圖面、產線資料與現場條件，確保後續設計
+        建立在實際條件上，而不是假設之上。
+      </p>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="container container--narrow">
+      <SectionHeading eyebrow="合作方式" title="從需求到導入的標準流程" />
+      <ProcessTimeline steps={qualitySteps} />
+    </div>
+  </section>
+
+  <section class="section section--tight section--alt">
+    <div class="container container--narrow">
+      <SectionHeading eyebrow="技術能力" title="涵蓋的工程能力類型" />
+      <FeatureList items={capabilities} />
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="container container--narrow">
+      <SectionHeading eyebrow="品質與驗證" title="我們如何確保方案可靠" />
+      <p class="measure">
+        每個專案在交付前都會經過內部設計審查與功能測試，確認實際運作符合設計規格。
+        我們不對外宣稱通過特定國際認證或獎項。本網站為作品集概念案例，所有公司
+        資料、產品與規格均為示範內容，實際專案的驗證標準需依合作條件另行確認。
+      </p>
+    </div>
+  </section>
+
+  <div class="container">
+    <CTABanner locale={locale} title="想進一步了解我們的合作方式？" description="提交您的專案背景，我們的技術團隊會協助評估。" />
+  </div>
+</BaseLayout>
+
+<style>
+  .container--narrow {
+    max-width: 860px;
+  }
+</style>

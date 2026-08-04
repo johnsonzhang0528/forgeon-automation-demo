@@ -1,0 +1,17 @@
+---
+// Root-level 404 fallback (used when a locale segment can't be resolved at
+// all, e.g. a totally malformed path). Redirects to the zh-TW 404 so the
+// visitor still lands on a styled, on-brand not-found page rather than a
+// blank host-level error page.
+---
+
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="0; url=/zh-tw/404" />
+    <title>Redirecting…</title>
+  </head>
+  <body>
+    <p>If you are not redirected automatically, <a href="/zh-tw/404">click here</a>.</p>
+  </body>
+</html>

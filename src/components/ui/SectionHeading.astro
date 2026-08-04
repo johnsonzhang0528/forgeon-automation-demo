@@ -1,0 +1,51 @@
+---
+export interface Props {
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  align?: 'left' | 'center';
+  level?: 'h1' | 'h2' | 'h3';
+}
+
+const { eyebrow, title, description, align = 'left', level = 'h2' } = Astro.props;
+const Tag = level;
+---
+
+<div class:list={['section-heading', { 'section-heading--center': align === 'center' }]}>
+  {eyebrow && <p class="section-heading__eyebrow">{eyebrow}</p>}
+  <Tag class="section-heading__title">{title}</Tag>
+  {description && <p class="section-heading__desc measure">{description}</p>}
+</div>
+
+<style>
+  .section-heading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-xl);
+  }
+  .section-heading--center {
+    align-items: center;
+    text-align: center;
+  }
+  .section-heading--center .section-heading__desc {
+    margin-inline: auto;
+  }
+  .section-heading__eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin: 0;
+    font-weight: 600;
+  }
+  .section-heading__title {
+    margin: 0;
+  }
+  .section-heading__desc {
+    color: var(--color-muted);
+    font-size: var(--fs-md);
+    margin: 0;
+  }
+</style>

@@ -1,0 +1,150 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import SectionHeading from '../../../../components/ui/SectionHeading.astro';
+import Breadcrumb from '../../../../components/navigation/Breadcrumb.astro';
+import FeatureList from '../../../../components/ui/FeatureList.astro';
+import SpecificationTable from '../../../../components/ui/SpecificationTable.astro';
+import ProductGlyph from '../../../../components/ui/ProductGlyph.astro';
+import Badge from '../../../../components/ui/Badge.astro';
+import Button from '../../../../components/ui/Button.astro';
+import SolutionCard from '../../../../components/ui/SolutionCard.astro';
+import CTABanner from '../../../../components/sections/CTABanner.astro';
+import StructuredData from '../../../../components/seo/StructuredData.astro';
+import { getSortedProducts, getSortedSolutions } from '../../../../utils/content';
+import { demoDataNoticeZh } from '../../../../config/site';
+
+export async function getStaticPaths() {
+  const products = await getSortedProducts();
+  return products.map((p) => ({ params: { slug: p.data.entrySlug }, props: { product: p } }));
+}
+
+const { product } = Astro.props;
+const locale = 'zh-tw' as const;
+const d = product.data;
+const allSolutions = await getSortedSolutions();
+const relatedSolutions = allSolutions.filter((s) => d.relatedSolutions.includes(s.data.entrySlug));
+
+const path = `/zh-tw/products/${d.entrySlug}/`;
+const otherLocalePath = `/en/products/${d.entrySlug}/`;
+---
+
+<BaseLayout locale={locale} path={path} otherLocalePath={otherLocalePath} title={d.seoTitle['zh-tw']} description={d.seoDescription['zh-tw']}>
+  <StructuredData breadcrumbs={[{ name: '產品', path: '/zh-tw/products/' }, { name: d.name, path }]} />
+
+  <div class="container section--tight">
+    <Breadcrumb locale={locale} items={[{ label: '產品', path: '/zh-tw/products/' }, { label: d.name, path }]} />
+  </div>
+
+  <section class="section section--tight">
+    <div class="container product-hero">
+      <div class="product-hero__media">
+        <ProductGlyph product={d.entrySlug as 'axm-400' | 'vision-x2' | 'flexcell-m'} />
+      </div>
+      <div class="product-hero__copy">
+        <Badge variant="demo">概念展示資料</Badge>
+        <h1 class="product-hero__name mono">{d.name}</h1>
+        <p class="product-hero__positioning">{d.positioning['zh-tw']}</p>
+        <p class="product-hero__desc measure">{d.shortDescription['zh-tw']}</p>
+        <div class="product-hero__actions">
+          <Button href="/zh-tw/contact/" trackEvent="cta_click">提交專案需求</Button>
+          {d.datasheetPath && (
+            <Button href={d.datasheetPath} variant="secondary" trackEvent="spec_download">
+              下載規格 PDF（示範檔案）
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--tight section--alt">
+    <div class="container container--narrow">
+      <SectionHeading eyebrow="產品特性" title="特性" />
+      <FeatureList items={d.features['zh-tw']} />
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="container container--narrow">
+      <SectionHeading eyebrow="適用情境" title="適合的應用場景" />
+      <FeatureList items={d.useCases['zh-tw']} />
+    </div>
+  </section>
+
+  <section class="section section--tight section--alt">
+    <div class="container container--narrow">
+      <SectionHeading eyebrow="技術規格" title="規格表" />
+      <SpecificationTable
+        caption={`${d.name} 技術規格`}
+        rows={d.specs.map((s) => ({ label: s.label['zh-tw'], value: s.value['zh-tw'] }))}
+      />
+      <p class="demo-disclaimer">{demoDataNoticeZh}</p>
+    </div>
+  </section>
+
+  {d.options && (
+    <section class="section section--tight">
+      <div class="container container--narrow">
+        <SectionHeading eyebrow="可選配項目" title="選配" />
+        <FeatureList items={d.options['zh-tw']} />
+      </div>
+    </section>
+  )}
+
+  {relatedSolutions.length > 0 && (
+    <section class="section section--tight section--alt">
+      <div class="container">
+        <SectionHeading eyebrow="相關解決方案" title="可搭配的解決方案" />
+        <div class="grid-auto">
+          {relatedSolutions.map((s) => (
+            <SolutionCard
+              locale={locale}
+              slug={s.data.entrySlug}
+              name={s.data.name['zh-tw']}
+              description={s.data.shortDescription['zh-tw']}
+              hasDetailPage={s.data.hasDetailPage}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <div class="container">
+    <CTABanner locale={locale} title={`想進一步了解 ${d.name}？`} description="提交您的應用需求，工程團隊會協助評估配置。" />
+  </div>
+</BaseLayout>
+
+<style>
+  .product-hero {
+    display: grid;
+    gap: var(--space-xl);
+  }
+  .product-hero__name {
+    font-size: var(--fs-2xl);
+    margin: var(--space-sm) 0 var(--space-2xs);
+  }
+  .product-hero__positioning {
+    font-weight: 600;
+    color: var(--color-ink-soft);
+    margin: 0 0 var(--space-sm);
+  }
+  .product-hero__desc {
+    color: var(--color-muted);
+    margin: 0 0 var(--space-lg);
+  }
+  .product-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+  .container--narrow {
+    max-width: 860px;
+  }
+  @media (min-width: 860px) {
+    .product-hero {
+      grid-template-columns: 1fr 1.1fr;
+      align-items: center;
+    }
+  }
+</style>

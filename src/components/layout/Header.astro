@@ -1,0 +1,277 @@
+---
+import type { Locale } from '../../config/site';
+import { getDictionary } from '../../utils/i18n';
+import { navItems } from '../../config/nav';
+import Logo from '../ui/Logo.astro';
+import LanguageSwitcher from '../navigation/LanguageSwitcher.astro';
+import Button from '../ui/Button.astro';
+
+export interface Props {
+  locale: Locale;
+  path: string;
+  otherLocalePath?: string;
+}
+
+const { locale, path, otherLocalePath } = Astro.props;
+const dict = getDictionary(locale);
+
+function isActive(itemPath: string) {
+  return path === itemPath || path.startsWith(itemPath);
+}
+---
+
+<header class="site-header" data-header>
+  <div class="container site-header__row">
+    <Logo locale={locale} />
+
+    <nav class="desktop-nav" aria-label={locale === 'zh-tw' ? '主要導覽' : 'Main navigation'}>
+      <ul>
+        {navItems.map((item) => (
+          <li>
+            <a
+              href={item.path(locale)}
+              aria-current={isActive(item.path(locale)) ? 'page' : undefined}
+              class:list={['desktop-nav__link', { 'is-active': isActive(item.path(locale)) }]}
+            >
+              {dict.nav[item.labelKey]}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="site-header__actions">
+      <LanguageSwitcher locale={locale} path={path} otherLocalePath={otherLocalePath} />
+      <Button href={`/${locale}/contact/`} size="md" class="site-header__cta" trackEvent="cta_click">
+        {dict.nav.ctaPrimary}
+      </Button>
+      <button
+        type="button"
+        class="mobile-nav-toggle"
+        data-mobile-nav-toggle
+        aria-expanded="false"
+        aria-controls="mobile-nav"
+        aria-label={dict.nav.menuOpen}
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="mobile-nav" class="mobile-nav" data-mobile-nav hidden>
+    <div class="mobile-nav__panel">
+      <div class="mobile-nav__top">
+        <Logo locale={locale} />
+        <button
+          type="button"
+          class="mobile-nav-toggle"
+          data-mobile-nav-close
+          aria-label={dict.nav.menuClose}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <ul class="mobile-nav__list">
+        {navItems.map((item) => (
+          <li>
+            <a href={item.path(locale)} class="mobile-nav__link" aria-current={isActive(item.path(locale)) ? 'page' : undefined}>
+              {dict.nav[item.labelKey]}
+            </a>
+          </li>
+        ))}
+      </ul>
+      <div class="mobile-nav__footer">
+        <LanguageSwitcher locale={locale} path={path} otherLocalePath={otherLocalePath} />
+        <Button href={`/${locale}/contact/`} size="lg" class="mobile-nav__cta" trackEvent="cta_click">
+          {dict.nav.ctaPrimary}
+        </Button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-nav);
+    background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .site-header__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    padding-block: var(--space-sm);
+  }
+  .desktop-nav ul {
+    display: flex;
+    gap: var(--space-lg);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .desktop-nav {
+    display: none;
+  }
+  .desktop-nav__link {
+    color: var(--color-ink-soft);
+    text-decoration: none;
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    padding-block: var(--space-3xs);
+    border-bottom: 2px solid transparent;
+  }
+  .desktop-nav__link:hover,
+  .desktop-nav__link.is-active {
+    color: var(--color-ink);
+    border-bottom-color: var(--color-accent);
+  }
+  .site-header__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+  }
+  .site-header__cta {
+    display: none;
+  }
+  .mobile-nav-toggle {
+    background: none;
+    border: none;
+    color: var(--color-ink);
+    display: inline-flex;
+    padding: var(--space-2xs);
+    border-radius: var(--radius-sm);
+  }
+  .mobile-nav-toggle:hover {
+    background: var(--color-surface-alt);
+  }
+
+  .mobile-nav {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-mobile-nav);
+    background: rgba(18, 24, 31, 0.4);
+  }
+  .mobile-nav[hidden] {
+    display: none;
+  }
+  .mobile-nav__panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: min(88vw, 360px);
+    background: var(--color-surface);
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-md);
+    box-shadow: var(--shadow-lg);
+  }
+  .mobile-nav__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+  }
+  .mobile-nav__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+  }
+  .mobile-nav__link {
+    display: block;
+    padding: var(--space-sm) var(--space-2xs);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--color-ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .mobile-nav__footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    padding-top: var(--space-lg);
+  }
+  .mobile-nav__cta {
+    width: 100%;
+  }
+
+  @media (min-width: 960px) {
+    .desktop-nav {
+      display: block;
+    }
+    .site-header__cta {
+      display: inline-flex;
+    }
+    .mobile-nav-toggle {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  function initMobileNav() {
+    const toggle = document.querySelector('[data-mobile-nav-toggle]');
+    const closeBtn = document.querySelector('[data-mobile-nav-close]');
+    const panel = document.querySelector('[data-mobile-nav]') as HTMLElement | null;
+    if (!toggle || !panel) return;
+
+    let lastFocused: HTMLElement | null = null;
+
+    function open() {
+      lastFocused = document.activeElement as HTMLElement;
+      panel!.hidden = false;
+      toggle!.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+      const firstLink = panel!.querySelector('a, button') as HTMLElement | null;
+      firstLink?.focus();
+    }
+
+    function close() {
+      panel!.hidden = true;
+      toggle!.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+      lastFocused?.focus();
+    }
+
+    toggle.addEventListener('click', open);
+    closeBtn?.addEventListener('click', close);
+    panel.addEventListener('click', (e) => {
+      if (e.target === panel) close();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !panel!.hidden) close();
+    });
+
+    // Basic focus trap
+    panel.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab') return;
+      const focusables = panel!.querySelectorAll<HTMLElement>('a, button');
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (!first || !last) return;
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
+  }
+
+  initMobileNav();
+</script>

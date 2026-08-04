@@ -1,0 +1,49 @@
+---
+export interface Props {
+  industry: 'semiconductor-electronics' | 'automotive-components' | 'metal-machining' | 'packaging-logistics';
+  class?: string;
+}
+const { industry, class: className = '' } = Astro.props;
+---
+
+<svg class:list={['industry-icon', className]} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  {industry === 'semiconductor-electronics' && (
+    <>
+      <rect x="14" y="14" width="20" height="20" rx="2" stroke="currentColor" stroke-width="1.6"/>
+      <rect x="20" y="20" width="8" height="8" fill="currentColor"/>
+      <path d="M14 20H6M14 28H6M34 20h8M34 28h8M20 14V6M28 14V6M20 42v-8M28 42v-8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </>
+  )}
+  {industry === 'automotive-components' && (
+    <>
+      <circle cx="16" cy="34" r="5" stroke="currentColor" stroke-width="1.6"/>
+      <circle cx="34" cy="34" r="5" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M11 30l4-12h14l6 8h4l3 4" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M17 18v-6h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </>
+  )}
+  {industry === 'metal-machining' && (
+    <>
+      <path d="M8 40l10-24 4 2-10 24z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M18 16l16 16" stroke="currentColor" stroke-width="1.6"/>
+      <circle cx="34" cy="32" r="6" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M34 26v-6M34 44v-6M28 32h-6M46 32h-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </>
+  )}
+  {industry === 'packaging-logistics' && (
+    <>
+      <path d="M24 6l16 8-16 8-16-8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M8 14v20l16 8 16-8V14" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M24 22v20" stroke="currentColor" stroke-width="1.6"/>
+    </>
+  )}
+</svg>
+
+<style>
+  .industry-icon {
+    width: 40px;
+    height: 40px;
+    color: var(--color-accent);
+    flex-shrink: 0;
+  }
+</style>

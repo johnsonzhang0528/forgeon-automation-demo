@@ -1,0 +1,50 @@
+---
+import { siteConfig, type Locale } from '../../config/site';
+
+export interface Props {
+  locale: Locale;
+  variant?: 'default' | 'invert';
+}
+
+const { locale, variant = 'default' } = Astro.props;
+const stroke = variant === 'invert' ? 'var(--color-invert-text)' : 'var(--color-ink)';
+const accent = 'var(--color-accent)';
+---
+
+<a href={`/${locale}/`} class="logo" aria-label={`${siteConfig.brandNameZh} ${siteConfig.brandNameEn}`}>
+  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+    <rect x="1" y="1" width="30" height="30" rx="4" stroke={stroke} stroke-width="1.5"/>
+    <path d="M9 22V10h12M9 16h9" stroke={accent} stroke-width="2" stroke-linecap="square"/>
+  </svg>
+  <span class="logo__text">
+    <span class="logo__zh">{siteConfig.brandNameZh}</span>
+    <span class="logo__en">{siteConfig.brandNameEn}</span>
+  </span>
+</a>
+
+<style define:vars={{ textColor: stroke }}>
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    text-decoration: none;
+    color: var(--textColor);
+  }
+  .logo__text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+  }
+  .logo__zh {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-md);
+    color: var(--textColor);
+  }
+  .logo__en {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    color: var(--color-muted);
+  }
+</style>

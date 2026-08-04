@@ -1,0 +1,73 @@
+/* Utility classes — used sparingly, only for genuinely repeated primitives */
+
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--container-padding);
+}
+
+.container-wide {
+  width: 100%;
+  max-width: var(--container-wide);
+  margin-inline: auto;
+  padding-inline: var(--container-padding);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.section {
+  padding-block: var(--space-3xl);
+}
+
+.section--tight {
+  padding-block: var(--space-2xl);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.measure {
+  max-width: var(--measure);
+}
+
+.text-muted {
+  color: var(--color-muted);
+}
+
+.grid-auto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: var(--space-lg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity var(--duration-standard) var(--ease-standard),
+      transform var(--duration-standard) var(--ease-standard);
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

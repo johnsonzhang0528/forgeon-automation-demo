@@ -1,0 +1,98 @@
+---
+/**
+ * JSON-LD structured data. Only renders schemas whose facts are actually
+ * true on this page (spec §21: "只有內容真正符合時才輸出 Schema").
+ */
+import { siteConfig } from '../../config/site';
+import { absoluteUrl } from '../../utils/seo';
+
+export interface BreadcrumbItem {
+  name: string;
+  path: string;
+}
+
+export interface Props {
+  organization?: boolean;
+  website?: boolean;
+  breadcrumbs?: BreadcrumbItem[];
+  faq?: { question: string; answer: string }[];
+  article?: {
+    headline: string;
+    description: string;
+    datePublished: string;
+    path: string;
+  };
+}
+
+const { organization = false, website = false, breadcrumbs, faq, article } = Astro.props;
+
+const schemas: Record<string, unknown>[] = [];
+
+if (organization) {
+  schemas.push({
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: siteConfig.brandNameEn,
+    alternateName: siteConfig.brandNameZh,
+    url: siteConfig.siteUrl,
+    description:
+      'Fictional portfolio concept company for demonstration purposes only. Not a real business.',
+  });
+}
+
+if (website) {
+  schemas.push({
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: `${siteConfig.brandNameZh} / ${siteConfig.brandNameEn}`,
+    url: siteConfig.siteUrl,
+  });
+}
+
+if (breadcrumbs && breadcrumbs.length > 0) {
+  schemas.push({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: breadcrumbs.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: item.name,
+      item: absoluteUrl(item.path),
+    })),
+  });
+}
+
+if (faq && faq.length > 0) {
+  schemas.push({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faq.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer,
+      },
+    })),
+  });
+}
+
+if (article) {
+  schemas.push({
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: article.headline,
+    description: article.description,
+    datePublished: article.datePublished,
+    url: absoluteUrl(article.path),
+    author: {
+      '@type': 'Organization',
+      name: siteConfig.brandNameEn,
+    },
+  });
+}
+---
+
+{schemas.map((schema) => (
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+))}

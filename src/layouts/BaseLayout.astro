@@ -1,0 +1,81 @@
+---
+import '../styles/global.css';
+import '../styles/utilities.css';
+import type { Locale } from '../config/site';
+import { getHtmlLang } from '../utils/i18n';
+import Header from '../components/layout/Header.astro';
+import Footer from '../components/layout/Footer.astro';
+import AnalyticsBridge from '../components/layout/AnalyticsBridge.astro';
+import SEOHead from '../components/seo/SEOHead.astro';
+import StructuredData from '../components/seo/StructuredData.astro';
+import { siteConfig } from '../config/site';
+
+export interface Props {
+  locale: Locale;
+  path: string;
+  title: string;
+  description: string;
+  otherLocalePath?: string;
+  ogImage?: string;
+  noindex?: boolean;
+  bodyClass?: string;
+}
+
+const {
+  locale,
+  path,
+  title,
+  description,
+  otherLocalePath,
+  ogImage,
+  noindex,
+  bodyClass = '',
+} = Astro.props;
+
+const skipLabel = locale === 'zh-tw' ? '跳到主要內容' : 'Skip to content';
+const gtmId = siteConfig.gtmId;
+---
+
+<!doctype html>
+<html lang={getHtmlLang(locale)}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg" />
+    <SEOHead
+      locale={locale}
+      path={path}
+      title={title}
+      description={description}
+      otherLocalePath={otherLocalePath}
+      ogImage={ogImage}
+      noindex={noindex}
+    />
+    <StructuredData organization website />
+
+    {gtmId && (
+      <script is:inline define:vars={{ gtmId }}>
+        (function (w, d, s, l, i) {
+          w[l] = w[l] || [];
+          w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+          var f = d.getElementsByTagName(s)[0],
+            j = d.createElement(s),
+            dl = l != 'dataLayer' ? '&l=' + l : '';
+          j.async = true;
+          j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+          f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', gtmId);
+      </script>
+    )}
+  </head>
+  <body class={bodyClass}>
+    <a href="#main-content" class="skip-link">{skipLabel}</a>
+    <Header locale={locale} path={path} otherLocalePath={otherLocalePath} />
+    <main id="main-content" tabindex="-1">
+      <slot />
+    </main>
+    <Footer locale={locale} />
+    <AnalyticsBridge />
+  </body>
+</html>

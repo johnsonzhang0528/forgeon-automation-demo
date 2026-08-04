@@ -1,0 +1,37 @@
+---
+/**
+ * Shared card shell — no shadow until hover, hairline border, no
+ * cards-inside-cards. Consumed by SolutionCard / ProductCard / IndustryCard.
+ */
+export interface Props {
+  href: string;
+  class?: string;
+}
+const { href, class: className = '' } = Astro.props;
+---
+
+<a href={href} class:list={['card', className]}>
+  <slot />
+</a>
+
+<style>
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color var(--duration-fast) var(--ease-standard),
+      box-shadow var(--duration-fast) var(--ease-standard),
+      transform var(--duration-fast) var(--ease-standard);
+  }
+  .card:hover {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+</style>

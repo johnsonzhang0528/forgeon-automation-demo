@@ -1,0 +1,48 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHeading from '../../../components/ui/SectionHeading.astro';
+import SolutionCard from '../../../components/ui/SolutionCard.astro';
+import Breadcrumb from '../../../components/navigation/Breadcrumb.astro';
+import CTABanner from '../../../components/sections/CTABanner.astro';
+import { getSortedSolutions } from '../../../utils/content';
+
+const locale = 'en' as const;
+const solutions = await getSortedSolutions();
+---
+
+<BaseLayout
+  locale={locale}
+  path="/en/solutions/"
+  otherLocalePath="/zh-tw/solutions/"
+  title="Solutions Overview | FORGEON AUTOMATION"
+  description="FORGEON AUTOMATION offers six solution areas, including precision positioning, vision inspection, automated assembly, line upgrades, and custom integration, configured around your process challenge."
+>
+  <div class="container section--tight">
+    <Breadcrumb locale={locale} items={[{ label: 'Solutions', path: '/en/solutions/' }]} />
+  </div>
+
+  <section class="section section--tight">
+    <div class="container">
+      <SectionHeading
+        eyebrow="Solutions Overview"
+        title="Automation Configured Around Your Process Challenge"
+        description="From precision positioning and vision inspection to full-plant integration, every solution starts from an actual process problem and lists applicable industries and compatible products."
+      />
+      <div class="grid-auto">
+        {solutions.map((s) => (
+          <SolutionCard
+            locale={locale}
+            slug={s.data.entrySlug}
+            name={s.data.name.en}
+            description={s.data.shortDescription.en}
+            hasDetailPage={s.data.hasDetailPage}
+          />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <CTABanner locale={locale} title="Not sure which solution fits your line?" description="Submit your project background and we'll help evaluate the right combination." />
+  </div>
+</BaseLayout>

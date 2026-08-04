@@ -1,0 +1,99 @@
+/**
+ * Design tokens for FORGEON AUTOMATION demo site.
+ * See DESIGN.md for the rationale behind every color/type/spacing decision.
+ */
+:root {
+  /* ---- Color: ink / surface ---- */
+  --color-ink: #12181f;
+  --color-ink-soft: #2a323c;
+  --color-surface: #f7f5f1;
+  --color-surface-alt: #efece5;
+  --color-card: #ffffff;
+  --color-border: #e2e0da;
+  --color-border-strong: #c9c6bd;
+  --color-muted: #5b6470;
+  --color-muted-soft: #838c96;
+
+  /* ---- Color: accent ---- */
+  --color-accent: #c1622b;
+  --color-accent-dark: #9c4d21;
+  --color-accent-light: #e79a68;
+  --color-accent-contrast: #fff8f2;
+
+  /* ---- Color: semantic ---- */
+  --color-success: #2f6b3f;
+  --color-success-bg: #eaf3ec;
+  --color-error: #b3372c;
+  --color-error-bg: #fbebe9;
+  --color-focus: #1d6fbf;
+
+  /* ---- Color: inverted sections (footer, stat bands) ---- */
+  --color-invert-bg: #12181f;
+  --color-invert-text: #f7f5f1;
+  --color-invert-muted: #9aa3ad;
+  --color-invert-border: #2a323c;
+
+  /* ---- Typography ---- */
+  --font-display: 'Space Grotesk', 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  --font-body: 'IBM Plex Sans', 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  --fs-xs: 0.8125rem;
+  --fs-sm: 0.9375rem;
+  --fs-base: 1rem;
+  --fs-md: 1.125rem;
+  --fs-lg: 1.375rem;
+  --fs-xl: 1.75rem;
+  --fs-2xl: 2.25rem;
+  --fs-3xl: 3rem;
+  --fs-4xl: clamp(2.5rem, 5vw, 4rem);
+
+  --lh-tight: 1.2;
+  --lh-normal: 1.55;
+  --lh-relaxed: 1.75;
+
+  --measure: 62ch;
+
+  /* ---- Spacing scale ---- */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2rem;
+  --space-xl: 3rem;
+  --space-2xl: clamp(3rem, 6vw, 5rem);
+  --space-3xl: clamp(4rem, 8vw, 7rem);
+
+  /* ---- Radius ---- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* ---- Shadow (used sparingly — see DESIGN.md) ---- */
+  --shadow-sm: 0 1px 2px rgba(18, 24, 31, 0.06);
+  --shadow-md: 0 4px 16px rgba(18, 24, 31, 0.10);
+  --shadow-lg: 0 12px 32px rgba(18, 24, 31, 0.14);
+
+  /* ---- Layout ---- */
+  --container-max: 1280px;
+  --container-wide: 1440px;
+  --container-padding: clamp(1.25rem, 4vw, 2.5rem);
+
+  /* ---- Motion ---- */
+  --ease-standard: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-standard: 220ms;
+
+  /* ---- Z-index ---- */
+  --z-nav: 100;
+  --z-mobile-nav: 200;
+  --z-skip-link: 300;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-standard: 0ms;
+  }
+}

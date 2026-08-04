@@ -1,0 +1,318 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeading from '../../components/ui/SectionHeading.astro';
+import Button from '../../components/ui/Button.astro';
+import HeroIllustration from '../../components/ui/HeroIllustration.astro';
+import SolutionCard from '../../components/ui/SolutionCard.astro';
+import ProductCard from '../../components/ui/ProductCard.astro';
+import IndustryCard from '../../components/ui/IndustryCard.astro';
+import ProcessTimeline from '../../components/ui/ProcessTimeline.astro';
+import CTABanner from '../../components/sections/CTABanner.astro';
+import { getSortedSolutions, getSortedProducts, getSortedIndustries } from '../../utils/content';
+
+const locale = 'zh-tw' as const;
+
+const solutions = (await getSortedSolutions()).slice(0, 3);
+const products = await getSortedProducts();
+const industries = await getSortedIndustries();
+
+const processSteps = [
+  { title: '需求釐清', description: '了解製程背景、現有設備介面與導入目標，確認初步可行性。' },
+  { title: '方案評估', description: '依工件、節拍與空間條件，提出運動、視覺或整合方案的技術評估。' },
+  { title: '設計與報價', description: '完成機構與系統設計，提供正式技術方案與報價。' },
+  { title: '製作與測試', description: '模組製作、系統整合與內部功能測試，確認符合設計條件。' },
+  { title: '導入與驗收', description: '現場安裝、調整與驗收，並提供操作與維護說明。' },
+];
+
+const whyReasons = [
+  { title: '工程導向流程', desc: '每個方案都從實際製程問題出發，先確認可行性再進入設計，不做無根據的承諾。' },
+  { title: '模組化產品線', desc: '運動、視覺與組裝模組可單獨導入或組合使用，依專案規模彈性配置。' },
+  { title: '結構化技術文件', desc: '規格、選配與導入條件均以文件化方式呈現，方便工程團隊內部評估與比較。' },
+  { title: '海外專案溝通經驗', desc: '提供中英文技術對應窗口，降低跨國專案在規格確認上的溝通落差。' },
+];
+---
+
+<BaseLayout
+  locale={locale}
+  path="/zh-tw/"
+  otherLocalePath="/en/"
+  title="鋒岳自動化｜精密運動與視覺整合的工業自動化方案"
+  description="鋒岳自動化提供精密線性模組、視覺定位檢測與自動化組裝整合方案，協助半導體、汽車零組件、金屬加工與包裝物流產業處理定位、檢測與組裝挑戰。"
+>
+  <!-- Hero -->
+  <section class="hero section">
+    <div class="container hero__grid">
+      <div class="hero__copy">
+        <p class="hero__eyebrow">工業自動化 · 精密運動與視覺整合</p>
+        <h1 class="hero__title">精準驅動，更有效率的生產流程。</h1>
+        <p class="hero__desc measure">
+          鋒岳自動化整合精密線性模組、視覺定位檢測與組裝工作站，協助工廠處理定位、
+          檢測與重複組裝流程中的精度與效率挑戰。從單一站點升級到完整產線整合，
+          依製程條件提出可評估、可導入的自動化方案。
+        </p>
+        <div class="hero__actions">
+          <Button href="/zh-tw/contact/" size="lg" trackEvent="cta_click">提交專案需求</Button>
+          <Button href="/zh-tw/contact/" variant="secondary" size="lg" trackEvent="cta_click">索取技術建議</Button>
+        </div>
+        <p class="hero__note">本網站為作品集概念案例，公司與產品為虛構內容。</p>
+      </div>
+      <div class="hero__visual">
+        <HeroIllustration />
+      </div>
+    </div>
+  </section>
+
+  <!-- Capability overview -->
+  <section class="section section--tight">
+    <div class="container">
+      <SectionHeading
+        eyebrow="核心能力"
+        title="從精密運動到系統整合"
+        description="鋒岳自動化的能力涵蓋運動模組設計、視覺定位檢測與整廠整合工程，讓客戶可以依專案規模選擇單一模組或完整方案。"
+      />
+      <div class="capability-grid">
+        <div class="capability-item">
+          <span class="capability-item__index mono">01</span>
+          <h3>精密線性運動模組</h3>
+          <p>高剛性結構搭配伺服傳動，提供加工、檢測與組裝站點所需的重複定位精度。</p>
+        </div>
+        <div class="capability-item">
+          <span class="capability-item__index mono">02</span>
+          <h3>視覺定位與檢測</h3>
+          <p>工業相機與影像演算法處理工件定位、瑕疵檢測與條碼特徵辨識。</p>
+        </div>
+        <div class="capability-item">
+          <span class="capability-item__index mono">03</span>
+          <h3>自動化組裝整合</h3>
+          <p>模組化組裝工作站搭配機械手臂與客製治具，適合中小批量多款式生產。</p>
+        </div>
+        <div class="capability-item">
+          <span class="capability-item__index mono">04</span>
+          <h3>既有產線升級</h3>
+          <p>針對瓶頸站點導入局部自動化，不需整線重建即可改善產能限制。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Solutions -->
+  <section class="section section--tight">
+    <div class="container">
+      <SectionHeading
+        eyebrow="解決方案"
+        title="依製程挑戰配置的自動化方案"
+        description="從精密定位到視覺檢測，每項方案都從實際製程問題出發。"
+      />
+      <div class="grid-auto">
+        {solutions.map((s) => (
+          <SolutionCard
+            locale={locale}
+            slug={s.data.entrySlug}
+            name={s.data.name['zh-tw']}
+            description={s.data.shortDescription['zh-tw']}
+            hasDetailPage={s.data.hasDetailPage}
+          />
+        ))}
+      </div>
+      <div class="section-cta">
+        <Button href="/zh-tw/solutions/" variant="secondary">查看解決方案</Button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Products -->
+  <section class="section section--tight section--alt">
+    <div class="container">
+      <SectionHeading
+        eyebrow="代表產品"
+        title="模組化產品線"
+        description="三款核心產品可獨立導入，也可組合為完整自動化站點。"
+      />
+      <div class="grid-auto">
+        {products.map((p) => (
+          <ProductCard
+            locale={locale}
+            slug={p.data.entrySlug as 'axm-400' | 'vision-x2' | 'flexcell-m'}
+            name={p.data.name}
+            positioning={p.data.positioning['zh-tw']}
+            description={p.data.shortDescription['zh-tw']}
+          />
+        ))}
+      </div>
+      <div class="section-cta">
+        <Button href="/zh-tw/products/" variant="secondary">查看產品規格</Button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Industries -->
+  <section class="section section--tight">
+    <div class="container">
+      <SectionHeading
+        eyebrow="應用產業"
+        title="服務的產業範圍"
+        description="從半導體到包裝物流，依產業特性配置適合的自動化方案。"
+      />
+      <div class="grid-auto">
+        {industries.map((ind) => (
+          <IndustryCard
+            locale={locale}
+            slug={ind.data.entrySlug as any}
+            name={ind.data.name['zh-tw']}
+            description={ind.data.shortDescription['zh-tw']}
+            hasDetailPage={ind.data.hasDetailPage}
+          />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Process -->
+  <section class="section section--tight section--alt">
+    <div class="container container--narrow">
+      <SectionHeading
+        eyebrow="專案導入流程"
+        title="從需求釐清到現場驗收"
+        description="五個階段的標準流程，確保每個專案都經過完整的技術評估。"
+      />
+      <ProcessTimeline steps={processSteps} />
+    </div>
+  </section>
+
+  <!-- Why us -->
+  <section class="section section--tight">
+    <div class="container">
+      <SectionHeading eyebrow="合作理由" title="為什麼與鋒岳自動化合作" align="center" />
+      <div class="grid-auto">
+        {whyReasons.map((r) => (
+          <div class="why-item">
+            <h3>{r.title}</h3>
+            <p>{r.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <div class="container">
+    <CTABanner
+      locale={locale}
+      title="準備好討論您的自動化需求了嗎？"
+      description="提交專案背景與需求，我們的技術團隊將協助評估可行的解決方案。"
+    />
+  </div>
+</BaseLayout>
+
+<style>
+  .hero {
+    background:
+      radial-gradient(ellipse at top right, color-mix(in srgb, var(--color-accent) 6%, transparent), transparent 60%),
+      var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding-top: var(--space-2xl);
+  }
+  .hero__grid {
+    display: grid;
+    gap: var(--space-2xl);
+    align-items: center;
+  }
+  .hero__eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    font-weight: 600;
+    margin: 0 0 var(--space-sm);
+  }
+  .hero__title {
+    margin: 0 0 var(--space-md);
+  }
+  .hero__desc {
+    color: var(--color-muted);
+    font-size: var(--fs-md);
+    margin: 0 0 var(--space-lg);
+  }
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+  }
+  .hero__note {
+    font-size: var(--fs-xs);
+    color: var(--color-muted-soft);
+    margin: 0;
+  }
+  .hero__visual {
+    display: flex;
+    justify-content: center;
+  }
+
+  .section--alt {
+    background: var(--color-surface-alt);
+  }
+
+  .container--narrow {
+    max-width: 860px;
+  }
+
+  .capability-grid {
+    display: grid;
+    gap: var(--space-lg);
+    grid-template-columns: 1fr;
+  }
+  .capability-item {
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--color-border);
+  }
+  .capability-item__index {
+    color: var(--color-accent);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+  }
+  .capability-item h3 {
+    margin: var(--space-2xs) 0;
+    font-size: var(--fs-md);
+  }
+  .capability-item p {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: var(--fs-sm);
+  }
+
+  .section-cta {
+    margin-top: var(--space-xl);
+    display: flex;
+    justify-content: center;
+  }
+
+  .why-item {
+    text-align: center;
+    padding: var(--space-lg);
+  }
+  .why-item h3 {
+    font-size: var(--fs-md);
+    margin: 0 0 var(--space-2xs);
+  }
+  .why-item p {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: var(--fs-sm);
+  }
+
+  @media (min-width: 720px) {
+    .capability-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (min-width: 960px) {
+    .hero__grid {
+      grid-template-columns: 1.1fr 0.9fr;
+    }
+    .capability-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+</style>

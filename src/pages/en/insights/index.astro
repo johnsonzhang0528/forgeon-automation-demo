@@ -1,0 +1,75 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHeading from '../../../components/ui/SectionHeading.astro';
+import Breadcrumb from '../../../components/navigation/Breadcrumb.astro';
+import Card from '../../../components/ui/Card.astro';
+import { getSortedInsights } from '../../../utils/content';
+import { getDictionary } from '../../../utils/i18n';
+
+const locale = 'en' as const;
+const dict = getDictionary(locale);
+const insights = await getSortedInsights(locale);
+
+function formatDate(d: Date) {
+  return new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(d);
+}
+---
+
+<BaseLayout
+  locale={locale}
+  path="/en/insights/"
+  otherLocalePath="/zh-tw/insights/"
+  title="Insights | FORGEON AUTOMATION"
+  description="Technical resource articles from FORGEON AUTOMATION covering automation implementation preparation and how to evaluate line upgrade versus rebuild decisions."
+>
+  <div class="container section--tight">
+    <Breadcrumb locale={locale} items={[{ label: 'Insights', path: '/en/insights/' }]} />
+  </div>
+
+  <section class="section section--tight">
+    <div class="container">
+      <SectionHeading
+        eyebrow="Insights"
+        title="Practical Reference for Automation Projects"
+        description="Practical technical information to help evaluate preparation and decisions for automation projects."
+      />
+      <div class="insights-list">
+        {insights.map((post) => (
+          <Card href={`/en/insights/${post.data.entrySlug}/`} class="insight-card">
+            <p class="insight-card__date mono">{formatDate(post.data.publishDate)}</p>
+            <h2 class="insight-card__title">{post.data.title}</h2>
+            <p class="insight-card__summary measure">{post.data.summary}</p>
+            <span class="insight-card__link">{dict.misc.readMore}</span>
+          </Card>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .insights-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+  .insight-card__date {
+    color: var(--color-muted);
+    font-size: var(--fs-xs);
+    margin: 0;
+  }
+  .insight-card__title {
+    font-size: var(--fs-xl);
+    margin: var(--space-2xs) 0;
+  }
+  .insight-card__summary {
+    color: var(--color-muted);
+    margin: 0;
+  }
+  .insight-card__link {
+    color: var(--color-accent);
+    font-weight: 600;
+    font-size: var(--fs-sm);
+    margin-top: var(--space-2xs);
+  }
+</style>

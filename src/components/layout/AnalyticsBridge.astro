@@ -1,0 +1,26 @@
+---
+// Wires up window.dataLayer + listens for forgeon:analytics custom events
+// dispatched by interactive islands (LanguageSwitcher, forms, downloads).
+// No-ops safely if dataLayer is absent (spec §22).
+---
+
+<script>
+  import { trackEvent } from '../../utils/analytics';
+
+  window.addEventListener('forgeon:analytics', (e) => {
+    const { event, payload } = (e as CustomEvent).detail || {};
+    if (event) trackEvent(event, payload);
+  });
+
+  // Delegate cta_click / spec_download / contact_click for any element with data-track
+  document.addEventListener('click', (e) => {
+    const el = (e.target as HTMLElement)?.closest('[data-track]');
+    if (!el) return;
+    const eventName = el.getAttribute('data-track');
+    if (!eventName) return;
+    trackEvent(eventName as import('../../utils/analytics').AnalyticsEvent, {
+      label: el.textContent?.trim().slice(0, 80),
+      href: el.getAttribute('href') || undefined,
+    });
+  });
+</script>

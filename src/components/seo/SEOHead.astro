@@ -1,0 +1,51 @@
+---
+import { siteConfig, type Locale } from '../../config/site';
+import { absoluteUrl, buildHreflangs } from '../../utils/seo';
+
+export interface Props {
+  locale: Locale;
+  path: string;
+  title: string;
+  description: string;
+  otherLocalePath?: string;
+  ogImage?: string;
+  noindex?: boolean;
+}
+
+const {
+  locale,
+  path,
+  title,
+  description,
+  otherLocalePath,
+  ogImage = '/images/og-default.svg',
+  noindex = false,
+} = Astro.props;
+
+const canonical = absoluteUrl(path);
+const hreflangs = buildHreflangs(locale, path, otherLocalePath);
+const ogLocale = locale === 'zh-tw' ? 'zh_TW' : 'en_US';
+const fullOgImage = ogImage.startsWith('http') ? ogImage : absoluteUrl(ogImage);
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+{noindex && <meta name="robots" content="noindex,nofollow" />}
+
+{hreflangs.map((h) => (
+  <link rel="alternate" hreflang={h.hreflang} href={h.href} />
+))}
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={`${siteConfig.brandNameZh} / ${siteConfig.brandNameEn}`} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:locale" content={ogLocale} />
+<meta property="og:image" content={fullOgImage} />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={fullOgImage} />

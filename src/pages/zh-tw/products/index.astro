@@ -1,0 +1,48 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHeading from '../../../components/ui/SectionHeading.astro';
+import ProductCard from '../../../components/ui/ProductCard.astro';
+import Breadcrumb from '../../../components/navigation/Breadcrumb.astro';
+import CTABanner from '../../../components/sections/CTABanner.astro';
+import { getSortedProducts } from '../../../utils/content';
+
+const locale = 'zh-tw' as const;
+const products = await getSortedProducts();
+---
+
+<BaseLayout
+  locale={locale}
+  path="/zh-tw/products/"
+  otherLocalePath="/en/products/"
+  title="產品總覽｜鋒岳自動化"
+  description="鋒岳自動化產品線包含 AXM-400 精密線性模組、VISION-X2 視覺定位模組與 FLEXCELL-M 模組化組裝工作站，規格為概念展示資料。"
+>
+  <div class="container section--tight">
+    <Breadcrumb locale={locale} items={[{ label: '產品', path: '/zh-tw/products/' }]} />
+  </div>
+
+  <section class="section section--tight">
+    <div class="container">
+      <SectionHeading
+        eyebrow="產品總覽"
+        title="模組化產品線"
+        description="三款核心產品可獨立導入，也可組合為完整自動化站點。所有規格為概念展示資料，實際配置需經工程確認。"
+      />
+      <div class="grid-auto">
+        {products.map((p) => (
+          <ProductCard
+            locale={locale}
+            slug={p.data.entrySlug as 'axm-400' | 'vision-x2' | 'flexcell-m'}
+            name={p.data.name}
+            positioning={p.data.positioning['zh-tw']}
+            description={p.data.shortDescription['zh-tw']}
+          />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <CTABanner locale={locale} title="需要協助挑選合適的產品組合？" description="提供您的工件與製程資訊，我們會協助評估適合的產品配置。" />
+  </div>
+</BaseLayout>

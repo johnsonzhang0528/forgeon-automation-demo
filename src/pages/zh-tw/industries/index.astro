@@ -1,0 +1,48 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHeading from '../../../components/ui/SectionHeading.astro';
+import IndustryCard from '../../../components/ui/IndustryCard.astro';
+import Breadcrumb from '../../../components/navigation/Breadcrumb.astro';
+import CTABanner from '../../../components/sections/CTABanner.astro';
+import { getSortedIndustries } from '../../../utils/content';
+
+const locale = 'zh-tw' as const;
+const industries = await getSortedIndustries();
+---
+
+<BaseLayout
+  locale={locale}
+  path="/zh-tw/industries/"
+  otherLocalePath="/en/industries/"
+  title="產業應用｜鋒岳自動化"
+  description="鋒岳自動化服務半導體與電子組裝、汽車零組件、精密金屬加工與包裝物流等產業，依產業製程特性配置適合的自動化方案。"
+>
+  <div class="container section--tight">
+    <Breadcrumb locale={locale} items={[{ label: '產業應用', path: '/zh-tw/industries/' }]} />
+  </div>
+
+  <section class="section section--tight">
+    <div class="container">
+      <SectionHeading
+        eyebrow="產業應用"
+        title="服務的產業範圍"
+        description="每個產業的製程挑戰不同，以下列出常見問題、適合的解決方案與導入前應準備的資訊。"
+      />
+      <div class="grid-auto">
+        {industries.map((ind) => (
+          <IndustryCard
+            locale={locale}
+            slug={ind.data.entrySlug as any}
+            name={ind.data.name['zh-tw']}
+            description={ind.data.shortDescription['zh-tw']}
+            hasDetailPage={ind.data.hasDetailPage}
+          />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <CTABanner locale={locale} title="想了解您的產業適合哪種方案？" description="提交產業別與製程背景，我們會協助初步評估。" />
+  </div>
+</BaseLayout>

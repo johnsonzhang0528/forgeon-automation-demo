@@ -1,0 +1,103 @@
+---
+export interface Props {
+  href?: string;
+  type?: 'button' | 'submit';
+  variant?: 'primary' | 'secondary' | 'ghost';
+  size?: 'md' | 'lg';
+  class?: string;
+  id?: string;
+  disabled?: boolean;
+  ariaLabel?: string;
+  trackEvent?: string;
+}
+
+const {
+  href,
+  type = 'button',
+  variant = 'primary',
+  size = 'md',
+  class: className = '',
+  id,
+  disabled = false,
+  ariaLabel,
+  trackEvent,
+} = Astro.props;
+
+const Tag = href ? 'a' : 'button';
+const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boolean).join(' ');
+---
+
+<Tag
+  href={href}
+  type={!href ? type : undefined}
+  class={classes}
+  id={id}
+  disabled={!href ? disabled : undefined}
+  aria-label={ariaLabel}
+  data-track={trackEvent}
+>
+  <slot />
+</Tag>
+
+<style>
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2xs);
+    font-family: var(--font-body);
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: background-color var(--duration-fast) var(--ease-standard),
+      border-color var(--duration-fast) var(--ease-standard),
+      color var(--duration-fast) var(--ease-standard),
+      transform var(--duration-fast) var(--ease-standard);
+    white-space: nowrap;
+  }
+  .btn:active {
+    transform: translateY(1px);
+  }
+  .btn--md {
+    padding: 0.7em 1.4em;
+    font-size: var(--fs-sm);
+  }
+  .btn--lg {
+    padding: 0.9em 1.8em;
+    font-size: var(--fs-md);
+  }
+  .btn--primary {
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+    border-color: var(--color-accent);
+  }
+  .btn--primary:hover {
+    background: var(--color-accent-dark);
+    border-color: var(--color-accent-dark);
+    color: var(--color-accent-contrast);
+  }
+  .btn--secondary {
+    background: transparent;
+    color: var(--color-ink);
+    border-color: var(--color-border-strong);
+  }
+  .btn--secondary:hover {
+    border-color: var(--color-ink);
+    background: var(--color-surface-alt);
+  }
+  .btn--ghost {
+    background: transparent;
+    color: var(--color-accent);
+    border-color: transparent;
+    padding-inline: 0.4em;
+  }
+  .btn--ghost:hover {
+    color: var(--color-accent-dark);
+  }
+  .btn[disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+</style>

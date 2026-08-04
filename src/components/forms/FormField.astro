@@ -1,0 +1,158 @@
+---
+export interface Props {
+  id: string;
+  label: string;
+  type?: 'text' | 'email' | 'tel' | 'textarea' | 'select' | 'radio-group' | 'file';
+  required?: boolean;
+  requiredLabel?: string;
+  hint?: string;
+  options?: { value: string; label: string }[];
+  placeholder?: string;
+  autocomplete?: string;
+}
+const {
+  id,
+  label,
+  type = 'text',
+  required = false,
+  requiredLabel = 'required',
+  hint,
+  options = [],
+  placeholder,
+  autocomplete,
+} = Astro.props;
+const errorId = `${id}-error`;
+const hintId = hint ? `${id}-hint` : undefined;
+const describedBy = [hint ? hintId : null, errorId].filter(Boolean).join(' ');
+---
+
+<div class="form-field" data-form-field={id}>
+  {type !== 'radio-group' && (
+    <label for={id} class="form-field__label">
+      {label}
+      {required && <span class="form-field__required" aria-hidden="true">*</span>}
+      {required && <span class="visually-hidden">({requiredLabel})</span>}
+    </label>
+  )}
+
+  {type === 'radio-group' && (
+    <span class="form-field__label" id={`${id}-label`}>
+      {label}
+      {required && <span class="form-field__required" aria-hidden="true">*</span>}
+    </span>
+  )}
+
+  {hint && <p id={hintId} class="form-field__hint">{hint}</p>}
+
+  {type === 'textarea' && (
+    <textarea
+      id={id}
+      name={id}
+      required={required}
+      aria-describedby={describedBy}
+      placeholder={placeholder}
+      rows="5"
+      class="form-field__control"
+    ></textarea>
+  )}
+
+  {type === 'select' && (
+    <select id={id} name={id} required={required} aria-describedby={describedBy} class="form-field__control">
+      <option value="">{placeholder}</option>
+      {options.map((opt) => <option value={opt.value}>{opt.label}</option>)}
+    </select>
+  )}
+
+  {type === 'radio-group' && (
+    <div class="form-field__radios" role="radiogroup" aria-labelledby={`${id}-label`} aria-describedby={errorId}>
+      {options.map((opt, i) => (
+        <label class="form-field__radio">
+          <input type="radio" name={id} value={opt.value} required={required && i === 0} />
+          <span>{opt.label}</span>
+        </label>
+      ))}
+    </div>
+  )}
+
+  {type === 'file' && (
+    <input
+      id={id}
+      name={id}
+      type="file"
+      aria-describedby={describedBy}
+      class="form-field__control form-field__control--file"
+    />
+  )}
+
+  {(type === 'text' || type === 'email' || type === 'tel') && (
+    <input
+      id={id}
+      name={id}
+      type={type}
+      required={required}
+      aria-describedby={describedBy}
+      placeholder={placeholder}
+      autocomplete={autocomplete}
+      class="form-field__control"
+    />
+  )}
+
+  <p id={errorId} class="form-field__error" role="alert" hidden></p>
+</div>
+
+<style>
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+  }
+  .form-field__label {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .form-field__required {
+    color: var(--color-accent);
+    margin-left: 0.15em;
+  }
+  .form-field__hint {
+    margin: 0;
+    font-size: var(--fs-xs);
+    color: var(--color-muted);
+  }
+  .form-field__control {
+    font-size: var(--fs-sm);
+    padding: 0.65em 0.85em;
+    border: 1.5px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-card);
+    color: var(--color-ink);
+    width: 100%;
+  }
+  .form-field__control:focus-visible {
+    border-color: var(--color-focus);
+  }
+  .form-field__control--file {
+    padding: 0.5em;
+  }
+  .form-field__radios {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+  }
+  .form-field__radio {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    font-size: var(--fs-sm);
+  }
+  .form-field__error {
+    margin: 0;
+    font-size: var(--fs-xs);
+    color: var(--color-error);
+    font-weight: 600;
+  }
+  .form-field[data-invalid='true'] .form-field__control {
+    border-color: var(--color-error);
+  }
+</style>

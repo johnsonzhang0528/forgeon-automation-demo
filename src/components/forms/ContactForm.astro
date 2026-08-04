@@ -1,0 +1,420 @@
+---
+import type { Locale } from '../../config/site';
+import { getDictionary } from '../../utils/i18n';
+import { siteConfig } from '../../config/site';
+import FormField from './FormField.astro';
+import Button from '../ui/Button.astro';
+
+export interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const dict = getDictionary(locale);
+const hasEndpoint = Boolean(siteConfig.rfqEndpoint);
+
+const countryOptions =
+  locale === 'zh-tw'
+    ? [
+        { value: 'tw', label: '台灣' },
+        { value: 'us', label: '美國' },
+        { value: 'jp', label: '日本' },
+        { value: 'de', label: '德國' },
+        { value: 'vn', label: '越南' },
+        { value: 'in', label: '印度' },
+        { value: 'other', label: '其他' },
+      ]
+    : [
+        { value: 'tw', label: 'Taiwan' },
+        { value: 'us', label: 'United States' },
+        { value: 'jp', label: 'Japan' },
+        { value: 'de', label: 'Germany' },
+        { value: 'vn', label: 'Vietnam' },
+        { value: 'in', label: 'India' },
+        { value: 'other', label: 'Other' },
+      ];
+
+const industryOptions =
+  locale === 'zh-tw'
+    ? [
+        { value: 'semiconductor', label: '半導體與電子組裝' },
+        { value: 'automotive', label: '汽車零組件' },
+        { value: 'metal', label: '精密金屬加工' },
+        { value: 'packaging', label: '包裝與物流' },
+        { value: 'optoelectronics', label: '光電設備' },
+        { value: 'other', label: '其他' },
+      ]
+    : [
+        { value: 'semiconductor', label: 'Semiconductor & Electronics' },
+        { value: 'automotive', label: 'Automotive Components' },
+        { value: 'metal', label: 'Precision Metal Machining' },
+        { value: 'packaging', label: 'Packaging & Logistics' },
+        { value: 'optoelectronics', label: 'Optoelectronics' },
+        { value: 'other', label: 'Other' },
+      ];
+
+const projectTypeOptions =
+  locale === 'zh-tw'
+    ? [
+        { value: 'new-line', label: '全新產線建置' },
+        { value: 'upgrade', label: '既有產線升級' },
+        { value: 'single-station', label: '單一站點自動化' },
+        { value: 'consultation', label: '技術諮詢評估' },
+      ]
+    : [
+        { value: 'new-line', label: 'New Line Build' },
+        { value: 'upgrade', label: 'Existing Line Upgrade' },
+        { value: 'single-station', label: 'Single-Station Automation' },
+        { value: 'consultation', label: 'Technical Consultation' },
+      ];
+
+const timelineOptions =
+  locale === 'zh-tw'
+    ? [
+        { value: '0-3m', label: '3 個月內' },
+        { value: '3-6m', label: '3–6 個月' },
+        { value: '6-12m', label: '6–12 個月' },
+        { value: 'exploring', label: '尚在評估階段' },
+      ]
+    : [
+        { value: '0-3m', label: 'Within 3 months' },
+        { value: '3-6m', label: '3–6 months' },
+        { value: '6-12m', label: '6–12 months' },
+        { value: 'exploring', label: 'Still exploring options' },
+      ];
+
+const budgetOptions =
+  locale === 'zh-tw'
+    ? [
+        { value: 'under-50k', label: 'USD 50,000 以下' },
+        { value: '50k-150k', label: 'USD 50,000–150,000' },
+        { value: '150k-500k', label: 'USD 150,000–500,000' },
+        { value: 'over-500k', label: 'USD 500,000 以上' },
+        { value: 'unsure', label: '尚未確定' },
+      ]
+    : [
+        { value: 'under-50k', label: 'Under USD 50,000' },
+        { value: '50k-150k', label: 'USD 50,000–150,000' },
+        { value: '150k-500k', label: 'USD 150,000–500,000' },
+        { value: 'over-500k', label: 'Over USD 500,000' },
+        { value: 'unsure', label: 'Not yet determined' },
+      ];
+---
+
+<div class="contact-form-wrap">
+  <div class:list={['form-mode-notice', { 'form-mode-notice--live': hasEndpoint }]}>
+    {hasEndpoint
+      ? (locale === 'zh-tw' ? '本表單已串接正式送出端點。' : 'This form is connected to a live submission endpoint.')
+      : dict.form.demoModeNotice}
+  </div>
+
+  <form
+    id="rfq-form"
+    class="contact-form"
+    novalidate
+    data-rfq-form
+    data-has-endpoint={String(hasEndpoint)}
+    data-endpoint={siteConfig.rfqEndpoint}
+  >
+    <div class="contact-form__grid">
+      <FormField id="companyName" label={dict.form.companyName} required requiredLabel={dict.form.requiredMark} autocomplete="organization" />
+      <FormField id="contactName" label={dict.form.contactName} required requiredLabel={dict.form.requiredMark} autocomplete="name" />
+      <FormField id="jobTitle" label={dict.form.jobTitle} autocomplete="organization-title" />
+      <FormField id="email" label={dict.form.email} type="email" required requiredLabel={dict.form.requiredMark} autocomplete="email" />
+      <FormField id="phone" label={dict.form.phone} type="tel" autocomplete="tel" />
+      <FormField id="country" label={dict.form.country} type="select" required requiredLabel={dict.form.requiredMark} options={countryOptions} placeholder={dict.form.selectPlaceholder} />
+      <FormField id="industry" label={dict.form.industry} type="select" required requiredLabel={dict.form.requiredMark} options={industryOptions} placeholder={dict.form.selectPlaceholder} />
+      <FormField id="projectType" label={dict.form.projectType} type="select" required requiredLabel={dict.form.requiredMark} options={projectTypeOptions} placeholder={dict.form.selectPlaceholder} />
+    </div>
+
+    <FormField id="requirement" label={dict.form.requirement} type="textarea" required requiredLabel={dict.form.requiredMark} placeholder={locale === 'zh-tw' ? '請描述您的專案背景、目標與目前遇到的挑戰…' : 'Describe your project background, goals, and current challenges…'} />
+
+    <div class="contact-form__grid">
+      <FormField id="timeline" label={dict.form.timeline} type="select" options={timelineOptions} placeholder={dict.form.selectPlaceholder} />
+      <FormField id="budget" label={dict.form.budget} type="select" options={budgetOptions} placeholder={dict.form.selectPlaceholder} />
+    </div>
+
+    <div class="contact-form__grid">
+      <FormField
+        id="hasSpec"
+        label={dict.form.hasSpec}
+        type="radio-group"
+        options={[{ value: 'yes', label: dict.form.yes }, { value: 'no', label: dict.form.no }]}
+      />
+      <FormField
+        id="needNda"
+        label={dict.form.needNda}
+        type="radio-group"
+        options={[{ value: 'yes', label: dict.form.yes }, { value: 'no', label: dict.form.no }]}
+      />
+    </div>
+
+    <FormField id="attachment" label={dict.form.fileUpload} type="file" hint={dict.form.fileUploadHint} />
+
+    <div class="form-field contact-form__consent">
+      <label class="form-field__radio">
+        <input type="checkbox" id="privacyConsent" name="privacyConsent" required />
+        <span>{dict.form.privacyConsent}</span>
+      </label>
+      <p id="privacyConsent-error" class="form-field__error" role="alert" hidden></p>
+    </div>
+
+    <div class="contact-form__submit-row">
+      <Button type="submit" size="lg" id="rfq-submit-btn">
+        <span data-submit-label>{dict.form.submit}</span>
+      </Button>
+      <div class="contact-form__status" role="status" aria-live="polite" data-form-status></div>
+    </div>
+  </form>
+
+  <div class="contact-form__result" data-form-result hidden></div>
+</div>
+
+<style>
+  .contact-form-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+  .form-mode-notice {
+    font-size: var(--fs-sm);
+    background: var(--color-accent-contrast);
+    color: var(--color-accent-dark);
+    border: 1px solid var(--color-accent-light);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+  }
+  .form-mode-notice--live {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+    border-color: color-mix(in srgb, var(--color-success) 40%, transparent);
+  }
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+  .contact-form__grid {
+    display: grid;
+    gap: var(--space-md);
+    grid-template-columns: 1fr;
+  }
+  .contact-form__consent {
+    padding-top: var(--space-xs);
+    border-top: 1px solid var(--color-border);
+  }
+  .contact-form__consent .form-field__radio {
+    align-items: flex-start;
+  }
+  .contact-form__consent input {
+    margin-top: 0.2em;
+  }
+  .contact-form__submit-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+  }
+  .contact-form__result[data-state='success'] {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+    border: 1px solid color-mix(in srgb, var(--color-success) 35%, transparent);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+  }
+  .contact-form__result[data-state='error'] {
+    background: var(--color-error-bg);
+    color: var(--color-error);
+    border: 1px solid color-mix(in srgb, var(--color-error) 35%, transparent);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+  }
+  .contact-form__result[data-state='demo'] {
+    background: var(--color-surface-alt);
+    color: var(--color-ink-soft);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+  }
+  .contact-form__result h3 {
+    margin: 0 0 var(--space-2xs);
+    font-size: var(--fs-md);
+  }
+  .contact-form__result p {
+    margin: 0;
+    font-size: var(--fs-sm);
+  }
+
+  @media (min-width: 720px) {
+    .contact-form__grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>
+
+<script define:vars={{
+  locale,
+  strings: {
+    required: dict.form.errors.required,
+    email: dict.form.errors.email,
+    consent: dict.form.errors.consent,
+    minLength: dict.form.errors.minLength,
+    submitting: dict.form.submitting,
+    submit: dict.form.submit,
+    successTitle: dict.form.successTitle,
+    successBody: dict.form.successBody,
+    demoTitle: dict.form.demoModeSubmitTitle,
+    demoBody: dict.form.demoModeSubmitBody,
+    errorTitle: dict.form.errorTitle,
+    errorBody: dict.form.errorBody,
+  },
+}}>
+  function initRfqForm() {
+    const form = document.querySelector('[data-rfq-form]');
+    if (!(form instanceof HTMLFormElement)) return;
+
+    const hasEndpoint = form.dataset.hasEndpoint === 'true';
+    const endpoint = form.dataset.endpoint || '';
+    const submitBtn = form.querySelector('#rfq-submit-btn');
+    const submitLabel = form.querySelector('[data-submit-label]');
+    const statusEl = form.querySelector('[data-form-status]');
+    const resultEl = document.querySelector('[data-form-result]');
+    let isSubmitting = false;
+
+    function setFieldError(fieldName, message) {
+      const errorEl = document.getElementById(`${fieldName}-error`);
+      if (errorEl) {
+        errorEl.textContent = message || '';
+        errorEl.hidden = !message;
+      }
+      const fieldWrap = document.querySelector(`[data-form-field="${fieldName}"]`);
+      if (fieldWrap) fieldWrap.setAttribute('data-invalid', message ? 'true' : 'false');
+    }
+
+    function validate() {
+      let firstInvalid = null;
+      let valid = true;
+
+      const requiredTextFields = ['companyName', 'contactName', 'country', 'industry', 'projectType'];
+      requiredTextFields.forEach((name) => {
+        const el = form.elements.namedItem(name);
+        const value = el && 'value' in el ? String(el.value).trim() : '';
+        if (!value) {
+          setFieldError(name, strings.required);
+          valid = false;
+          firstInvalid = firstInvalid || el;
+        } else {
+          setFieldError(name, '');
+        }
+      });
+
+      const emailEl = form.elements.namedItem('email');
+      const emailVal = emailEl && 'value' in emailEl ? String(emailEl.value).trim() : '';
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailVal) {
+        setFieldError('email', strings.required);
+        valid = false;
+        firstInvalid = firstInvalid || emailEl;
+      } else if (!emailPattern.test(emailVal)) {
+        setFieldError('email', strings.email);
+        valid = false;
+        firstInvalid = firstInvalid || emailEl;
+      } else {
+        setFieldError('email', '');
+      }
+
+      const reqEl = form.elements.namedItem('requirement');
+      const reqVal = reqEl && 'value' in reqEl ? String(reqEl.value).trim() : '';
+      if (!reqVal) {
+        setFieldError('requirement', strings.required);
+        valid = false;
+        firstInvalid = firstInvalid || reqEl;
+      } else if (reqVal.length < 20) {
+        setFieldError('requirement', strings.minLength);
+        valid = false;
+        firstInvalid = firstInvalid || reqEl;
+      } else {
+        setFieldError('requirement', '');
+      }
+
+      const consentEl = form.elements.namedItem('privacyConsent');
+      if (!consentEl || !('checked' in consentEl) || !consentEl.checked) {
+        const errorEl = document.getElementById('privacyConsent-error');
+        if (errorEl) {
+          errorEl.textContent = strings.consent;
+          errorEl.hidden = false;
+        }
+        valid = false;
+        firstInvalid = firstInvalid || consentEl;
+      } else {
+        const errorEl = document.getElementById('privacyConsent-error');
+        if (errorEl) errorEl.hidden = true;
+      }
+
+      if (!valid && firstInvalid && 'focus' in firstInvalid) {
+        firstInvalid.focus();
+      }
+      return valid;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (isSubmitting) return;
+
+      window.dispatchEvent(new CustomEvent('forgeon:analytics', { detail: { event: 'rfq_start' } }));
+
+      if (!validate()) return;
+
+      isSubmitting = true;
+      if (submitBtn) submitBtn.setAttribute('disabled', 'true');
+      if (submitLabel) submitLabel.textContent = strings.submitting;
+      if (statusEl) statusEl.textContent = strings.submitting;
+
+      try {
+        if (hasEndpoint) {
+          const formData = new FormData(form);
+          const payload = Object.fromEntries(formData.entries());
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) throw new Error('Submission failed');
+
+          window.dispatchEvent(new CustomEvent('forgeon:analytics', { detail: { event: 'rfq_submit', payload: { mode: 'live' } } }));
+          showResult('success', strings.successTitle, strings.successBody);
+        } else {
+          // Demo Mode: validate fully, never actually send, never claim success.
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          window.dispatchEvent(new CustomEvent('forgeon:analytics', { detail: { event: 'rfq_submit', payload: { mode: 'demo' } } }));
+          showResult('demo', strings.demoTitle, strings.demoBody);
+        }
+        form.reset();
+      } catch (err) {
+        showResult('error', strings.errorTitle, strings.errorBody);
+      } finally {
+        isSubmitting = false;
+        if (submitBtn) submitBtn.removeAttribute('disabled');
+        if (submitLabel) submitLabel.textContent = strings.submit;
+        if (statusEl) statusEl.textContent = '';
+      }
+    });
+
+    function showResult(state, title, body) {
+      if (!resultEl) return;
+      resultEl.hidden = false;
+      resultEl.setAttribute('data-state', state);
+      resultEl.innerHTML = `<h3>${title}</h3><p>${body}</p>`;
+      resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      resultEl.setAttribute('tabindex', '-1');
+      resultEl.focus();
+    }
+
+    // Clear individual field errors as the user fixes them.
+    form.addEventListener('input', (e) => {
+      const target = e.target;
+      if (target && target.name) setFieldError(target.name, '');
+    });
+  }
+
+  initRfqForm();
+</script>

@@ -1,0 +1,100 @@
+---
+/**
+ * Original SVG hero illustration — abstract precision linear module +
+ * robotic arm composition. Stands in for the Higgsfield-generated concept
+ * render planned in docs/HIGGSFIELD_ASSET_PLAN.md (not executed this
+ * session — see docs/SKILL_USAGE_LOG.md).
+ */
+export interface Props {
+  labelZh?: string;
+}
+---
+
+<div class="hero-art" role="img" aria-label="鋒岳自動化精密線性模組與機械手臂抽象概念示意">
+  <svg viewBox="0 0 560 560" fill="none" xmlns="http://www.w3.org/2000/svg" class="hero-art__svg">
+    <defs>
+      <radialGradient id="heroGlow" cx="50%" cy="35%" r="65%">
+        <stop offset="0%" stop-color="#2a323c" stop-opacity="0.5"/>
+        <stop offset="100%" stop-color="#12181f" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="railGrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#5b6470"/>
+        <stop offset="100%" stop-color="#838c96"/>
+      </linearGradient>
+    </defs>
+
+    <rect width="560" height="560" fill="url(#heroGlow)"/>
+
+    <!-- Blueprint grid -->
+    <g stroke="#2a323c" stroke-width="0.5" opacity="0.35">
+      {Array.from({ length: 14 }).map((_, i) => (
+        <line x1={i * 40} y1="0" x2={i * 40} y2="560"/>
+      ))}
+      {Array.from({ length: 14 }).map((_, i) => (
+        <line x1="0" y1={i * 40} x2="560" y2={i * 40}/>
+      ))}
+    </g>
+
+    <!-- Linear rail -->
+    <rect x="90" y="380" width="380" height="26" rx="4" fill="url(#railGrad)"/>
+    <rect x="90" y="380" width="380" height="26" rx="4" stroke="#12181f" stroke-width="1"/>
+    {Array.from({ length: 9 }).map((_, i) => (
+      <circle cx={120 + i * 42} cy="393" r="2" fill="#12181f" opacity="0.4"/>
+    ))}
+
+    <!-- Carriage -->
+    <rect x="230" y="358" width="70" height="70" rx="6" fill="#f7f5f1" stroke="#12181f" stroke-width="2"/>
+    <rect x="245" y="373" width="40" height="40" rx="3" fill="#c1622b"/>
+
+    <!-- Vertical arm -->
+    <rect x="257" y="220" width="16" height="150" rx="4" fill="#5b6470"/>
+    <circle cx="265" cy="220" r="22" fill="#12181f"/>
+    <circle cx="265" cy="220" r="22" stroke="#c1622b" stroke-width="2.5"/>
+
+    <!-- Gripper arm -->
+    <path d="M265 198 L340 150" stroke="#12181f" stroke-width="10" stroke-linecap="round"/>
+    <path d="M340 150 L390 175" stroke="#12181f" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="390" cy="175" r="10" fill="#c1622b"/>
+
+    <!-- Vision sensor node -->
+    <rect x="120" y="150" width="56" height="56" rx="8" fill="#12181f"/>
+    <circle cx="148" cy="178" r="16" fill="#f7f5f1"/>
+    <circle cx="148" cy="178" r="9" fill="#2a323c"/>
+    <circle cx="148" cy="178" r="4" fill="#c1622b"/>
+    <path d="M148 130v20M148 206v20M100 178h20M176 178h20" stroke="#5b6470" stroke-width="1.5" stroke-dasharray="3 4"/>
+
+    <!-- Base -->
+    <rect x="60" y="406" width="440" height="14" rx="3" fill="#2a323c"/>
+  </svg>
+  <span class="hero-art__badge">概念示意圖 · Concept Illustration</span>
+</div>
+
+<style>
+  .hero-art {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    margin-inline: auto;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--color-ink);
+    aspect-ratio: 1 / 1;
+  }
+  .hero-art__svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .hero-art__badge {
+    position: absolute;
+    bottom: var(--space-sm);
+    right: var(--space-sm);
+    font-size: var(--fs-xs);
+    font-family: var(--font-mono);
+    color: var(--color-invert-muted);
+    background: rgba(18, 24, 31, 0.7);
+    border: 1px solid var(--color-invert-border);
+    border-radius: var(--radius-sm);
+    padding: 0.3em 0.6em;
+  }
+</style>

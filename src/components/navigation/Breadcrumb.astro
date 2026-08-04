@@ -1,0 +1,64 @@
+---
+import type { Locale } from '../../config/site';
+import { getDictionary } from '../../utils/i18n';
+
+export interface Crumb {
+  label: string;
+  path: string;
+}
+
+export interface Props {
+  locale: Locale;
+  items: Crumb[];
+}
+
+const { locale, items } = Astro.props;
+const dict = getDictionary(locale);
+const allItems: Crumb[] = [{ label: dict.breadcrumb.home, path: `/${locale}/` }, ...items];
+---
+
+<nav aria-label={locale === 'zh-tw' ? '麵包屑導覽' : 'Breadcrumb'} class="breadcrumb">
+  <ol>
+    {allItems.map((item, i) => (
+      <li>
+        {i < allItems.length - 1 ? (
+          <a href={item.path}>{item.label}</a>
+        ) : (
+          <span aria-current="page">{item.label}</span>
+        )}
+        {i < allItems.length - 1 && <span class="breadcrumb__sep" aria-hidden="true">/</span>}
+      </li>
+    ))}
+  </ol>
+</nav>
+
+<style>
+  .breadcrumb ol {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: var(--space-2xs);
+    font-size: var(--fs-xs);
+  }
+  .breadcrumb li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xs);
+  }
+  .breadcrumb a {
+    color: var(--color-muted);
+    text-decoration: none;
+  }
+  .breadcrumb a:hover {
+    color: var(--color-accent);
+  }
+  .breadcrumb span[aria-current] {
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+  .breadcrumb__sep {
+    color: var(--color-border-strong);
+  }
+</style>

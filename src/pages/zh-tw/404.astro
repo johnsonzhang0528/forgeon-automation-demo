@@ -1,0 +1,57 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Button from '../../components/ui/Button.astro';
+
+const locale = 'zh-tw' as const;
+---
+
+<BaseLayout
+  locale={locale}
+  path="/zh-tw/404"
+  title="找不到頁面｜鋒岳自動化"
+  description="您造訪的頁面不存在或已被移動。返回首頁或查看解決方案。"
+  noindex
+>
+  <section class="not-found section">
+    <div class="container not-found__inner">
+      <p class="not-found__code mono">404</p>
+      <h1>找不到這個頁面</h1>
+      <p class="measure">
+        您造訪的網址可能已變更、輸入錯誤，或該頁面已不存在。您可以返回首頁，
+        或直接查看我們的解決方案總覽。
+      </p>
+      <div class="not-found__actions">
+        <Button href="/zh-tw/">返回首頁</Button>
+        <Button href="/zh-tw/solutions/" variant="secondary">查看解決方案</Button>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .not-found__inner {
+    text-align: center;
+    padding-block: var(--space-3xl);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+  .not-found__code {
+    font-size: var(--fs-4xl);
+    color: var(--color-accent);
+    font-weight: 700;
+    margin: 0;
+  }
+  .not-found__inner p.measure {
+    color: var(--color-muted);
+    margin-inline: auto;
+  }
+  .not-found__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+  }
+</style>

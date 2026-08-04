@@ -1,0 +1,150 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import SectionHeading from '../../../../components/ui/SectionHeading.astro';
+import Breadcrumb from '../../../../components/navigation/Breadcrumb.astro';
+import FeatureList from '../../../../components/ui/FeatureList.astro';
+import SpecificationTable from '../../../../components/ui/SpecificationTable.astro';
+import ProductGlyph from '../../../../components/ui/ProductGlyph.astro';
+import Badge from '../../../../components/ui/Badge.astro';
+import Button from '../../../../components/ui/Button.astro';
+import SolutionCard from '../../../../components/ui/SolutionCard.astro';
+import CTABanner from '../../../../components/sections/CTABanner.astro';
+import StructuredData from '../../../../components/seo/StructuredData.astro';
+import { getSortedProducts, getSortedSolutions } from '../../../../utils/content';
+import { demoDataNoticeEn } from '../../../../config/site';
+
+export async function getStaticPaths() {
+  const products = await getSortedProducts();
+  return products.map((p) => ({ params: { slug: p.data.entrySlug }, props: { product: p } }));
+}
+
+const { product } = Astro.props;
+const locale = 'en' as const;
+const d = product.data;
+const allSolutions = await getSortedSolutions();
+const relatedSolutions = allSolutions.filter((s) => d.relatedSolutions.includes(s.data.entrySlug));
+
+const path = `/en/products/${d.entrySlug}/`;
+const otherLocalePath = `/zh-tw/products/${d.entrySlug}/`;
+---
+
+<BaseLayout locale={locale} path={path} otherLocalePath={otherLocalePath} title={d.seoTitle.en} description={d.seoDescription.en}>
+  <StructuredData breadcrumbs={[{ name: 'Products', path: '/en/products/' }, { name: d.name, path }]} />
+
+  <div class="container section--tight">
+    <Breadcrumb locale={locale} items={[{ label: 'Products', path: '/en/products/' }, { label: d.name, path }]} />
+  </div>
+
+  <section class="section section--tight">
+    <div class="container product-hero">
+      <div class="product-hero__media">
+        <ProductGlyph product={d.entrySlug as 'axm-400' | 'vision-x2' | 'flexcell-m'} />
+      </div>
+      <div class="product-hero__copy">
+        <Badge variant="demo">Concept Demonstration Data</Badge>
+        <h1 class="product-hero__name mono">{d.name}</h1>
+        <p class="product-hero__positioning">{d.positioning.en}</p>
+        <p class="product-hero__desc measure">{d.shortDescription.en}</p>
+        <div class="product-hero__actions">
+          <Button href="/en/contact/" trackEvent="cta_click">Discuss Your Project</Button>
+          {d.datasheetPath && (
+            <Button href={d.datasheetPath} variant="secondary" trackEvent="spec_download">
+              Download Datasheet PDF (sample file)
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--tight section--alt">
+    <div class="container container--narrow">
+      <SectionHeading eyebrow="Features" title="Features" />
+      <FeatureList items={d.features.en} />
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="container container--narrow">
+      <SectionHeading eyebrow="Use Cases" title="Applicable Scenarios" />
+      <FeatureList items={d.useCases.en} />
+    </div>
+  </section>
+
+  <section class="section section--tight section--alt">
+    <div class="container container--narrow">
+      <SectionHeading eyebrow="Technical Specifications" title="Specifications" />
+      <SpecificationTable
+        caption={`${d.name} technical specifications`}
+        rows={d.specs.map((s) => ({ label: s.label.en, value: s.value.en }))}
+      />
+      <p class="demo-disclaimer">{demoDataNoticeEn}</p>
+    </div>
+  </section>
+
+  {d.options && (
+    <section class="section section--tight">
+      <div class="container container--narrow">
+        <SectionHeading eyebrow="Optional Configurations" title="Options" />
+        <FeatureList items={d.options.en} />
+      </div>
+    </section>
+  )}
+
+  {relatedSolutions.length > 0 && (
+    <section class="section section--tight section--alt">
+      <div class="container">
+        <SectionHeading eyebrow="Related Solutions" title="Compatible Solutions" />
+        <div class="grid-auto">
+          {relatedSolutions.map((s) => (
+            <SolutionCard
+              locale={locale}
+              slug={s.data.entrySlug}
+              name={s.data.name.en}
+              description={s.data.shortDescription.en}
+              hasDetailPage={s.data.hasDetailPage}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <div class="container">
+    <CTABanner locale={locale} title={`Want to learn more about ${d.name}?`} description="Submit your application requirements and our engineering team will help evaluate the configuration." />
+  </div>
+</BaseLayout>
+
+<style>
+  .product-hero {
+    display: grid;
+    gap: var(--space-xl);
+  }
+  .product-hero__name {
+    font-size: var(--fs-2xl);
+    margin: var(--space-sm) 0 var(--space-2xs);
+  }
+  .product-hero__positioning {
+    font-weight: 600;
+    color: var(--color-ink-soft);
+    margin: 0 0 var(--space-sm);
+  }
+  .product-hero__desc {
+    color: var(--color-muted);
+    margin: 0 0 var(--space-lg);
+  }
+  .product-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+  .container--narrow {
+    max-width: 860px;
+  }
+  @media (min-width: 860px) {
+    .product-hero {
+      grid-template-columns: 1fr 1.1fr;
+      align-items: center;
+    }
+  }
+</style>

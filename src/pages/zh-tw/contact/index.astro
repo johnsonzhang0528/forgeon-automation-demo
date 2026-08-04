@@ -1,0 +1,94 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHeading from '../../../components/ui/SectionHeading.astro';
+import Breadcrumb from '../../../components/navigation/Breadcrumb.astro';
+import ContactForm from '../../../components/forms/ContactForm.astro';
+import { siteConfig } from '../../../config/site';
+
+const locale = 'zh-tw' as const;
+---
+
+<BaseLayout
+  locale={locale}
+  path="/zh-tw/contact/"
+  otherLocalePath="/en/contact/"
+  title="聯絡我們與專案需求表單｜鋒岳自動化"
+  description="提交您的自動化專案背景與需求，鋒岳自動化技術團隊將協助評估解決方案。也可直接以 Email 或電話聯繫技術窗口。"
+>
+  <div class="container section--tight">
+    <Breadcrumb locale={locale} items={[{ label: '聯絡我們', path: '/zh-tw/contact/' }]} />
+  </div>
+
+  <section class="section section--tight">
+    <div class="container contact-layout">
+      <div class="contact-layout__intro">
+        <SectionHeading
+          eyebrow="聯絡我們"
+          title="提交您的專案需求"
+          description="填寫下方表單，說明您的製程背景與需求，技術團隊將於工作天內回覆評估結果。"
+        />
+        <div class="contact-info">
+          <h2>直接聯絡窗口</h2>
+          <ul>
+            <li><strong>Email</strong><a href={`mailto:${siteConfig.contact.emailZh}`}>{siteConfig.contact.emailZh}</a></li>
+            <li><strong>電話</strong><span>{siteConfig.contact.phone}</span></li>
+            <li><strong>地址</strong><span>{siteConfig.contact.addressZh}</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="contact-layout__form">
+        <ContactForm locale={locale} />
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .contact-layout {
+    display: grid;
+    gap: var(--space-2xl);
+    align-items: start;
+  }
+  .contact-info {
+    margin-top: var(--space-xl);
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--color-border);
+  }
+  .contact-info h2 {
+    font-size: var(--fs-md);
+    margin: 0 0 var(--space-sm);
+  }
+  .contact-info ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+  .contact-info li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2em;
+    font-size: var(--fs-sm);
+  }
+  .contact-info strong {
+    color: var(--color-muted);
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .contact-info a {
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+  .contact-info a:hover {
+    color: var(--color-accent);
+  }
+
+  @media (min-width: 960px) {
+    .contact-layout {
+      grid-template-columns: 0.85fr 1.15fr;
+    }
+  }
+</style>

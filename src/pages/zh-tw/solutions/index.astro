@@ -1,0 +1,48 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHeading from '../../../components/ui/SectionHeading.astro';
+import SolutionCard from '../../../components/ui/SolutionCard.astro';
+import Breadcrumb from '../../../components/navigation/Breadcrumb.astro';
+import CTABanner from '../../../components/sections/CTABanner.astro';
+import { getSortedSolutions } from '../../../utils/content';
+
+const locale = 'zh-tw' as const;
+const solutions = await getSortedSolutions();
+---
+
+<BaseLayout
+  locale={locale}
+  path="/zh-tw/solutions/"
+  otherLocalePath="/en/solutions/"
+  title="解決方案總覽｜鋒岳自動化"
+  description="鋒岳自動化提供精密定位、視覺檢測、自動化組裝、產線升級與客製整合等六項解決方案，依製程挑戰配置適合的自動化架構。"
+>
+  <div class="container section--tight">
+    <Breadcrumb locale={locale} items={[{ label: '解決方案', path: '/zh-tw/solutions/' }]} />
+  </div>
+
+  <section class="section section--tight">
+    <div class="container">
+      <SectionHeading
+        eyebrow="解決方案總覽"
+        title="依製程挑戰配置的自動化方案"
+        description="從精密定位、視覺檢測到整廠整合，每項方案都從實際製程問題出發，並標示適用產業與可搭配產品。"
+      />
+      <div class="grid-auto">
+        {solutions.map((s) => (
+          <SolutionCard
+            locale={locale}
+            slug={s.data.entrySlug}
+            name={s.data.name['zh-tw']}
+            description={s.data.shortDescription['zh-tw']}
+            hasDetailPage={s.data.hasDetailPage}
+          />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <CTABanner locale={locale} title="不確定哪個方案適合您的產線？" description="提交專案背景，我們會協助評估最適合的方案組合。" />
+  </div>
+</BaseLayout>

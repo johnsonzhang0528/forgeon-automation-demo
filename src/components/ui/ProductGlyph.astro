@@ -1,0 +1,77 @@
+---
+/**
+ * Original isometric-style SVG line art standing in for the planned
+ * Higgsfield product concept renders (see docs/HIGGSFIELD_ASSET_PLAN.md).
+ */
+export interface Props {
+  product: 'axm-400' | 'vision-x2' | 'flexcell-m';
+  class?: string;
+}
+const { product, class: className = '' } = Astro.props;
+---
+
+<div class:list={['product-glyph', className]}>
+  {product === 'axm-400' && (
+    <svg viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="90" width="160" height="20" rx="3" fill="#e2e0da" stroke="#5b6470" stroke-width="1.5"/>
+      {Array.from({ length: 8 }).map((_, i) => (
+        <circle cx={35 + i * 20} cy="100" r="1.6" fill="#5b6470"/>
+      ))}
+      <rect x="85" y="70" width="40" height="40" rx="5" fill="#ffffff" stroke="#12181f" stroke-width="2"/>
+      <rect x="97" y="82" width="16" height="16" rx="2" fill="#c1622b"/>
+      <rect x="15" y="112" width="170" height="8" rx="2" fill="#2a323c"/>
+    </svg>
+  )}
+  {product === 'vision-x2' && (
+    <svg viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="60" y="30" width="80" height="70" rx="8" fill="#12181f"/>
+      <circle cx="100" cy="65" r="22" fill="#f7f5f1"/>
+      <circle cx="100" cy="65" r="13" fill="#2a323c"/>
+      <circle cx="100" cy="65" r="5" fill="#c1622b"/>
+      <path d="M100 100v20M60 65H40M160 65h-20" stroke="#5b6470" stroke-width="1.5" stroke-dasharray="3 4"/>
+      <rect x="70" y="120" width="60" height="14" rx="3" fill="#e2e0da" stroke="#5b6470" stroke-width="1.5"/>
+    </svg>
+  )}
+  {product === 'flexcell-m' && (
+    <svg viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="40" width="50" height="80" rx="4" fill="#ffffff" stroke="#12181f" stroke-width="2"/>
+      <rect x="75" y="40" width="50" height="80" rx="4" fill="#ffffff" stroke="#12181f" stroke-width="2"/>
+      <rect x="130" y="40" width="50" height="80" rx="4" fill="#ffffff" stroke="#12181f" stroke-width="2"/>
+      <rect x="32" y="55" width="26" height="26" rx="3" fill="#c1622b" opacity="0.85"/>
+      <circle cx="100" cy="68" r="13" fill="#2a323c"/>
+      <path d="M145 55l20 13-20 13z" fill="#5b6470"/>
+      <rect x="15" y="122" width="170" height="8" rx="2" fill="#2a323c"/>
+    </svg>
+  )}
+  <span class="product-glyph__badge">概念產品圖 · Concept Render</span>
+</div>
+
+<style>
+  .product-glyph {
+    position: relative;
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .product-glyph svg {
+    width: 100%;
+    height: auto;
+    max-width: 320px;
+  }
+  .product-glyph__badge {
+    position: absolute;
+    bottom: var(--space-xs);
+    right: var(--space-xs);
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    color: var(--color-muted);
+    background: var(--color-card);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    padding: 0.2em 0.5em;
+  }
+</style>
