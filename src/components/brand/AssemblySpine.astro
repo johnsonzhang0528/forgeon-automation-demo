@@ -58,14 +58,19 @@ const stateLabel: Record<string, string> = {
           data-node-index={interactive ? i : undefined}
           data-node-state={state}
         >
-          <button
-            type="button"
-            class="assembly-spine__marker"
-            disabled={!interactive}
-            aria-label={`${node.label}：${stateLabel[state]}`}
-          >
-            <span class="assembly-spine__marker-dot" aria-hidden="true"></span>
-          </button>
+          {interactive ? (
+            <button
+              type="button"
+              class="assembly-spine__marker"
+              aria-label={`${node.label}：${stateLabel[state]}`}
+            >
+              <span class="assembly-spine__marker-dot" aria-hidden="true"></span>
+            </button>
+          ) : (
+            <span class="assembly-spine__marker" aria-label={`${node.label}：${stateLabel[state]}`}>
+              <span class="assembly-spine__marker-dot" aria-hidden="true"></span>
+            </span>
+          )}
           <div class="assembly-spine__meta">
             <span class="assembly-spine__label">{node.label}</span>
             {node.caption && <span class="assembly-spine__caption mono">{node.caption}</span>}
