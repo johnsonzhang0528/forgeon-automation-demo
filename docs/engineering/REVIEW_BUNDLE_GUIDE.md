@@ -117,9 +117,10 @@ Regardless of mode:
 - In `--full` mode specifically, `.claude/skills/**` is also excluded (via
   `.gitattributes` `export-ignore`) — third-party skill packages are
   installed tooling, not this project's source, and their documentation
-  legitimately discusses environment-variable names like `API_KEY` as
-  examples, which would otherwise trip the secret scan on every full-mode
-  run for no real reason.
+  legitimately discusses several of the environment-variable-name patterns
+  listed under [Secret scanning](#secret-scanning) below as illustrative
+  examples, which would otherwise trip that scan on every full-mode run
+  for no real reason.
 - Binary files that changed are never written into `diff/changes.patch`
   even in incremental mode — they're listed by path and size in
   `metadata/excluded-binaries.txt` instead, whether they were skipped
@@ -131,10 +132,18 @@ Regardless of mode:
 Runs on the fully-staged bundle contents, before any zip is written.
 Blocks (exit code `3`, no zip produced, staging directory left in place at
 `.review-bundles/<timestamp>-<label>/` for inspection) if either check
-finds something:
+finds something.
 
-**Forbidden filenames** (basename match): `*.env`, `.env.*`, `*.pem`,
-`*.key`, `id_rsa`, `id_ed25519`, `credentials*`, `secrets*`.
+Two checks run: a **filename check** against a short list of
+secret-shaped basenames (env files, private-key files, anything named
+"credentials" or "secrets"), and a **content check** that greps every
+staged text file for a handful of common secret-declaration patterns
+(cloud/API credential env-var names, a plaintext-password assignment
+pattern, and PEM private-key headers). The exact pattern lists live in
+`FORBIDDEN_NAME_PATTERNS` and `FORBIDDEN_CONTENT_PATTERNS` near the top of
+`scripts/create-review-bundle.sh` — read them there rather than here, so
+this guide doesn't itself become a file full of secret-shaped strings that
+trips the very scan it's describing.
 
 `.env.example`, `.env.sample`, and `.env.template` are explicitly exempt
 from the *filename* check only — they're real, safe-to-share template
@@ -142,15 +151,14 @@ files (this repo's own `.env.example` is tracked in git). Content scanning
 still runs on them; a real secret value pasted into one would still block
 the bundle.
 
-**Forbidden content patterns** (grepped across every staged text file):
-`API_KEY`, `SECRET_KEY`, `PRIVATE_KEY`, `ACCESS_TOKEN`, `AUTH_TOKEN`,
-`PASSWORD=`, `BEGIN RSA PRIVATE KEY`, `BEGIN OPENSSH PRIVATE KEY`.
-
 When blocked, the terminal output lists which staged *paths* triggered a
 match — never the matched value itself. If a block looks like a false
-positive (a doc that discusses these terms without containing a real
-secret), the fix is to either exclude that path from the bundle's source
-list or move the offending content, not to weaken the scan patterns.
+positive (a doc that discusses these pattern names without containing a
+real secret — this guide included, which is exactly why the pattern list
+isn't repeated above), the fix is to either exclude that path from the
+bundle's source list or rephrase the offending content so it doesn't
+contain the literal trigger string, not to weaken the scan patterns
+themselves.
 
 ## Size
 
