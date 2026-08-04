@@ -12,6 +12,79 @@ avoidance) was applied by hand rather than through `concept-seed.mjs` /
 `docs/SKILL_USAGE_LOG.md` §3 for the full explanation of what ran versus what
 was adapted, and why.
 
+## CC-01 Addendum (2026-08-05): Precision Datum System
+
+**The Color Strategy and Typography sections below describe the original
+build's world and are kept as historical record — the site's live design
+world as of CC-01 is the Precision Datum System, and the values below no
+longer match `src/styles/tokens.css`.** This addendum states what
+actually shipped; do not treat the sections that follow as current.
+
+Full audit rationale for the redesign is in
+`docs/redesign/forgeon_full_audit_and_redesign.md` (§17-19) and
+`docs/redesign/forgeon_claude_code_redesign_tasks.md`; token-by-token
+implementation detail is in `docs/DESIGN_SYSTEM.md`; every specific
+correction made to the redesign spec's literal proposed values (and why)
+is in `docs/DATUM_DECISION_LOG.md`'s CC-01 entry; WCAG math for every
+color pairing is in `docs/CONTRAST_AUDIT.md`.
+
+**THESIS (unchanged, made more literal):** precision is a process you can
+watch, not a claim you take on faith. The Precision Datum System commits
+this idea to a specific visual grammar rather than leaving it as a
+description: datum origin marks (a horizontal/vertical axis pair with a
+copper intersection point — not a crosshair), tolerance bands (parallel
+boundary lines with an acceptable-range zone, not a progress bar), vision
+lock frames (four-corner registration marks, not a scanning reticle),
+assembly spines (a main axis with connectable module nodes), process
+stamps (engineering-workflow status markers, deliberately not shaped like
+a certification seal), and cutaway windows (angled clip-path reveals of
+product/system media). Six components, `src/components/brand/`, each with
+its own accessibility semantics and reduced-motion behavior documented in
+its own file header.
+
+**Color: five roles, not one accent.** Paper (55% target, primary
+background), Ink (25%, primary text/dark sections), Steel (12%, technical
+lines/secondary text — now three role-specific steps,
+`--color-steel-700`/`600`/`500`, after WCAG verification found the
+redesign spec's single steel value failed as light-background text/border),
+Copper (6%, restricted to Datum Origin/primary CTA/active states — now
+including `--color-copper-700` for the paper-100/higher-margin case), plus
+2% functional colors (signal-green, error, focus). Copper is deliberately
+NOT used for all headings, all icons, all card borders, large backgrounds,
+or decorative gradients — the redesign task book's own explicit
+constraint, carried forward from the original build's "one saturated
+accent" principle but now role-scoped rather than universal.
+
+**Typography: real self-hosted webfonts, not the system-stack fallback
+this file previously documented.** The original Typography section below
+(and the "2026-08 revision" addendum inside it) accurately describes why
+CC-00-era passes fell back to system fonts — no verified network access to
+fetch real font binaries. CC-01 re-verified npm registry access worked and
+installed Noto Sans TC / Space Grotesk / IBM Plex Mono via `@fontsource/*`
+(all SIL OFL 1.1), self-hosted as WOFF2 with `font-display: swap`, only
+the weights actually used. Chinese headings/body force Noto Sans TC ahead
+of the Latin-first `--font-display` stack via a `:lang(zh)` CSS override,
+so Traditional Chinese never shapes against a Latin-only Space Grotesk
+first and never inherits its negative Latin display tracking. Full detail
+in `docs/ASSET_LICENSES.md` and `docs/DESIGN_SYSTEM.md`.
+
+**Explicit avoidances carried forward and reinforced this stage:** no
+purple/blue AI gradients, no hexagon/circuit-board backgrounds, no glowing
+lines as primary visual language, no uniform large-radius cards (radius
+caps at 12px, same as before), no reducing "industrial feel" to plain
+black+grid. New avoidances specific to the six brand components: no
+persistent/looping scan animation on VisionLockFrame (lock-on plays once),
+no certification-seal silhouette on ProcessStamp (rectangular chip with a
+datum-notch, not a circular/shield seal), no SVG-mask-only implementation
+on CutawayWindow (uses `clip-path: polygon()`, verified cross-browser safe
+per the file's own header comment, with an `@supports` fallback to a plain
+rounded-rect crop).
+
+**What this stage did NOT touch:** homepage information architecture,
+Hero, any page-level content — those are CC-02/CC-03 territory per the
+task book, and CC-01's own dispatch brief names them as explicit
+hard-stops.
+
 ## Mode
 
 **Persuade.** This is a B2B marketing/corporate site (spec §2.2: explicitly

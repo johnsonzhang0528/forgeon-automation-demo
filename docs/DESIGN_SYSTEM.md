@@ -4,88 +4,158 @@
 本文件是給頁構所作品集交付使用的技術規格摘要，對應 `src/styles/tokens.css`
 的實際實作值。
 
-## 色彩
+**2026-08 CC-01 修正**：以下為 Precision Datum System 重構後的完整數值。
+本輪修正取代先前的「Restrained 色彩策略（單一銅橘強調色）＋系統字體堆疊」
+版本，改為「製程座標系」設計語言：Paper／Ink／Steel／Copper／功能色五組
+角色化色彩，加上真正自託管的 Noto Sans TC／Space Grotesk／IBM Plex Mono
+三款字體。完整對比計算與規格值修正過程見 `docs/CONTRAST_AUDIT.md`；設計
+決策與被拒絕方案見 `docs/DATUM_DECISION_LOG.md` CC-01 章節。
 
-**2026-08 修正（P0.3）**：以下為修正後數值。修正前後完整對比與 WCAG
-計算過程見 `docs/CONTRAST_AUDIT.md`——`--color-accent`／
-`--color-accent-dark`／`--color-accent-light`／`--color-muted-soft`
-皆因未達 WCAG AA 門檻而調深，色相家族（銅橘／金屬灰）維持不變。
+## 色彩
 
 | Token | 值 | 用途 |
 |---|---|---|
-| `--color-ink` | `#12181f` | 主要文字、深色結構（非純黑） |
-| `--color-surface` | `#f7f5f1` | 頁面背景（暖白，非冷藍白） |
-| `--color-card` | `#ffffff` | 卡片背景 |
-| `--color-border` | `#e2e0da` | 一般分隔線 |
-| `--color-muted` | `#5b6470` | 次要文字（金屬灰），5.51:1 on surface |
-| `--color-muted-soft` | `#636b75`（**修正前 `#838c96`，3.13:1 未達標**） | 次要裝飾文字，修正後 4.96:1 on surface |
-| `--color-accent` | `#a34c1f`（**修正前 `#c1622b`，3.82:1 未達標**） | 唯一強調色（銅橘），修正後 5.34:1 on surface，僅用於 CTA、互動狀態、關鍵數據 |
-| `--color-accent-dark` | `#873e18`（修正前 `#9c4d21`） | Hover 狀態，7.06:1 on surface |
-| `--color-accent-light` | `#c06f39`（**修正前 `#e79a68`，2.09:1 未達 3:1 UI 邊界門檻**） | 邊框／深色背景文字，修正後 3.46:1（邊框）／4.74:1（深色背景文字） |
-| `--color-invert-bg` | `#12181f` | 頁尾與反轉區塊背景 |
-| `--color-focus` | `#1d6fbf` | 鍵盤 Focus 外框（電光藍，與 CTA 色區隔避免混淆），4.73:1 on surface |
+| `--color-ink-950` | `#0b1218` | 主要文字、深色結構、Footer、產品組裝舞台 |
+| `--color-ink-800` | `#1b2730` | 次深色文字 |
+| `--color-paper-50` | `#f7f4ed` | 主背景（暖白） |
+| `--color-paper-100` | `#eee9df` | 次背景 |
+| `--color-steel-700`（新增） | `#5c6870` | 次要文字（淺底），5.21:1 on paper-50 |
+| `--color-steel-600`（新增） | `#78838b` | 技術線、規格分隔線、淺底邊框，3.53:1 on paper-50 |
+| `--color-steel-500`（規格值，角色限定） | `#87939b` | 僅用於深底文字／裝飾，不可用於淺底文字或邊框（5.99:1 on ink-950；僅 2.86:1 on paper-50，不通過） |
+| `--color-steel-200`（規格值，角色限定） | `#cdd3d5` | 僅用於深底邊框，不可用於淺底邊框（12.46:1 on ink-950；僅 1.38:1 on paper-50，不通過） |
+| `--color-copper-600` | `#b84e1d` | Datum Origin、主要 CTA、淺底文字/連結，4.61:1 on paper-50（餘裕最小的 Token，見下方警示） |
+| `--color-copper-700`（新增） | `#9c4014` | 較深銅橘，用於 paper-100 背景或需要更多對比餘裕處，6.06:1 on paper-50／5.50:1 on paper-100 |
+| `--color-copper-500`（規格值，角色限定） | `#d5662b` | 僅用於淺底非文字裝飾／邊框（3.32:1，達 3:1 UI 邊界門檻但未達 4.5:1 文字門檻）或深底強調文字（5.18:1 on ink-950） |
+| `--color-signal-green` | `#34745a` | 成功／可導入狀態，5.04:1 on paper-50 |
+| `--color-error` | `#b4352b` | 錯誤狀態，5.49:1 on paper-50 |
+| `--color-focus` | `#1769aa` | Focus 外框，5.26:1 on paper-50／3.27:1 on ink-950 |
 
-**色彩策略**：Restrained（中性色為主 + 單一強調色），刻意避開 AI 紫藍漸層、
-賭場黑金與多重科技強調色（見指令 §14「避免」清單）。
+**色彩使用比例**（設計原則，非程式精確計算）：Paper 55%、Ink 25%、
+Steel 12%、Copper 6%、功能色 2%。Copper 刻意限定只用於 Datum Origin、
+主要 CTA、Active State 與必要重點，不得大量用於標題、Icon、卡片邊框或
+大面積背景／裝飾漸層。
+
+**⚠️ `--color-copper-600` 對比餘裕警示**：4.61:1 是全部 24 組已驗證配對中
+餘裕最小的一組（僅高於 4.5:1 門檻 0.11），其餘配對餘裕介於 3.2–17.2:1。
+未來任何調整 `--color-paper-50` 或 `--color-copper-600` 的階段都必須重新
+執行 `docs/CONTRAST_AUDIT.md` 的計算。
+
+**相容別名**：既有 10 個元件（Header、Button、SectionHeading、
+ProductCard、SolutionCard、IndustryCard、ContactForm、Footer、
+SpecificationTable、CTABanner）使用的舊 Token 名稱
+（`--color-accent`、`--color-muted`、`--color-surface` 等）全部重新指向
+對應的新 Datum Token 值，未刪除、未產生兩套衝突系統。完整對照見
+`src/styles/tokens.css` 的 Compat Alias 區塊。
 
 ## 字體
 
-**2026-08 修正（P1.2，選擇方案 B）**：先前宣告的 Space Grotesk／IBM Plex
-Sans／JetBrains Mono 從未實際載入（無字體檔、無 CDN 連結），已改為系統
-字體堆疊，確保「文件宣稱＝實際生效」。理由見 `docs/REMEDIATION_PLAN.md`。
+**2026-08 CC-01 修正**：先前版本因沙盒無網路存取而使用系統字體堆疊，本輪
+重新確認 npm registry 可存取後，正式安裝並自託管三款合法開源字體。
 
-| 角色 | 字體堆疊 | 備註 |
+| 角色 | 字體 | 授權 | 已載入字重 |
+|---|---|---|---|
+| 標題（英文 Display，`--font-display`） | Space Grotesk（`@fontsource/space-grotesk` 5.3.0） | SIL OFL 1.1 | 500, 600, 700 |
+| 中文（標題與內文，`:lang(zh)` 覆寫優先） | Noto Sans TC（`@fontsource/noto-sans-tc` 5.3.0） | SIL OFL 1.1 | 400, 500, 600, 700 |
+| 規格數值／型號／技術標記（`--font-mono`） | IBM Plex Mono（`@fontsource/ibm-plex-mono` 5.3.0） | SIL OFL 1.1 | 400, 500, 600 |
+
+三款字體皆為自託管 WOFF2（`public/fonts/`），`font-display: swap`，只 Preload
+Noto Sans TC 400（zh-tw 頁面首屏必要字重）。中文標題透過 `:lang(zh)`
+CSS 選擇器強制優先使用 Noto Sans TC（而非 Space Grotesk 開頭的
+`--font-display` 堆疊），避免中文字距被英文 Display 字體的負字距壓縮。
+完整授權與載入細節見 `docs/ASSET_LICENSES.md`。
+
+比例尺度約 1.25，基準 16px。中文內文區塊約 34–42 字寬（`--measure-zh:
+40em`），英文約 58–68ch（`--measure: 62ch`）。
+
+## 字級（Type Scale）
+
+| 層級 | Desktop | Mobile |
 |---|---|---|
-| 標題（英文/數字） | `-apple-system, "Segoe UI", "Century Gothic", "Avenir Next"` | 避免 Inter 預設樣板感，系統字體確定生效 |
-| 內文（英文） | `-apple-system, "Segoe UI", "Helvetica Neue", Roboto` | 長段落易讀，系統字體確定生效 |
-| 中文（標題與內文） | 系統 CJK 堆疊（PingFang TC / Noto Sans TC / 微軟正黑體） | 未內嵌 CJK Web Font（檔案體積考量） |
-| 規格數值／型號 | `ui-monospace, "SF Mono", "SFMono-Regular", "Cascadia Code", Consolas, Menlo` | 型號與規格表數值使用等寬字體，強化「量測感」，系統字體確定生效 |
+| Display | `clamp(3.75rem, 6vw, 6.75rem)` | `clamp(2.65rem, 12vw, 4rem)` |
+| H1 | `clamp(3rem, 4.8vw, 5rem)` | `clamp(2.5rem, 10vw, 3.25rem)` |
+| H2 | `clamp(2.25rem, 3.5vw, 3.75rem)` | 同 Desktop（clamp 自適應） |
+| H3 | `clamp(1.5rem, 2vw, 2rem)` | 同 Desktop |
+| H4 | `clamp(1.125rem, 1.5vw, 1.375rem)` | 同 Desktop |
+| Body Large | `1.125rem` | 同 |
+| Body | `1rem` | 同 |
+| Small | `0.875rem` | 同 |
+| Technical Label | `0.75rem`（Mono、大寫、letter-spacing 0.08em） | 同 |
 
-比例尺度約 1.25，基準 16px。內文區塊 `max-width: 62ch` 控制行寬。
+## Container、Grid、Spacing
 
-## 間距
-
-`--space-3xs`(4px) 到 `--space-3xl`(clamp 64–112px) 共 9 階，區塊級間距使用
-`clamp()` 依視窗寬度浮動，避免大螢幕留白不足、小螢幕留白過度。
+- Container：`--container-reading` 760px、`--container-content` 1280px、
+  `--container-wide` 1440px。
+- Page Gutter：Desktop `clamp(32px,4vw,64px)`、Tablet `clamp(24px,3vw,40px)`、
+  Mobile 20px。
+- Grid：Desktop 12 欄、Tablet 8 欄、Mobile 4 欄（`.datum-grid` utility，
+  各斷點皆用 `minmax(0, 1fr)` 軌道＋子項目 `min-width: 0`，避免長文字
+  內容撐開版面）。
+- Section 節奏：Major `clamp(120px,12vw,176px)`、Standard
+  `clamp(88px,9vw,120px)`、Compact `clamp(56px,6vw,72px)`。
+- Spacing：`--space-1`(4px) 到 `--space-32`(128px) 共 13 階單一數列，舊版
+  `--space-3xs`…`--space-3xl` 命名全部改為指向新數列的別名，不是兩套
+  互相獨立的系統。
 
 ## 圓角
 
 | Token | 值 | 用途 |
 |---|---|---|
-| `--radius-sm` | 4px | Input、Badge |
-| `--radius-md` | 8px | Button |
-| `--radius-lg` | 12px | Card、CTA Banner |
+| `--radius-xs` | 2px | 技術標記、細節裝飾 |
+| `--radius-sm` | 6px | Input、Badge |
+| `--radius-md` | 12px | Button、Card、CTA Banner |
 
-刻意設定上限（12px），避免指令 §13.2 提到的「過多圓角」樣板感；不使用
-藥丸狀按鈕。
+上限 12px，不使用藥丸狀按鈕，不是所有元件都套用相同圓角。
+
+## 邊框
+
+- Hairline（一般分隔線）：`--border-hairline` 1px，以 Steel Token 為主。
+- Technical（技術線）：`--border-technical` 1px。
+- Datum（Active／軸線強調）：`--border-datum` 2px，Copper Token。
+- UI（表單／按鈕）：`--border-ui` 1.5px。
 
 ## 陰影
 
-僅 3 階（`--shadow-sm/md/lg`），預設狀態不使用陰影，只在互動（卡片 Hover）
-或真實層級（行動選單抽屜）時套用，避免「無目的發光」與過度玻璃擬態。
+僅 3 階（`--shadow-sm/md/lg`），只用於 Dropdown、Dialog、Mobile Drawer 與
+Hover 時的可點擊元件，不用於預設卡片狀態。
 
 ## 按鈕
 
-三種變體：`primary`（銅橘實心）、`secondary`（描邊）、`ghost`（純文字連結樣式）。
-兩種尺寸：`md`、`lg`。統一 8px 圓角，無藥丸狀。
+三種變體：`primary`（Copper 實心，Hover 有 1.5px 軸線位移＋加深）、
+`secondary`（Ink 描邊）、`ghost`（純文字連結樣式，Tertiary）。另有
+`secondary-invert`（深底專用）。六種狀態：Default／Hover／Focus
+Visible／Active／Disabled／Loading（CC-01 新增 Loading 狀態與
+`aria-busy`／`aria-disabled` 屬性）。Focus 外框：`2px solid
+var(--color-focus)`，`outline-offset: 3px`。統一 12px 圓角，無藥丸狀。
+
+## 品牌視覺元件（CC-01 新增，`src/components/brand/`）
+
+六個 Precision Datum System 元件：`DatumOrigin`（基準原點標記）、
+`ToleranceBand`（公差帶）、`VisionLockFrame`（視覺定位框）、
+`AssemblySpine`（模組組裝軸）、`ProcessStamp`（工程流程標記）、
+`CutawayWindow`（模組剖面視窗）。逐一的實作方式、Props、Accessibility、
+Reduced Motion、Fallback 說明見 CC-01 執行報告第四節，或直接閱讀各
+`.astro` 檔案開頭的 JSDoc 註解（每個元件都在檔案內完整記錄設計限制與
+理由）。
 
 ## 表單
 
-Input／Select／Textarea 統一使用 1.5px 邊框、8px 圓角；錯誤狀態邊框變色為
-`--color-error` 並顯示 `role="alert"` 錯誤文字；Focus 狀態使用獨立
-`--color-focus` 顏色與 `:focus-visible`，與滑鼠點擊區隔。
+Input／Select／Textarea 統一使用 1.5px 邊框、`--radius-sm`(6px) 圓角；
+錯誤狀態邊框變色為 `--color-error` 並顯示 `role="alert"` 錯誤文字；
+Focus 狀態使用獨立 `--color-focus` 顏色與 `:focus-visible`。
 
 ## 卡片
 
-單層卡片（不使用卡片內嵌卡片），預設 1px hairline 邊框、無陰影；Hover 時
-邊框轉為強調色並套用中階陰影 + 2px 位移。Solution / Product / Industry
-三種卡片共用 `Card.astro` 基底元件。
+單層卡片（不使用卡片內嵌卡片），預設 1px hairline 邊框、無陰影；Hover
+時邊框轉為 `--color-copper-600` 並套用中階陰影 + 2px 位移。Solution /
+Product / Industry 三種卡片共用 `Card.astro` 基底元件（CC-01 未修改此
+元件結構，僅新 Token 值透過 Compat Alias 生效）。
 
 ## 響應式規則
 
-- 斷點：360 / 390 / 768 / 1024 / 1280 / 1440 / 1920px 皆已測試（見
-  `docs/QA_CHECKLIST.md`）。
+- 斷點：360 / 390 / 768 / 1024 / 1280 / 1440 / 1920px。
 - 桌面導覽於 `960px` 以上顯示，以下改為全螢幕抽屜式行動選單。
-- 規格表於 `560px` 以下由橫向表格轉為堆疊式讀法，避免橫向捲動。
+- 規格表於 `560px` 以下由橫向表格轉為堆疊式讀法。
 - 表單欄位於 `720px` 以上採雙欄網格，以下單欄堆疊。
-- 所有容器寬度受控於 `--container-max`(1280px) / `--container-wide`(1440px)。
+- 內部設計系統預覽頁（`/internal-preview/design-system/`）與全部既有
+  頁面在 CC-01 完成後皆於 360／390／768px 通過零橫向溢位檢查（詳見
+  `docs/DATUM_QA.md`）。

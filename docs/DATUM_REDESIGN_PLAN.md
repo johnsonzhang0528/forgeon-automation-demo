@@ -23,7 +23,7 @@ re-litigated per stage — only execution status is updated here.
 | ID | Purpose | Status |
 |---|---|---|
 | CC-00 | Baseline, clean install, naming unification | Done — see `DATUM_DECISION_LOG.md` |
-| CC-01 | Precision Datum Design System (tokens, type, brand components) | Not started |
+| CC-01 | Precision Datum Design System (tokens, type, brand components) | Done — see `DATUM_DECISION_LOG.md`, `DATUM_QA.md`, `IMPECCABLE_REVIEW_LOG.md` |
 | CC-02 | Header + Hero Design Spike | Not started |
 | CC-03 | Homepage core narrative rebuild | Not started |
 | CC-04 | Solution / Product detail page rebuild | Not started |
