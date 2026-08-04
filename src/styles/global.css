@@ -1,6 +1,91 @@
 @import './tokens.css';
 
 /* ---------------------------------------------------------------------- */
+/* Self-hosted webfonts (Precision Datum System)                          */
+/* Source: @fontsource/* (npm), SIL OFL 1.1 — see docs/ASSET_LICENSES.md. */
+/* Only weights actually used ship as WOFF2 files under /public/fonts.    */
+/* font-display: swap on every face so text is never invisible during     */
+/* load (no FOIT); system-stack fallback in tokens.css covers the gap.    */
+/* ---------------------------------------------------------------------- */
+@font-face {
+  font-family: 'Noto Sans TC';
+  src: url('/fonts/noto-sans-tc/noto-sans-tc-chinese-traditional-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF, U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD, U+3000-303F, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FF00-FFEF;
+}
+@font-face {
+  font-family: 'Noto Sans TC';
+  src: url('/fonts/noto-sans-tc/noto-sans-tc-chinese-traditional-500-normal.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Noto Sans TC';
+  src: url('/fonts/noto-sans-tc/noto-sans-tc-chinese-traditional-600-normal.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Noto Sans TC';
+  src: url('/fonts/noto-sans-tc/noto-sans-tc-chinese-traditional-700-normal.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('/fonts/space-grotesk/space-grotesk-latin-500-normal.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('/fonts/space-grotesk/space-grotesk-latin-600-normal.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('/fonts/space-grotesk/space-grotesk-latin-700-normal.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('/fonts/ibm-plex-mono/ibm-plex-mono-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('/fonts/ibm-plex-mono/ibm-plex-mono-latin-500-normal.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('/fonts/ibm-plex-mono/ibm-plex-mono-latin-600-normal.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ---------------------------------------------------------------------- */
 /* Reset                                                                   */
 /* ---------------------------------------------------------------------- */
 *,
@@ -84,32 +169,106 @@ main {
   flex: 1 1 auto;
 }
 
+/* ---------------------------------------------------------------------- */
+/* Headings — Display / H1-H4 (spec §6 type scale)                        */
+/* Chinese-first font order: Noto Sans TC leads --font-display's own      */
+/* declaration order was Latin-first (Space Grotesk) for the English/     */
+/* number-forward brand register, but full <html lang="zh-tw"> pages set  */
+/* heading font-family back to CJK-first here so Traditional Chinese      */
+/* headings never attempt to shape against a Latin-only face and never    */
+/* get compressed by Space Grotesk's tighter letter-spacing intended for  */
+/* Latin display text (spec §6: "中文標題不可出現過度壓縮字距").          */
+/* ---------------------------------------------------------------------- */
 h1,
 h2,
 h3,
 h4 {
   font-family: var(--font-display);
-  line-height: var(--lh-tight);
   font-weight: 600;
   color: var(--color-ink);
-  letter-spacing: -0.01em;
+}
+
+/* :lang(zh) matches the page's actual <html lang="zh-Hant-TW"> (see
+   src/utils/i18n.ts getHtmlLang) via BCP-47 prefix matching — CSS :lang()
+   matches on primary-subtag prefix, so `zh` matches `zh-Hant-TW`. */
+:lang(zh) h1,
+:lang(zh) h2,
+:lang(zh) h3,
+:lang(zh) h4 {
+  font-family: 'Noto Sans TC', var(--font-display);
+  letter-spacing: 0; /* CJK does not use Latin display's negative tracking */
 }
 
 h1 {
-  font-size: var(--fs-4xl);
+  font-size: var(--fs-h1-mobile);
+  line-height: var(--lh-h1);
+  letter-spacing: var(--ls-h1);
 }
 h2 {
-  font-size: var(--fs-2xl);
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+  letter-spacing: var(--ls-h2);
 }
 h3 {
-  font-size: var(--fs-xl);
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
 }
 h4 {
-  font-size: var(--fs-md);
+  font-size: var(--fs-h4);
+  line-height: var(--lh-h4);
 }
 
+@media (min-width: 640px) {
+  h1 {
+    font-size: var(--fs-h1);
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Display utility class (not a semantic heading level — used for the one */
+/* largest hero-scale treatment per page; see spec §6 "Display")          */
+/* ---------------------------------------------------------------------- */
+.text-display {
+  font-family: var(--font-display);
+  font-size: var(--fs-display-mobile);
+  line-height: var(--lh-display);
+  letter-spacing: var(--ls-display);
+  font-weight: 600;
+}
+:lang(zh) .text-display {
+  font-family: 'Noto Sans TC', var(--font-display);
+  letter-spacing: 0;
+}
+@media (min-width: 640px) {
+  .text-display {
+    font-size: var(--fs-display);
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Body text scale                                                        */
+/* ---------------------------------------------------------------------- */
 p {
   max-width: var(--measure);
+}
+:lang(zh) p {
+  max-width: var(--measure-zh);
+}
+
+.text-body-lg {
+  font-size: var(--fs-body-lg);
+  line-height: var(--lh-body-lg);
+}
+.text-small {
+  font-size: var(--fs-small);
+  line-height: var(--lh-small);
+}
+.text-technical {
+  font-family: var(--font-mono);
+  font-size: var(--fs-technical);
+  line-height: var(--lh-technical);
+  letter-spacing: var(--ls-technical);
+  text-transform: uppercase;
 }
 
 a {
@@ -129,7 +288,7 @@ code,
 }
 
 /* ---------------------------------------------------------------------- */
-/* Focus visibility (a11y — spec §24)                                     */
+/* Focus visibility (a11y — spec §24 / CC-01 §9)                          */
 /* ---------------------------------------------------------------------- */
 :focus {
   outline: none;
@@ -137,8 +296,8 @@ code,
 
 :focus-visible {
   outline: 2px solid var(--color-focus);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
+  outline-offset: 3px;
+  border-radius: var(--radius-xs);
 }
 
 /* ---------------------------------------------------------------------- */

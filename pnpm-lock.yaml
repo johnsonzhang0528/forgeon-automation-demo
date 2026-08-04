@@ -8,6 +8,15 @@ importers:
 
   .:
     dependencies:
+      '@fontsource/ibm-plex-mono':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/noto-sans-tc':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/space-grotesk':
+        specifier: ^5.3.0
+        version: 5.3.0
       astro:
         specifier: ^4.16.0
         version: 4.16.19(@types/node@26.1.2)(rollup@4.62.4)(typescript@5.9.3)
@@ -321,6 +330,15 @@ packages:
     engines: {node: '>=12'}
     cpu: [x64]
     os: [win32]
+
+  '@fontsource/ibm-plex-mono@5.3.0':
+    resolution: {integrity: sha512-eTgnZjZEGk1QtD3ZstF+Vclo2HLAni8YMy34/DxllwZvyz1lR/1RF/xTiAquOBO7MvqBx8D2Ig2WCPMVfdZu7Q==}
+
+  '@fontsource/noto-sans-tc@5.3.0':
+    resolution: {integrity: sha512-+0MguVH2vIxkVJLiaMHVKHk+yJZmZvMU9d8z88JdUx8C2CgMLOtm7WNloi3HYlvCNy7TpuvjIUvh5iiGp6INxQ==}
+
+  '@fontsource/space-grotesk@5.3.0':
+    resolution: {integrity: sha512-ksnGizDPXIDuvqcTYTSrmZ+evx9sDlS8rp7+42BQ7wU+spt3twEoXfbJz672C+5CLg6VeUQwRy5RXshWb67LcQ==}
 
   '@img/sharp-darwin-arm64@0.33.5':
     resolution: {integrity: sha512-UT4p+iz/2H4twwAoLCqfA9UH5pI6DggwKEGuaPy7nCVQ8ZsiY5PIcrRvD1DzuY3qYL07NtIQcWnBSY/heikIFQ==}
@@ -2284,6 +2302,12 @@ snapshots:
 
   '@esbuild/win32-x64@0.21.5':
     optional: true
+
+  '@fontsource/ibm-plex-mono@5.3.0': {}
+
+  '@fontsource/noto-sans-tc@5.3.0': {}
+
+  '@fontsource/space-grotesk@5.3.0': {}
 
   '@img/sharp-darwin-arm64@0.33.5':
     optionalDependencies:

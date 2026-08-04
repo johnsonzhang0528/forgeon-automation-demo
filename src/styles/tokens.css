@@ -1,115 +1,247 @@
 /**
- * Design tokens for FORGEON AUTOMATION demo site.
- * See DESIGN.md for the rationale behind every color/type/spacing decision.
+ * Design tokens for FORGEON AUTOMATION — Precision Datum System.
+ * See DESIGN.md for full rationale, docs/CONTRAST_AUDIT.md for the WCAG
+ * math behind every color pairing, and docs/DATUM_DECISION_LOG.md (CC-01
+ * entry) for what changed from the redesign spec's literal proposed values
+ * and why.
+ *
+ * Legacy `--color-*` / `--fs-*` / `--space-*` / `--radius-*` tokens below
+ * (marked "compat alias") are kept and re-pointed at the new palette so the
+ * ten existing components audited in CC-01 (Header, Button, SectionHeading,
+ * ProductCard, SolutionCard, IndustryCard, ContactForm, Footer,
+ * SpecificationTable, CTABanner) keep working unmodified. New work should
+ * use the `--datum-*` names directly; the compat aliases are not meant to
+ * grow new consumers.
  */
 :root {
-  /* ---- Color: ink / surface ---- */
-  --color-ink: #12181f;
-  --color-ink-soft: #2a323c;
-  --color-surface: #f7f5f1;
-  --color-surface-alt: #efece5;
+  /* ======================================================================
+     PRECISION DATUM COLOR SYSTEM
+     Ratio target (design intent, not computed per-pixel): Paper 55% /
+     Ink 25% / Steel 12% / Copper 6% / functional colors 2%. See
+     DESIGN_SYSTEM.md "色彩使用比例" for the applied reasoning per section.
+     ====================================================================== */
+
+  /* ---- Ink: primary text, deep structure, product-assembly stage, footer ---- */
+  --color-ink-950: #0b1218;
+  --color-ink-800: #1b2730;
+
+  /* ---- Paper: primary background, reading areas, quiet sections ---- */
+  --color-paper-50: #f7f4ed;
+  --color-paper-100: #eee9df;
+
+  /* ---- Steel: technical lines, secondary info, spec dividers, inactive ----
+     Three tuned values, not one — the spec's single `--color-steel-500`
+     measured 2.86:1 as text-on-paper (fails 4.5:1) and 1.38:1 as a
+     light-background border (fails 3:1). Rather than pick one value that
+     compromises both roles, three role-specific steps are defined; all
+     share the same neutral-gray hue family. See CONTRAST_AUDIT.md. */
+  --color-steel-700: #5c6870; /* muted/secondary text on paper — 5.21:1 */
+  --color-steel-600: #78838b; /* technical line / border on paper — 3.53:1 (UI) */
+  --color-steel-500: #87939b; /* AS SPECIFIED — muted text on ink-950 (5.99:1) and non-text decorative use only; fails as light-bg text/border, do not use on paper for text or borders */
+  --color-steel-200: #cdd3d5; /* AS SPECIFIED — border/hairline on ink-950 (dark bg) only; fails 3:1 on paper, do not use as a light-background border */
+
+  /* ---- Copper: Datum Origin, primary CTA, active state, engineering
+     fix points. Deliberately NOT used for all headings/icons/card borders/
+     large backgrounds/decorative gradients — see DESIGN_SYSTEM.md. ---- */
+  --color-copper-600: #b84e1d; /* AS SPECIFIED — primary CTA fill + text/link on paper-50, 4.61:1 (passes 4.5:1 with a real but small margin) */
+  --color-copper-700: #9c4014; /* new — deeper copper for text on paper-100 or wherever more margin is needed (6.06:1); same hue family, not a new accent */
+  --color-copper-500: #d5662b; /* AS SPECIFIED — non-text UI/decorative on paper (3.32:1, clears 3:1 border floor) and accent text on ink-950 dark backgrounds (5.18:1); do not use as body text on paper (3.32:1 fails 4.5:1) */
+
+  /* ---- Functional ---- */
+  --color-signal-green: #34745a; /* success / can-deploy state, 5.04:1 on paper-50 */
+  --color-error: #b4352b; /* 5.49:1 on paper-50 */
+  --color-focus: #1769aa; /* focus ring — 5.26:1 on paper-50, 3.27:1 on ink-950 (both clear the 3:1 non-text-UI floor) */
+
+  /* ---- Compat aliases: legacy names existing components already consume.
+     Re-pointed to the closest-role new Datum token. Do not add new
+     consumers of the legacy names — use --color-ink-950 etc. directly. ---- */
+  --color-ink: var(--color-ink-950);
+  --color-ink-soft: var(--color-ink-800);
+  --color-surface: var(--color-paper-50);
+  --color-surface-alt: var(--color-paper-100);
   --color-card: #ffffff;
-  --color-border: #e2e0da;
-  --color-border-strong: #c9c6bd;
-  --color-muted: #5b6470;
-  /* Retuned 2026-08 (docs/CONTRAST_AUDIT.md): #838c96 on --color-surface
-     measured 3.13:1, below the 4.5:1 normal-text WCAG threshold. #636b75
-     measures 4.96:1 on surface / 5.40:1 on white — same "quiet secondary
-     text" role, now readable. */
-  --color-muted-soft: #636b75;
-
-  /* ---- Color: accent ----
-     Retuned 2026-08 (docs/CONTRAST_AUDIT.md): the original #c1622b measured
-     3.82:1 on --color-surface and its paired "on-accent" text
-     (--color-accent-contrast #fff8f2 on #c1622b) measured 3.95:1 — both
-     below the 4.5:1 normal-text threshold used across Button/eyebrow/link
-     copy. Every value below was deepened just enough to clear its actual
-     usage's WCAG threshold (4.5:1 for text, 3:1 for the light/border
-     variant used only as a non-text UI boundary), while keeping the same
-     copper-bronze hue family per DESIGN.md's brand commitment. */
-  --color-accent: #a34c1f;
-  --color-accent-dark: #873e18;
-  --color-accent-light: #c06f39;
-  --color-accent-contrast: #fff8f2;
-
-  /* ---- Color: semantic ---- */
-  --color-success: #2f6b3f;
+  --color-border: var(--color-steel-600);
+  --color-border-strong: var(--color-ink-800);
+  --color-muted: var(--color-steel-700);
+  --color-muted-soft: var(--color-steel-700);
+  --color-accent: var(--color-copper-600);
+  --color-accent-dark: var(--color-copper-700);
+  --color-accent-light: var(--color-copper-500);
+  --color-accent-contrast: var(--color-paper-50);
+  --color-success: var(--color-signal-green);
   --color-success-bg: #eaf3ec;
-  --color-error: #b3372c;
   --color-error-bg: #fbebe9;
-  --color-focus: #1d6fbf;
+  --color-invert-bg: var(--color-ink-950);
+  --color-invert-text: var(--color-paper-50);
+  --color-invert-muted: var(--color-steel-500);
+  --color-invert-border: var(--color-steel-200);
 
-  /* ---- Color: inverted sections (footer, stat bands) ---- */
-  --color-invert-bg: #12181f;
-  --color-invert-text: #f7f5f1;
-  --color-invert-muted: #9aa3ad;
-  --color-invert-border: #2a323c;
+  /* ======================================================================
+     TYPOGRAPHY
+     ====================================================================== */
 
-  /* ---- Typography ----
-   * Font decision (spec P1.2, option B — see docs/REMEDIATION_PLAN.md):
-   * these were previously declared as 'Space Grotesk' / 'IBM Plex Sans' /
-   * 'JetBrains Mono' with no font file, CDN link, or Fontsource package
-   * anywhere in the build — every visitor's browser was silently falling
-   * back to whatever the next name in the stack resolved to, meaning the
-   * declared brand fonts were never actually loaded. This sandbox has no
-   * network access to fetch real font binaries and download+vendor font
-   * files without being able to verify licensing/hashes was judged riskier
-   * than being honest about the fallback. The stacks below are real,
-   * deliberately-chosen system font stacks (not "whatever's left after
-   * Space Grotesk fails to load") that keep the "not Inter, has some
-   * engineering-grade personality" intent from DESIGN.md without claiming
-   * a webfont that was never shipped.
-   */
-  --font-display: -apple-system, 'Segoe UI', 'Century Gothic', 'Avenir Next', 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
-  --font-body: -apple-system, 'Segoe UI', 'Helvetica Neue', Roboto, 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', 'SFMono-Regular', 'Cascadia Code', Consolas, Menlo, monospace;
+  /* ---- Font families ----
+     Self-hosted, verifiable, SIL OFL 1.1 licensed WOFF2 via @fontsource
+     (see docs/ASSET_LICENSES.md). Only the weights actually used are
+     shipped. `font-display: swap` set in the @font-face rules in
+     global.css. System-font fallback chain kept behind each webfont so a
+     failed/blocked font fetch degrades to a real, legible stack rather than
+     tofu or default serif. */
+  --font-display: 'Space Grotesk', -apple-system, 'Segoe UI', 'Century Gothic', 'Avenir Next', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+  --font-body: 'Noto Sans TC', -apple-system, 'Segoe UI', 'Helvetica Neue', Roboto, 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', 'SFMono-Regular', 'Cascadia Code', Consolas, Menlo, monospace;
 
-  --fs-xs: 0.8125rem;
-  --fs-sm: 0.9375rem;
-  --fs-base: 1rem;
-  --fs-md: 1.125rem;
-  --fs-lg: 1.375rem;
-  --fs-xl: 1.75rem;
-  --fs-2xl: 2.25rem;
-  --fs-3xl: 3rem;
-  --fs-4xl: clamp(2.5rem, 5vw, 4rem);
+  /* ---- Type scale (Display / H1-H4 / Body / Small / Technical Label) ----
+     Per redesign spec §6/§19. Chinese headings do NOT inherit
+     --font-display's Latin-first stack directly at the H1/Display sizes —
+     see .datum-display/h1 rules in global.css, which layer Noto Sans TC
+     ahead of Space Grotesk for CJK runs via `lang` scoping, avoiding
+     mis-rendered/tofu'd Chinese glyphs under a Latin display face. */
+  --fs-display: clamp(3.75rem, 6vw, 6.75rem);
+  --fs-display-mobile: clamp(2.65rem, 12vw, 4rem);
+  --lh-display: 0.95;
+  --ls-display: -0.04em;
 
-  --lh-tight: 1.2;
-  --lh-normal: 1.55;
-  --lh-relaxed: 1.75;
+  --fs-h1: clamp(3rem, 4.8vw, 5rem);
+  --fs-h1-mobile: clamp(2.5rem, 10vw, 3.25rem);
+  --lh-h1: 1.02;
+  --ls-h1: -0.035em;
 
+  --fs-h2: clamp(2.25rem, 3.5vw, 3.75rem);
+  --lh-h2: 1.08;
+  --ls-h2: -0.025em;
+
+  --fs-h3: clamp(1.5rem, 2vw, 2rem);
+  --lh-h3: 1.2;
+
+  --fs-h4: clamp(1.125rem, 1.5vw, 1.375rem);
+  --lh-h4: 1.35;
+
+  --fs-body-lg: 1.125rem;
+  --lh-body-lg: 1.7;
+
+  --fs-body: 1rem;
+  --lh-body: 1.75;
+
+  --fs-small: 0.875rem;
+  --lh-small: 1.55;
+
+  --fs-technical: 0.75rem;
+  --lh-technical: 1.4;
+  --ls-technical: 0.08em;
+
+  /* ---- Compat aliases: legacy fs-* scale existing components consume.
+     Mapped to the closest new-scale equivalent so nothing silently
+     shrinks/grows outside its previous visual step. ---- */
+  --fs-xs: var(--fs-technical);
+  --fs-sm: var(--fs-small);
+  --fs-base: var(--fs-body);
+  --fs-md: var(--fs-body-lg);
+  --fs-lg: var(--fs-h4);
+  --fs-xl: var(--fs-h3);
+  --fs-2xl: var(--fs-h2);
+  --fs-3xl: var(--fs-h1);
+  --fs-4xl: var(--fs-h1);
+
+  --lh-tight: var(--lh-h1);
+  --lh-normal: var(--lh-body);
+  --lh-relaxed: var(--lh-body-lg);
+
+  /* ---- Reading measure ----
+     Chinese ~34–42 characters at Noto Sans TC's per-glyph width, English
+     58–68ch, per redesign spec §6. */
   --measure: 62ch;
+  --measure-zh: 40em; /* ~34-42 CJK characters at 1em advance width */
 
-  /* ---- Spacing scale ---- */
-  --space-3xs: 0.25rem;
-  --space-2xs: 0.5rem;
-  --space-xs: 0.75rem;
-  --space-sm: 1rem;
-  --space-md: 1.5rem;
-  --space-lg: 2rem;
-  --space-xl: 3rem;
-  --space-2xl: clamp(3rem, 6vw, 5rem);
-  --space-3xl: clamp(4rem, 8vw, 7rem);
-
-  /* ---- Radius ---- */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-
-  /* ---- Shadow (used sparingly — see DESIGN.md) ---- */
-  --shadow-sm: 0 1px 2px rgba(18, 24, 31, 0.06);
-  --shadow-md: 0 4px 16px rgba(18, 24, 31, 0.10);
-  --shadow-lg: 0 12px 32px rgba(18, 24, 31, 0.14);
-
-  /* ---- Layout ---- */
-  --container-max: 1280px;
+  /* ======================================================================
+     CONTAINER, GRID, SPACING
+     ====================================================================== */
+  --container-reading: 760px;
+  --container-content: 1280px;
   --container-wide: 1440px;
-  --container-padding: clamp(1.25rem, 4vw, 2.5rem);
 
-  /* ---- Motion ---- */
+  --page-gutter-desktop: clamp(32px, 4vw, 64px);
+  --page-gutter-tablet: clamp(24px, 3vw, 40px);
+  --page-gutter-mobile: 20px;
+
+  --grid-gutter-desktop: 28px;
+  --grid-gutter-tablet: 22px;
+  --grid-gutter-mobile: 16px;
+
+  --section-major: clamp(120px, 12vw, 176px);
+  --section-standard: clamp(88px, 9vw, 120px);
+  --section-compact: clamp(56px, 6vw, 72px);
+
+  /* ---- Spacing scale (--space-1 .. --space-32, per redesign spec §7) ---- */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  --space-20: 5rem;     /* 80px */
+  --space-24: 6rem;     /* 96px */
+  --space-32: 8rem;     /* 128px */
+
+  /* ---- Compat aliases: legacy space-* scale existing components consume.
+     One consistent scale, not two conflicting ones (spec §7 explicit
+     instruction) — every legacy name below resolves to a --space-N value,
+     none is redefined independently. ---- */
+  --space-3xs: var(--space-1);
+  --space-2xs: var(--space-2);
+  --space-xs: var(--space-3);
+  --space-sm: var(--space-4);
+  --space-md: var(--space-6);
+  --space-lg: var(--space-8);
+  --space-xl: var(--space-12);
+  --space-2xl: clamp(3rem, 6vw, 5rem);
+  --space-3xl: var(--section-standard);
+
+  /* ---- Container/padding compat aliases ---- */
+  --container-max: var(--container-content);
+  --container-padding: var(--page-gutter-desktop);
+
+  /* ======================================================================
+     RADIUS, BORDER, SHADOW
+     ====================================================================== */
+  --radius-xs: 2px;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+
+  /* Compat aliases: old scale was 4/8/12; new spec caps at 2/6/12. Mapped
+     to the nearest new step so nothing silently changes to a LARGER radius
+     than before — sm(4px)→xs(2px) rounds down, not up, keeping the "less
+     rounded" direction the spec explicitly wants. */
+  --radius-lg: var(--radius-md);
+
+  /* ---- Border widths ---- */
+  --border-hairline: 1px;   /* general dividers */
+  --border-technical: 1px;  /* technical/datum lines, dashed in use */
+  --border-datum: 2px;      /* active datum line, axis emphasis */
+  --border-ui: 1.5px;       /* form controls, buttons */
+
+  /* ---- Shadow: dropdown / dialog / mobile drawer / required overlays only.
+     NOT applied to default card state (see Card.astro — hover-only). ---- */
+  --shadow-sm: 0 1px 2px rgba(11, 18, 24, 0.08);
+  --shadow-md: 0 4px 16px rgba(11, 18, 24, 0.12);
+  --shadow-lg: 0 12px 32px rgba(11, 18, 24, 0.16);
+
+  /* ======================================================================
+     MOTION
+     ====================================================================== */
   --ease-standard: cubic-bezier(0.2, 0.7, 0.3, 1);
-  --duration-fast: 150ms;
-  --duration-standard: 220ms;
+  --duration-micro: 160ms;   /* datum line reveal, small state changes */
+  --duration-ui: 260ms;      /* button/link hover, focus transitions */
+  --duration-section: 480ms; /* section-level reveals */
+  --duration-assembly: 850ms; /* assembly/module-connect motion (CC-08 territory; tokens defined here for brand components to reference) */
+
+  /* Compat aliases */
+  --duration-fast: var(--duration-micro);
+  --duration-standard: var(--duration-ui);
 
   /* ---- Z-index ---- */
   --z-nav: 100;
@@ -121,5 +253,9 @@
   :root {
     --duration-fast: 0ms;
     --duration-standard: 0ms;
+    --duration-micro: 0ms;
+    --duration-ui: 0ms;
+    --duration-section: 0ms;
+    --duration-assembly: 0ms;
   }
 }

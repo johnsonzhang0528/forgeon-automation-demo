@@ -16,25 +16,55 @@
 
 ## 字體
 
-**2026-08 修正（spec P1.2，選擇方案 B）**：先前版本宣告 Space Grotesk／
-IBM Plex Sans／JetBrains Mono 但從未內嵌字體檔，屬於「文件宣稱使用、
-實際未載入」的落差。本輪修正改為明確採用系統字體堆疊，移除不存在的
-字型宣告，不再有此落差。詳細決策理由見 `docs/REMEDIATION_PLAN.md`
-「P1.2 字體決策說明」與 `DESIGN.md` Typography 章節。
+**2026-08 CC-01 修正（Precision Datum System，取代先前的系統字體回退狀態）**：
+CC-00／早期修正輪的沙盒環境無 npm registry 網路存取，因此當時誠實記錄為
+系統字體堆疊，未宣稱載入不存在的 Web Font。CC-01 執行時重新確認 npm
+registry 實際可存取（`npm view @fontsource/noto-sans-tc version` 成功回傳
+`5.3.0`），因此依規格 §5 正式安裝並自託管三款合法開源字體。這是真正的
+Web Font 載入，不是宣稱。
 
-| 字體堆疊 | 用途 | 授權狀態 | 備註 |
-|---|---|---|---|
-| `-apple-system, "Segoe UI", "Century Gothic", "Avenir Next"` + CJK 系統堆疊 | 標題（`--font-display`） | 系統內建字體，無需額外授權 | 已確定生效，非宣稱未載入的狀態 |
-| `-apple-system, "Segoe UI", "Helvetica Neue", Roboto` + CJK 系統堆疊 | 內文（`--font-body`） | 系統內建字體，無需額外授權 | 已確定生效 |
-| `ui-monospace, "SF Mono", "SFMono-Regular", "Cascadia Code", Consolas, Menlo` | 型號／規格數值（`--font-mono`） | 系統內建字體，無需額外授權 | 已確定生效 |
-| 系統 CJK 字體堆疊（PingFang TC / Noto Sans TC / 微軟正黑體） | 中文標題與內文 | 使用作業系統內建字體，無需額外授權 | 依訪客裝置實際安裝字體顯示，未強制下載 Web Font |
+| 字體 | npm 套件 | 版本 | 授權 | 已載入字重 | 格式 | 來源檔案 |
+|---|---|---|---|---|---|---|
+| Noto Sans TC | `@fontsource/noto-sans-tc` | 5.3.0 | SIL Open Font License 1.1（Google Inc.） | 400, 500, 600, 700 | WOFF2 | `public/fonts/noto-sans-tc/*.woff2`；授權原文複製於 `public/fonts/noto-sans-tc/LICENSE.txt` |
+| Space Grotesk | `@fontsource/space-grotesk` | 5.3.0 | SIL Open Font License 1.1（The Space Grotesk Project Authors） | 500, 600, 700 | WOFF2 | `public/fonts/space-grotesk/*.woff2`；授權原文複製於 `public/fonts/space-grotesk/LICENSE.txt` |
+| IBM Plex Mono | `@fontsource/ibm-plex-mono` | 5.3.0 | SIL Open Font License 1.1（IBM Corp.） | 400, 500, 600 | WOFF2 | `public/fonts/ibm-plex-mono/*.woff2`；授權原文複製於 `public/fonts/ibm-plex-mono/LICENSE.txt` |
 
-**不再有「待辦」項目**：因為系統字體堆疊不依賴外部字型檔案下載，沒有
-授權檔案需要確認、沒有需要引入的 `@font-face` 宣告。若未來要改用真正的
-Web Font（例如重新導入 Space Grotesk），需要：(1) 取得授權合規的字體檔
-（本沙盒環境無網路存取，未執行此步驟）、(2) 加入 `@font-face` 或
-Fontsource 套件並設定 `font-display: swap`、(3) 更新本表與 `DESIGN.md`
-為方案 A 狀態，屆時才需要重新確認授權條款。
+**授權條款摘要**：SIL Open Font License 1.1 允許自由使用、研究、修改、
+重新散布，唯一限制是不得單獨販售字體檔本身（Bundled 於本網站程式碼中
+散布不受此限）。三款字體皆可合法自託管於商業／作品集網站，無需另行付費
+或標註來源（雖然本文件仍保留完整來源紀錄以利稽核）。完整授權原文已隨
+每個字體家族的 WOFF2 檔案一併複製到 `public/fonts/<family>/LICENSE.txt`，
+建置時會被 Astro 原樣輸出到 `dist/fonts/<family>/LICENSE.txt`。
+
+**安裝與載入方式**：
+
+1. 透過 `npx --yes pnpm add @fontsource/noto-sans-tc @fontsource/space-grotesk
+   @fontsource/ibm-plex-mono` 安裝（見 `package.json` dependencies）。
+2. 只複製實際使用的字重 WOFF2 檔案到 `public/fonts/`（未複製 Noto Sans TC
+   的 100/200/300/800/900 等未使用字重，避免無意義下載——規格 §5「請依
+   實際頁面需求減少，不得無意義載入全部字重」）。
+3. `src/styles/global.css` 以手寫 `@font-face` 宣告（非直接 `@import
+   '@fontsource/.../index.css'`，因為 Fontsource 套件的 CSS 預設會宣告
+   全部字重，手寫 `@font-face` 才能精確控制只宣告上表 10 個字重），每條
+   都設 `font-display: swap`。
+4. `src/layouts/BaseLayout.astro` 只 Preload 一個檔案：Noto Sans TC 400
+   （zh-tw 頁面 Body 與 H1 的首屏必要字重），Space Grotesk 與 IBM Plex
+   Mono 不 Preload，因為它們只影響非首屏關鍵的英文 Display 與技術標記文字
+   （規格 §5「首屏真正需要的字型才可 Preload」）。
+
+**實際驗證**（見 `docs/DATUM_QA.md` CC-01 章節）：Playwright 對
+`http://localhost:4325/zh-tw/` 的真實 Network 請求記錄確認 7 個 WOFF2
+檔案以 HTTP 200 載入；`document.fonts` FontFace API 檢查確認
+`Noto Sans TC 400/500/600/700`／`Space Grotesk 700`／`IBM Plex Mono
+400/600` 狀態為 `loaded`（`Space Grotesk 500/600`／`IBM Plex Mono 500`
+在該次測試頁面未被實際使用到而顯示 `unloaded`——這是瀏覽器 Lazy 載入
+未觸發使用的字重的正常行為，不是載入失敗；其餘頁面若使用到這些字重時
+會依 `@font-face` 規則正常觸發載入）。
+
+**檔案大小**：`public/fonts/` 總計約 4.0MB（Noto Sans TC 四個字重合計約
+3.9MB，因完整繁體中文字符集無法再壓縮；Space Grotesk／IBM Plex Mono 三個
+字重合計約 96KB）。記錄於 `docs/DATUM_DECISION_LOG.md` 作為已知取捨，非
+遺漏優化。
 
 ## 圖片來源與授權檢查狀態總結
 

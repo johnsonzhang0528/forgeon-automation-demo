@@ -1,4 +1,9 @@
-/* Utility classes — used sparingly, only for genuinely repeated primitives */
+/* Utility classes — used sparingly, only for genuinely repeated primitives.
+   Precision Datum System container/grid utilities added in CC-01; existing
+   .container/.section/.grid-auto classes kept for the ten components
+   audited this stage (Header, Button, SectionHeading, ProductCard,
+   SolutionCard, IndustryCard, ContactForm, Footer, SpecificationTable,
+   CTABanner) — none of them are renamed. */
 
 .container {
   width: 100%;
@@ -12,6 +17,27 @@
   max-width: var(--container-wide);
   margin-inline: auto;
   padding-inline: var(--container-padding);
+}
+
+/* ---- New Datum-named container aliases (spec §7) — same behavior as
+   .container/.container-wide above, offered under the spec's literal
+   token-derived names for new CC-02+ work without renaming the legacy
+   classes ten existing components already reference. ---- */
+.container-reading {
+  width: 100%;
+  max-width: var(--container-reading);
+  margin-inline: auto;
+  padding-inline: var(--page-gutter-mobile);
+}
+@media (min-width: 768px) {
+  .container-reading {
+    padding-inline: var(--page-gutter-tablet);
+  }
+}
+@media (min-width: 1024px) {
+  .container-reading {
+    padding-inline: var(--page-gutter-desktop);
+  }
 }
 
 .visually-hidden {
@@ -32,6 +58,17 @@
 
 .section--tight {
   padding-block: var(--space-2xl);
+}
+
+/* ---- New Datum section-rhythm utilities (spec §7 "Section Spacing") ---- */
+.section-major {
+  padding-block: var(--section-major);
+}
+.section-standard {
+  padding-block: var(--section-standard);
+}
+.section-compact {
+  padding-block: var(--section-compact);
 }
 
 .stack {
@@ -59,6 +96,61 @@
   gap: var(--space-lg);
 }
 
+/* ---------------------------------------------------------------------- */
+/* Datum Grid — explicit 12/8/4-column grid (spec §7)                     */
+/* A small, named set (not "a large amount of hard-to-understand utility  */
+/* classes" — spec's own warning): one grid container class plus a        */
+/* column-span class family used only where an explicit span is needed.   */
+/* Most layouts should use .grid-auto or flex/.stack instead; this is for */
+/* the asymmetric 12-column compositions CC-02+ needs (Hero, System Map). */
+/* ---------------------------------------------------------------------- */
+.datum-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--grid-gutter-mobile);
+}
+/* Every direct grid item defaults to min-width: auto per the CSS Grid
+   spec, which lets long unbroken content (a technical label, an
+   unbreakable class-name string, a long product model number) force the
+   whole row wider than the viewport instead of wrapping/truncating within
+   its track. minmax(0, 1fr) on the tracks above handles most cases;
+   min-width: 0 on items themselves is the belt-and-suspenders fix for
+   anything nested deeper than a direct child. */
+.datum-grid > * {
+  min-width: 0;
+}
+@media (min-width: 768px) {
+  .datum-grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: var(--grid-gutter-tablet);
+  }
+}
+@media (min-width: 1024px) {
+  .datum-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--grid-gutter-desktop);
+  }
+}
+
+/* Column span utilities — mobile base (out of 4), tablet (out of 8),
+   desktop (out of 12). Only the spans the redesign task book's own
+   layouts call for are defined (avoids a combinatorial utility explosion
+   the spec explicitly warns against). */
+.datum-col-full {
+  grid-column: 1 / -1;
+}
+@media (min-width: 1024px) {
+  .datum-col-6-desktop {
+    grid-column: span 6;
+  }
+  .datum-col-7-desktop {
+    grid-column: span 7;
+  }
+  .datum-col-8-desktop {
+    grid-column: span 8;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .reveal {
     opacity: 0;
@@ -69,5 +161,68 @@
   .reveal.is-visible {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Datum interaction utility — Tertiary Link (spec §9)                    */
+/* Text + horizontal axis-arrow, no stacked chevron icon. Hover extends    */
+/* the axis line 8-16px. Shared by any inline text-link CTA outside the   */
+/* Button component (Button.astro's own `ghost` variant covers the button-*/
+/* shaped case; this covers plain inline links that want the same motif). */
+/* ---------------------------------------------------------------------- */
+.datum-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-copper-600);
+  font-weight: 600;
+  text-decoration: none;
+  font-size: var(--fs-small);
+}
+.datum-link__axis {
+  display: inline-block;
+  width: 32px; /* full extended length reserved up front — see note below */
+  height: 1.5px;
+  background: currentColor;
+  position: relative;
+  flex-shrink: 0;
+  /*
+   * Impeccable's mechanical detector (layout-transition antipattern)
+   * flagged an earlier version of this rule that animated the `width`
+   * property directly on hover — animating width/height/padding/margin
+   * triggers layout recalculation on every frame (real performance cost,
+   * not just a lint nitpick). Fixed by reserving the full 32px width up
+   * front and using `transform: scaleX()` (GPU-composited, no layout
+   * recalculation) to visually shrink it to 20px at rest, scaling back to
+   * full width on hover — same "軸線延伸 8-16px" visual result the spec
+   * asks for, achieved through a transform-only transition.
+   */
+  transform: scaleX(0.625); /* 20px / 32px = 0.625 */
+  transform-origin: left center;
+  transition: transform var(--duration-ui) var(--ease-standard);
+}
+.datum-link__axis::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  /* Counter-scale the arrowhead by the inverse of the parent's scaleX so it
+     doesn't stretch horizontally as the axis line's transform animates. */
+  transform: translateY(-50%) rotate(45deg) scaleX(1.6);
+}
+.datum-link:hover {
+  color: var(--color-copper-700);
+}
+.datum-link:hover .datum-link__axis {
+  transform: scaleX(1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .datum-link__axis {
+    transition: none;
   }
 }
