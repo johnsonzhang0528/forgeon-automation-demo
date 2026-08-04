@@ -37,7 +37,7 @@ const otherLocalePath = `/en/industries/${d.entrySlug}/`;
 
   <section class="section section--tight">
     <div class="container industry-hero">
-      <IndustryIcon industry={d.entrySlug as any} class="industry-hero__icon" />
+      <IndustryIcon industry={d.entrySlug as any} size="lg" />
       <div>
         <Badge variant="demo">概念展示內容</Badge>
         <h1 class="industry-hero__title">{d.name['zh-tw']}</h1>
@@ -108,10 +108,6 @@ const otherLocalePath = `/en/industries/${d.entrySlug}/`;
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
-  }
-  .industry-hero__icon {
-    width: 56px;
-    height: 56px;
   }
   .industry-hero__title {
     margin: var(--space-sm) 0 var(--space-sm);

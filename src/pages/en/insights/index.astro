@@ -29,13 +29,14 @@ function formatDate(d: Date) {
   <section class="section section--tight">
     <div class="container">
       <SectionHeading
+        level="h1"
         eyebrow="Insights"
         title="Practical Reference for Automation Projects"
         description="Practical technical information to help evaluate preparation and decisions for automation projects."
       />
       <div class="insights-list">
         {insights.map((post) => (
-          <Card href={`/en/insights/${post.data.entrySlug}/`} class="insight-card">
+          <Card href={`/en/insights/${post.data.entrySlug}/`}>
             <p class="insight-card__date mono">{formatDate(post.data.publishDate)}</p>
             <h2 class="insight-card__title">{post.data.title}</h2>
             <p class="insight-card__summary measure">{post.data.summary}</p>

@@ -42,9 +42,11 @@ function isActive(itemPath: string) {
 
     <div class="site-header__actions">
       <LanguageSwitcher locale={locale} path={path} otherLocalePath={otherLocalePath} />
-      <Button href={`/${locale}/contact/`} size="md" class="site-header__cta" trackEvent="cta_click">
-        {dict.nav.ctaPrimary}
-      </Button>
+      <div class="site-header__cta">
+        <Button href={`/${locale}/contact/?intent=project`} size="md" trackEvent="cta_click" data-intent="project" data-source="header-desktop">
+          {dict.nav.ctaPrimary}
+        </Button>
+      </div>
       <button
         type="button"
         class="mobile-nav-toggle"
@@ -86,9 +88,11 @@ function isActive(itemPath: string) {
       </ul>
       <div class="mobile-nav__footer">
         <LanguageSwitcher locale={locale} path={path} otherLocalePath={otherLocalePath} />
-        <Button href={`/${locale}/contact/`} size="lg" class="mobile-nav__cta" trackEvent="cta_click">
-          {dict.nav.ctaPrimary}
-        </Button>
+        <div class="mobile-nav__cta">
+          <Button href={`/${locale}/contact/?intent=project`} size="lg" trackEvent="cta_click" data-intent="project" data-source="header-mobile">
+            {dict.nav.ctaPrimary}
+          </Button>
+        </div>
       </div>
     </div>
   </div>
@@ -138,6 +142,20 @@ function isActive(itemPath: string) {
     align-items: center;
     gap: var(--space-md);
   }
+  /*
+   * .site-header__cta / .mobile-nav__cta are native <div> wrappers around
+   * <Button>, not the class passed into Button itself. Astro scoped CSS only
+   * stamps the data-astro-cid-* attribute onto elements rendered directly in
+   * THIS component's own template — a class handed to a child component
+   * (Button.astro) is rendered on a DOM node that carries Button's own scope
+   * hash, not Header's, so a selector like `.site-header__cta` written here
+   * would never match it. Wrapping the child in a local <div>/<span> and
+   * styling that wrapper keeps every display/sizing rule inside the scope
+   * that actually owns the matching DOM node. See docs/REMEDIATION_PLAN.md
+   * P0.1 for the full writeup; the same fix is applied everywhere else a
+   * parent tried to reach into a child component's rendered class
+   * (IndustryIcon's `industry-hero__icon`, Card's `insight-card`).
+   */
   .site-header__cta {
     display: none;
   }
@@ -205,6 +223,19 @@ function isActive(itemPath: string) {
     padding-top: var(--space-lg);
   }
   .mobile-nav__cta {
+    display: flex;
+    width: 100%;
+  }
+  /*
+   * Deliberate, documented :global() use (per docs/REMEDIATION_PLAN.md
+   * P0.1 option (c)): the wrapper above can't set the width of the <a class
+   * ="btn"> Button renders internally without reaching past its own scope
+   * hash, and Button.astro has no `fullWidth` prop today. Scoping this to
+   * `.mobile-nav__cta > :global(.btn)` keeps the blast radius to exactly
+   * this one wrapper instead of a bare `:global(.btn)` that would leak into
+   * every Button on the page.
+   */
+  .mobile-nav__cta > :global(.btn) {
     width: 100%;
   }
 

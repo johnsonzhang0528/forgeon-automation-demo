@@ -5,12 +5,19 @@
  */
 export interface Props {
   product: 'axm-400' | 'vision-x2' | 'flexcell-m';
+  /** 'flush' drops the border/radius so the glyph can bleed to a parent
+   * card's edge (used by ProductCard, which sets `padding="none"` on its
+   * own Card). This is a real typed prop rather than a parent's scoped CSS
+   * reaching into this component's class — see docs/REMEDIATION_PLAN.md
+   * P0.1 for why the old `.product-card :global(.product-glyph)` approach
+   * on the *caller* side was replaced. */
+  variant?: 'default' | 'flush';
   class?: string;
 }
-const { product, class: className = '' } = Astro.props;
+const { product, variant = 'default', class: className = '' } = Astro.props;
 ---
 
-<div class:list={['product-glyph', className]}>
+<div class:list={['product-glyph', `product-glyph--${variant}`, className]}>
   {product === 'axm-400' && (
     <svg viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect x="20" y="90" width="160" height="20" rx="3" fill="#e2e0da" stroke="#5b6470" stroke-width="1.5"/>
@@ -56,6 +63,11 @@ const { product, class: className = '' } = Astro.props;
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+  .product-glyph--flush {
+    border: none;
+    border-radius: 0;
+    border-bottom: 1px solid var(--color-border);
   }
   .product-glyph svg {
     width: 100%;

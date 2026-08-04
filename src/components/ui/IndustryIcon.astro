@@ -1,12 +1,21 @@
 ---
+/**
+ * `size` is a real, typed prop rather than relying on a parent page's
+ * scoped CSS to reach into this component's rendered class (see
+ * docs/REMEDIATION_PLAN.md P0.1 — a parent's `.industry-hero__icon { width:
+ * 56px }` rule never matched because Astro scoped CSS only tags DOM nodes
+ * rendered directly inside the parent's own template, not a child
+ * component's output).
+ */
 export interface Props {
   industry: 'semiconductor-electronics' | 'automotive-components' | 'metal-machining' | 'packaging-logistics';
+  size?: 'md' | 'lg';
   class?: string;
 }
-const { industry, class: className = '' } = Astro.props;
+const { industry, size = 'md', class: className = '' } = Astro.props;
 ---
 
-<svg class:list={['industry-icon', className]} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<svg class:list={['industry-icon', `industry-icon--${size}`, className]} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
   {industry === 'semiconductor-electronics' && (
     <>
       <rect x="14" y="14" width="20" height="20" rx="2" stroke="currentColor" stroke-width="1.6"/>
@@ -45,5 +54,9 @@ const { industry, class: className = '' } = Astro.props;
     height: 40px;
     color: var(--color-accent);
     flex-shrink: 0;
+  }
+  .industry-icon--lg {
+    width: 56px;
+    height: 56px;
   }
 </style>

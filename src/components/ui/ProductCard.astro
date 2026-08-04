@@ -16,8 +16,8 @@ const { locale, slug, name, positioning, description } = Astro.props;
 const dict = getDictionary(locale);
 ---
 
-<Card href={`/${locale}/products/${slug}/`} class="product-card">
-  <ProductGlyph product={slug} />
+<Card href={`/${locale}/products/${slug}/`} padding="none">
+  <ProductGlyph product={slug} variant="flush" />
   <div class="product-card__body">
     <div class="product-card__head">
       <h3 class="product-card__name mono">{name}</h3>
@@ -33,15 +33,6 @@ const dict = getDictionary(locale);
 </Card>
 
 <style>
-  .product-card {
-    padding: 0;
-    overflow: hidden;
-  }
-  .product-card :global(.product-glyph) {
-    border: none;
-    border-radius: 0;
-    border-bottom: 1px solid var(--color-border);
-  }
   .product-card__body {
     display: flex;
     flex-direction: column;

@@ -15,7 +15,7 @@ const { locale, slug, name, description, hasDetailPage = false } = Astro.props;
 const dict = getDictionary(locale);
 ---
 
-<Card href={`/${locale}/industries/${slug}/`} class="industry-card">
+<Card href={`/${locale}/industries/${slug}/`}>
   <IndustryIcon industry={slug} />
   <h3 class="industry-card__title">{name}</h3>
   <p class="industry-card__desc measure">{description}</p>

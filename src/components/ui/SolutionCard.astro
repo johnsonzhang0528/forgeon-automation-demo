@@ -15,7 +15,7 @@ const { locale, slug, name, description, hasDetailPage = false } = Astro.props;
 const dict = getDictionary(locale);
 ---
 
-<Card href={`/${locale}/solutions/${slug}/`} class="solution-card">
+<Card href={`/${locale}/solutions/${slug}/`}>
   <SolutionIcon slug={slug} />
   <h3 class="solution-card__title">{name}</h3>
   <p class="solution-card__desc measure">{description}</p>

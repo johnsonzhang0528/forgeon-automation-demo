@@ -12,12 +12,24 @@
   --color-border: #e2e0da;
   --color-border-strong: #c9c6bd;
   --color-muted: #5b6470;
-  --color-muted-soft: #838c96;
+  /* Retuned 2026-08 (docs/CONTRAST_AUDIT.md): #838c96 on --color-surface
+     measured 3.13:1, below the 4.5:1 normal-text WCAG threshold. #636b75
+     measures 4.96:1 on surface / 5.40:1 on white — same "quiet secondary
+     text" role, now readable. */
+  --color-muted-soft: #636b75;
 
-  /* ---- Color: accent ---- */
-  --color-accent: #c1622b;
-  --color-accent-dark: #9c4d21;
-  --color-accent-light: #e79a68;
+  /* ---- Color: accent ----
+     Retuned 2026-08 (docs/CONTRAST_AUDIT.md): the original #c1622b measured
+     3.82:1 on --color-surface and its paired "on-accent" text
+     (--color-accent-contrast #fff8f2 on #c1622b) measured 3.95:1 — both
+     below the 4.5:1 normal-text threshold used across Button/eyebrow/link
+     copy. Every value below was deepened just enough to clear its actual
+     usage's WCAG threshold (4.5:1 for text, 3:1 for the light/border
+     variant used only as a non-text UI boundary), while keeping the same
+     copper-bronze hue family per DESIGN.md's brand commitment. */
+  --color-accent: #a34c1f;
+  --color-accent-dark: #873e18;
+  --color-accent-light: #c06f39;
   --color-accent-contrast: #fff8f2;
 
   /* ---- Color: semantic ---- */

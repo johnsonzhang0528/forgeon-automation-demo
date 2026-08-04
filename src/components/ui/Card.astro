@@ -2,15 +2,25 @@
 /**
  * Shared card shell — no shadow until hover, hairline border, no
  * cards-inside-cards. Consumed by SolutionCard / ProductCard / IndustryCard.
+ *
+ * `padding` is a real, typed prop (not a `class` string a parent passes in
+ * and then tries to override from its own scoped <style>). Astro scoped CSS
+ * only tags DOM nodes rendered directly inside a component's own template,
+ * so a rule like ProductCard's old `.product-card { padding: 0 }` never
+ * matched the <a class="card"> node actually rendered by this file — see
+ * docs/REMEDIATION_PLAN.md P0.1. Consumers that need a different padding
+ * (ProductCard flushes it to 0 so ProductGlyph can bleed to the card edge)
+ * now say so explicitly via this prop.
  */
 export interface Props {
   href: string;
+  padding?: 'default' | 'none';
   class?: string;
 }
-const { href, class: className = '' } = Astro.props;
+const { href, padding = 'default', class: className = '' } = Astro.props;
 ---
 
-<a href={href} class:list={['card', className]}>
+<a href={href} class:list={['card', `card--padding-${padding}`, className]}>
   <slot />
 </a>
 
@@ -28,6 +38,10 @@ const { href, class: className = '' } = Astro.props;
     transition: border-color var(--duration-fast) var(--ease-standard),
       box-shadow var(--duration-fast) var(--ease-standard),
       transform var(--duration-fast) var(--ease-standard);
+  }
+  .card--padding-none {
+    padding: 0;
+    overflow: hidden;
   }
   .card:hover {
     border-color: var(--color-accent);
