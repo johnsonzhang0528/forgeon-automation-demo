@@ -1,0 +1,110 @@
+---
+/**
+ * ProcessStamp — an engineering-workflow status marker: Reviewed /
+ * Evaluated / Configured / Verified. Deliberately built to NOT resemble a
+ * certification/compliance mark (spec §10.5 hard constraint: "不可長得像
+ * ISO、CE、政府認證；不可讓使用者誤認為是真實認證"):
+ *
+ * - Rectangular chip with a datum corner notch, not a circular/shield
+ *   seal shape (both are the standard certification-mark silhouette).
+ * - No laurel wreath, no star ring, no badge ribbon.
+ * - Always renders the words "流程狀態" / "PROCESS STATUS" as a permanent,
+ *   non-decorative visible label — never just an icon/mark alone — so it
+ *   cannot be screenshotted or cropped into something that reads as a
+ *   standalone certification seal.
+ * - Uses the same copper/steel/ink palette as the rest of the site, not a
+ *   gold/blue "official seal" color scheme.
+ */
+export interface Props {
+  status: 'reviewed' | 'evaluated' | 'configured' | 'verified';
+  /** ISO date or free-text date the status applies to (demo data — caller must supply real/labeled sample data). */
+  date?: string;
+  /** Optional reference code, e.g. a concept-scenario or document ID. */
+  reference?: string;
+  class?: string;
+}
+
+const { status, date, reference, class: className = '' } = Astro.props;
+
+const labels: Record<Props['status'], { zh: string; en: string }> = {
+  reviewed: { zh: '已審閱', en: 'REVIEWED' },
+  evaluated: { zh: '已評估', en: 'EVALUATED' },
+  configured: { zh: '已配置', en: 'CONFIGURED' },
+  verified: { zh: '已驗證', en: 'VERIFIED' },
+};
+const label = labels[status];
+---
+
+<div class:list={['process-stamp', `process-stamp--${status}`, className]} role="note">
+  <div class="process-stamp__corner" aria-hidden="true"></div>
+  <div class="process-stamp__body">
+    <span class="process-stamp__eyebrow mono">流程狀態 · PROCESS STATUS</span>
+    <span class="process-stamp__label">
+      <span class="process-stamp__label-zh">{label.zh}</span>
+      <span class="process-stamp__label-en mono">{label.en}</span>
+    </span>
+    {(date || reference) && (
+      <span class="process-stamp__meta mono">
+        {reference && <span>{reference}</span>}
+        {date && <span>{date}</span>}
+      </span>
+    )}
+  </div>
+</div>
+
+<style>
+  .process-stamp {
+    position: relative;
+    display: inline-flex;
+    align-items: stretch;
+    background: var(--color-paper-50);
+    border: 1.5px solid var(--color-steel-600);
+    border-radius: var(--radius-xs);
+    overflow: hidden;
+    max-width: 280px;
+  }
+  /* Datum-style corner notch (a clipped triangle, not a rosette/seal
+     silhouette) — signals "engineering annotation," not "official stamp". */
+  .process-stamp__corner {
+    width: 6px;
+    flex-shrink: 0;
+    background: var(--color-steel-600);
+  }
+  .process-stamp--verified .process-stamp__corner,
+  .process-stamp--configured .process-stamp__corner {
+    background: var(--color-copper-600);
+  }
+  .process-stamp__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-2) var(--space-3);
+  }
+  .process-stamp__eyebrow {
+    font-size: 0.5625rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-steel-700);
+  }
+  .process-stamp__label {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+  }
+  .process-stamp__label-zh {
+    font-weight: 700;
+    font-size: var(--fs-small);
+    color: var(--color-ink-800);
+  }
+  .process-stamp__label-en {
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    color: var(--color-copper-700);
+  }
+  .process-stamp__meta {
+    display: flex;
+    gap: var(--space-2);
+    font-size: 0.625rem;
+    color: var(--color-steel-700);
+  }
+</style>

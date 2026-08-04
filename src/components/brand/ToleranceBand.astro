@@ -1,0 +1,232 @@
+---
+/**
+ * ToleranceBand — two parallel boundary lines with a translucent
+ * acceptable-range band between them, optionally marking Min/Target/Max.
+ * Deliberately NOT a progress bar (spec §10.2): there is no single filled
+ * percentage, no start-at-zero-and-fill motion, and the band's own width
+ * — not a moving fill — is the entire visual message ("this is the
+ * acceptable range," not "we are N% of the way there").
+ *
+ * Used for: fit/no-fit ranges, spec tolerance ranges, decision thresholds,
+ * risk boundaries. All numeric content rendered through this component in
+ * this preview/demo build is sample data and must be labeled as such by
+ * the caller (spec §10.2: "Demo 預覽只能標示為示範值") — this component
+ * itself does not fabricate figures, it only visualizes whatever real
+ * min/target/max/value props it is given.
+ */
+export interface Props {
+  orientation?: 'horizontal' | 'vertical';
+  min: number;
+  max: number;
+  /** Optional target/nominal value inside [min, max]. */
+  target?: number;
+  /** Optional current/actual value to plot as a marker — may fall outside [min, max] to show an out-of-tolerance reading. */
+  value?: number;
+  /** Unit suffix for the numeric labels, e.g. "mm", "°C". */
+  unit?: string;
+  /** Visible min/max/target numeric labels. */
+  showLabels?: boolean;
+  /** Marks this as demonstration data — renders a visible "示範數值" tag. Required to be true unless the caller has real figures. */
+  isDemoData?: boolean;
+  class?: string;
+}
+
+const {
+  orientation = 'horizontal',
+  min,
+  max,
+  target,
+  value,
+  unit = '',
+  showLabels = true,
+  isDemoData = true,
+  class: className = '',
+} = Astro.props;
+
+const range = max - min || 1;
+const pct = (n: number) => Math.max(0, Math.min(100, ((n - min) / range) * 100));
+const targetPct = target !== undefined ? pct(target) : undefined;
+const valuePct = value !== undefined ? pct(value) : undefined;
+const valueInRange = value !== undefined ? value >= min && value <= max : undefined;
+
+const isVertical = orientation === 'vertical';
+---
+
+<div
+  class:list={['tolerance-band', `tolerance-band--${orientation}`, className]}
+  role="img"
+  aria-label={`公差帶：最小值 ${min}${unit}，最大值 ${max}${unit}${target !== undefined ? `，目標值 ${target}${unit}` : ''}${value !== undefined ? `，目前值 ${value}${unit}（${valueInRange ? '在公差範圍內' : '超出公差範圍'}）` : ''}`}
+>
+  {isDemoData && <span class="tolerance-band__demo-tag">示範數值 · Demo Data</span>}
+
+  <div class="tolerance-band__track">
+    <div class="tolerance-band__boundary tolerance-band__boundary--min" aria-hidden="true"></div>
+    <div class="tolerance-band__zone" aria-hidden="true"></div>
+    <div class="tolerance-band__boundary tolerance-band__boundary--max" aria-hidden="true"></div>
+
+    {targetPct !== undefined && (
+      <div
+        class="tolerance-band__target"
+        style={isVertical ? `bottom: ${targetPct}%` : `left: ${targetPct}%`}
+        aria-hidden="true"
+      ></div>
+    )}
+
+    {valuePct !== undefined && (
+      <div
+        class:list={['tolerance-band__value', { 'tolerance-band__value--out': !valueInRange }]}
+        style={isVertical ? `bottom: ${Math.max(0, Math.min(100, valuePct))}%` : `left: ${Math.max(0, Math.min(100, valuePct))}%`}
+        aria-hidden="true"
+      ></div>
+    )}
+  </div>
+
+  {showLabels && (
+    <div class="tolerance-band__labels">
+      <span class="tolerance-band__label tolerance-band__label--min mono">MIN {min}{unit}</span>
+      {target !== undefined && <span class="tolerance-band__label tolerance-band__label--target mono">TARGET {target}{unit}</span>}
+      <span class="tolerance-band__label tolerance-band__label--max mono">MAX {max}{unit}</span>
+    </div>
+  )}
+  {value !== undefined && (
+    <p class="tolerance-band__value-readout mono">
+      {isVertical ? '目前值' : '目前值'} {value}{unit}
+      <span class:list={['tolerance-band__status', { 'tolerance-band__status--fail': !valueInRange }]}>
+        {valueInRange ? '（在公差範圍內）' : '（超出公差範圍）'}
+      </span>
+    </p>
+  )}
+</div>
+
+<style>
+  .tolerance-band {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .tolerance-band__demo-tag {
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-steel-700);
+    border: 1px solid var(--color-steel-600);
+    border-radius: var(--radius-xs);
+    padding: 0.15em 0.5em;
+  }
+  .tolerance-band__track {
+    position: relative;
+    background: transparent;
+  }
+  .tolerance-band--horizontal .tolerance-band__track {
+    height: 32px;
+    width: 100%;
+  }
+  .tolerance-band--vertical .tolerance-band__track {
+    width: 32px;
+    height: 200px;
+  }
+  .tolerance-band__zone {
+    position: absolute;
+    background: color-mix(in srgb, var(--color-copper-500) 14%, transparent);
+    border-radius: var(--radius-xs);
+  }
+  .tolerance-band--horizontal .tolerance-band__zone {
+    inset: 8px 0;
+  }
+  .tolerance-band--vertical .tolerance-band__zone {
+    inset: 0 8px;
+  }
+  .tolerance-band__boundary {
+    position: absolute;
+    background: var(--color-steel-600);
+  }
+  .tolerance-band--horizontal .tolerance-band__boundary {
+    top: 4px;
+    bottom: 4px;
+    width: 2px;
+  }
+  .tolerance-band--horizontal .tolerance-band__boundary--min {
+    left: 0;
+  }
+  .tolerance-band--horizontal .tolerance-band__boundary--max {
+    right: 0;
+  }
+  .tolerance-band--vertical .tolerance-band__boundary {
+    left: 4px;
+    right: 4px;
+    height: 2px;
+  }
+  .tolerance-band--vertical .tolerance-band__boundary--min {
+    bottom: 0;
+  }
+  .tolerance-band--vertical .tolerance-band__boundary--max {
+    top: 0;
+  }
+  .tolerance-band__target {
+    position: absolute;
+    background: var(--color-ink-800);
+  }
+  .tolerance-band--horizontal .tolerance-band__target {
+    top: 0;
+    bottom: 0;
+    width: 1.5px;
+    transform: translateX(-50%);
+  }
+  .tolerance-band--vertical .tolerance-band__target {
+    left: 0;
+    right: 0;
+    height: 1.5px;
+    transform: translateY(50%);
+  }
+  .tolerance-band__value {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--color-copper-600);
+    border: 2px solid var(--color-paper-50);
+    box-shadow: 0 0 0 1px var(--color-copper-600);
+  }
+  .tolerance-band--horizontal .tolerance-band__value {
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .tolerance-band--vertical .tolerance-band__value {
+    left: 50%;
+    transform: translate(-50%, 50%);
+  }
+  .tolerance-band__value--out {
+    background: var(--color-error);
+    box-shadow: 0 0 0 1px var(--color-error);
+  }
+  .tolerance-band__labels {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+  .tolerance-band--vertical .tolerance-band__labels {
+    flex-direction: column-reverse;
+  }
+  .tolerance-band__label {
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+    color: var(--color-steel-700);
+  }
+  .tolerance-band__label--target {
+    color: var(--color-ink-800);
+    font-weight: 600;
+  }
+  .tolerance-band__value-readout {
+    font-size: var(--fs-small);
+    margin: 0;
+    color: var(--color-ink-800);
+  }
+  .tolerance-band__status {
+    color: var(--color-signal-green);
+  }
+  .tolerance-band__status--fail {
+    color: var(--color-error);
+  }
+</style>

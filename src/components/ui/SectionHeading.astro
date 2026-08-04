@@ -36,7 +36,19 @@ const Tag = level;
     font-size: var(--fs-xs);
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--color-accent);
+    /*
+     * CC-01 token-compatibility fix, found via axe-core in
+     * tests/e2e/axe.spec.ts (real regression across multiple pages —
+     * home, home-en, and others — every instance where a SectionHeading
+     * renders inside a `.section--alt` block, whose background is
+     * `--color-surface-alt` = `--color-paper-100`). Same root cause and
+     * fix as ProcessTimeline.astro's __index (see that file's comment):
+     * `--color-accent` (copper-600, #b84e1d) measures 4.18-4.19:1 on
+     * `--color-paper-100`, below the 4.5:1 text threshold —
+     * `--color-accent-dark` (copper-700, #9c4014) clears it at 5.50:1,
+     * same hue family, no other visual change.
+     */
+    color: var(--color-accent-dark);
     margin: 0;
     font-weight: 600;
   }

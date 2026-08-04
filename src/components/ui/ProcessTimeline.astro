@@ -42,7 +42,23 @@ const { steps } = Astro.props;
   }
   .process-timeline__index {
     font-size: var(--fs-sm);
-    color: var(--color-accent);
+    /*
+     * CC-01 token-compatibility fix, found via axe-core in
+     * tests/e2e/axe.spec.ts (real regression, not a false positive):
+     * ProcessTimeline is always rendered inside a `.section--alt` (see
+     * every call site: homepage, Solution Detail, About), whose background
+     * is `--color-surface-alt` = `--color-paper-100`. The Precision Datum
+     * palette's `--color-accent` (= `--color-copper-600`, #b84e1d) was
+     * verified in docs/CONTRAST_AUDIT.md to measure only 4.19:1 on
+     * `--color-paper-100` — below the 4.5:1 text threshold, exactly the
+     * failure axe-core caught live in the rendered page
+     * (measured 4.18:1, matching the audit's calculation). `--color-accent
+     * -dark` (= `--color-copper-700`, #9c4014) is the token this palette
+     * specifically added for this "copper text on the tinted paper-100
+     * background" case — verified at 5.50:1. Same hue family, no other
+     * visual change; not a component redesign.
+     */
+    color: var(--color-accent-dark);
     font-weight: 700;
     padding-top: 0.15em;
   }

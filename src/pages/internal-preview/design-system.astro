@@ -1,0 +1,516 @@
+---
+/**
+ * Internal-only Precision Datum System preview / style guide.
+ * Route: /internal-preview/design-system/
+ *
+ * NOT a production site page:
+ * - Not linked from primary nav (src/config/nav.ts has no entry for it).
+ * - Not enumerated by sitemap.xml.ts, which hand-builds its URL list from
+ *   `locales` x a fixed `staticSegments` array plus content-collection
+ *   slugs (src/pages/sitemap.xml.ts) — it has no filesystem-walk step that
+ *   could ever pick this route up, so nothing needed to be added to an
+ *   exclude-list; there is no include path to exclude it from.
+ * - Marked noindex/nofollow via a literal <meta name="robots"> tag below.
+ *   This page intentionally does NOT use SEOHead/BaseLayout, both of which
+ *   are locale-aware and assume a Locale prop this internal tooling page
+ *   doesn't have.
+ *
+ * Naming note: originally attempted at src/pages/__preview/design-system —
+ * Astro's router silently excludes any src/pages path segment starting
+ * with `_` from routing (by design, not a bug), so that path built with 0
+ * errors but emitted no route at all. Moved to `internal-preview/` (spec
+ * CC-01 §3 explicitly allows adjusting the file name to fit the existing
+ * architecture) so `pnpm build` actually emits this page for screenshotting
+ * and review while keeping every other "not a production page" property
+ * above.
+ *
+ * Demonstrates every token, both fonts, all six brand components in every
+ * documented state, Light/Dark background pairing, hover/focus/active/
+ * disabled, and reduced-motion behavior — per CC-01 spec §11.
+ */
+import '../../styles/global.css';
+import '../../styles/utilities.css';
+import Button from '../../components/ui/Button.astro';
+import Badge from '../../components/ui/Badge.astro';
+import FormField from '../../components/forms/FormField.astro';
+import DatumOrigin from '../../components/brand/DatumOrigin.astro';
+import ToleranceBand from '../../components/brand/ToleranceBand.astro';
+import VisionLockFrame from '../../components/brand/VisionLockFrame.astro';
+import AssemblySpine from '../../components/brand/AssemblySpine.astro';
+import ProcessStamp from '../../components/brand/ProcessStamp.astro';
+import CutawayWindow from '../../components/brand/CutawayWindow.astro';
+
+const colorTokens = [
+  { name: '--color-ink-950', value: '#0b1218', usage: '主要文字、深色結構' },
+  { name: '--color-ink-800', value: '#1b2730', usage: '次深色文字' },
+  { name: '--color-paper-50', value: '#f7f4ed', usage: '主背景' },
+  { name: '--color-paper-100', value: '#eee9df', usage: '次背景' },
+  { name: '--color-steel-700', value: '#5c6870', usage: '次要文字（新增，取代 steel-500 作為淺底文字）' },
+  { name: '--color-steel-600', value: '#78838b', usage: '技術線、淺底邊框（新增）' },
+  { name: '--color-steel-500', value: '#87939b', usage: '按規格保留：僅用於深底文字／裝飾，不可作淺底文字或邊框' },
+  { name: '--color-steel-200', value: '#cdd3d5', usage: '按規格保留：僅用於深底邊框' },
+  { name: '--color-copper-600', value: '#b84e1d', usage: 'Datum Origin、主要 CTA、淺底文字/連結' },
+  { name: '--color-copper-700', value: '#9c4014', usage: '深銅橘（新增，paper-100 或需更多對比餘裕時使用）' },
+  { name: '--color-copper-500', value: '#d5662b', usage: '非文字裝飾／邊框（淺底）、深底強調文字' },
+  { name: '--color-signal-green', value: '#34745a', usage: '成功／可導入狀態' },
+  { name: '--color-error', value: '#b4352b', usage: '錯誤狀態' },
+  { name: '--color-focus', value: '#1769aa', usage: 'Focus 外框' },
+];
+
+const spacingTokens = ['1', '2', '3', '4', '5', '6', '8', '10', '12', '16', '20', '24', '32'];
+
+const spineNodes = [
+  { label: 'AXM-400', caption: '定位模組', state: 'connected' as const },
+  { label: 'VISION-X2', caption: '視覺檢測', state: 'aligned' as const },
+  { label: 'FLEXCELL-M', caption: '組裝工作站', state: 'unconnected' as const },
+];
+---
+
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Precision Datum System — 內部設計系統預覽（非正式網站頁面）</title>
+    <meta name="generator" content={Astro.generator} />
+  </head>
+  <body class="preview-body">
+    <div class="preview-banner">
+      <strong>內部設計系統預覽頁</strong> — 僅供本地開發與內部審查使用，未加入主要導覽、未加入
+      Sitemap、已設定 noindex/nofollow，不是正式網站對外頁面。
+    </div>
+
+    <main class="preview-main">
+      <header class="preview-hero">
+        <p class="text-technical" style="color: var(--color-copper-600)">PRECISION DATUM SYSTEM · CC-01</p>
+        <h1>製程座標系設計系統預覽</h1>
+        <p class="text-body-lg" style="color: var(--color-steel-700); max-width: 65ch;">
+          展示 CC-01 建立的全部 Design Token、字體、六個品牌視覺元件與現有元件相容狀態。本頁僅用於本地與內部審查，非正式網站內容頁。
+        </p>
+      </header>
+
+      <!-- ================= 1. Color tokens ================= -->
+      <section class="preview-section" aria-labelledby="s-color">
+        <h2 id="s-color">1. 色彩 Token</h2>
+        <p class="text-small" style="color: var(--color-steel-700)">完整對比數值見 <code>docs/CONTRAST_AUDIT.md</code>。</p>
+        <div class="swatch-grid">
+          {colorTokens.map((t) => (
+            <div class="swatch">
+              <div class="swatch__chip" style={`background: ${t.value}`}></div>
+              <p class="swatch__name mono">{t.name}</p>
+              <p class="swatch__value mono">{t.value}</p>
+              <p class="swatch__usage">{t.usage}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <!-- ================= 2. Typography ================= -->
+      <section class="preview-section" aria-labelledby="s-type">
+        <h2 id="s-type">2. 字體與排版</h2>
+
+        <h3>中文字體（Noto Sans TC 自託管）</h3>
+        <p class="text-display" style="font-size: clamp(2rem, 5vw, 3.5rem);">精準驅動生產</p>
+        <p class="text-body-lg">鋒岳自動化整合精密線性模組、視覺定位檢測與自動化組裝整合方案。0123456789 ABCDEFGH AXM-400</p>
+
+        <h3>英文 Display（Space Grotesk 自託管）</h3>
+        <p class="text-display" lang="en" style="font-size: clamp(2rem, 5vw, 3.5rem);">Precision in Motion</p>
+
+        <h3>技術標記（IBM Plex Mono 自託管）</h3>
+        <p class="text-technical">AXM-400 · VISION-X2 · FLEXCELL-M · TOLERANCE ±0.02MM</p>
+
+        <h3>字級尺度</h3>
+        <!--
+          The samples below are VISUAL swatches of each heading level's
+          type styling, not a real document outline: they use paragraph
+          tags with heading-equivalent CSS classes rather than real
+          semantic heading elements at levels one through four. A
+          style-guide page that rendered a second real level-one heading
+          sample alongside its own page heading would produce two level-one
+          headings on one page, which is exactly the defect
+          scripts/check-h1.mjs exists to catch — this page must pass that
+          same check like every other page (CC-01 §14 runs check:h1 with no
+          stated exemption for the preview page).
+        -->
+        <div class="type-scale">
+          <p class="text-display preview-type-sample" style="margin:0">Display</p>
+          <p class="preview-type-sample preview-type-sample--h1" style="margin:0">H1 標題範例 Heading One</p>
+          <p class="preview-type-sample preview-type-sample--h2" style="margin:0">H2 標題範例 Heading Two</p>
+          <p class="preview-type-sample preview-type-sample--h3" style="margin:0">H3 標題範例 Heading Three</p>
+          <p class="preview-type-sample preview-type-sample--h4" style="margin:0">H4 標題範例 Heading Four</p>
+          <p class="text-body-lg" style="margin:0">Body Large — 適合前導段落與重點說明文字。</p>
+          <p style="margin:0">Body — 一般內文段落，中文約 34–42 字換行，英文約 58–68ch。</p>
+          <p class="text-small" style="margin:0">Small — 次要說明、註解文字。</p>
+          <p class="text-technical" style="margin:0">Technical Label — 型號、規格數值</p>
+        </div>
+      </section>
+
+      <!-- ================= 3. Container & Grid ================= -->
+      <section class="preview-section" aria-labelledby="s-grid">
+        <h2 id="s-grid">3. Container 與 Grid</h2>
+        <p>Container：Reading 760px · Content 1280px · Wide 1440px。Grid：Desktop 12 欄／Tablet 8 欄／Mobile 4 欄。</p>
+        <div class="datum-grid" style="background: var(--color-paper-100); padding: var(--space-4); border-radius: var(--radius-xs);">
+          <div class="grid-demo-cell datum-col-full">datum-col-full（跨全部欄）</div>
+          <div class="grid-demo-cell datum-col-7-desktop">datum-col-7-desktop</div>
+          <div class="grid-demo-cell datum-col-6-desktop">datum-col-6-desktop</div>
+        </div>
+      </section>
+
+      <!-- ================= 4. Spacing ================= -->
+      <section class="preview-section" aria-labelledby="s-spacing">
+        <h2 id="s-spacing">4. Spacing</h2>
+        <div class="spacing-demo">
+          {spacingTokens.map((s) => (
+            <div class="spacing-demo__row">
+              <span class="mono text-small" style="width: 90px;">--space-{s}</span>
+              <div class="spacing-demo__bar" style={`width: var(--space-${s})`}></div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <!-- ================= 5. Radius / Border / Shadow ================= -->
+      <section class="preview-section" aria-labelledby="s-radius">
+        <h2 id="s-radius">5. Radius、Border、Shadow</h2>
+        <div class="cluster" style="gap: var(--space-6); flex-wrap: wrap;">
+          <div class="demo-box" style="border-radius: var(--radius-xs);">radius-xs (2px)</div>
+          <div class="demo-box" style="border-radius: var(--radius-sm);">radius-sm (6px)</div>
+          <div class="demo-box" style="border-radius: var(--radius-md);">radius-md (12px)</div>
+        </div>
+        <div class="cluster" style="gap: var(--space-6); flex-wrap: wrap; margin-top: var(--space-6);">
+          <div class="demo-box" style="box-shadow: var(--shadow-sm);">shadow-sm</div>
+          <div class="demo-box" style="box-shadow: var(--shadow-md);">shadow-md</div>
+          <div class="demo-box" style="box-shadow: var(--shadow-lg);">shadow-lg</div>
+        </div>
+        <div class="cluster" style="gap: var(--space-6); flex-wrap: wrap; margin-top: var(--space-6);">
+          <div class="demo-box" style="border: var(--border-hairline) solid var(--color-steel-600);">hairline</div>
+          <div class="demo-box" style="border: var(--border-datum) solid var(--color-copper-600);">datum line</div>
+        </div>
+      </section>
+
+      <!-- ================= 6. Buttons & interaction states ================= -->
+      <section class="preview-section" aria-labelledby="s-buttons">
+        <h2 id="s-buttons">6. 按鈕與互動狀態</h2>
+        <p class="text-small" style="color: var(--color-steel-700)">用鍵盤 Tab 至按鈕可見 Focus Visible 外框；下方另備 Disabled／Loading。</p>
+        <div class="cluster" style="gap: var(--space-4); flex-wrap: wrap;">
+          <Button variant="primary" size="lg">Primary Button</Button>
+          <Button variant="secondary" size="lg">Secondary Button</Button>
+          <Button variant="ghost" size="lg">Ghost / Tertiary</Button>
+          <Button variant="primary" size="lg" disabled>Disabled</Button>
+          <Button variant="primary" size="lg" loading>Loading</Button>
+        </div>
+        <div class="preview-dark-panel" style="margin-top: var(--space-6);">
+          <div class="cluster" style="gap: var(--space-4); flex-wrap: wrap;">
+            <Button variant="primary" size="lg">Primary（深底）</Button>
+            <Button variant="secondary-invert" size="lg">Secondary Invert（深底）</Button>
+          </div>
+        </div>
+        <p style="margin-top: var(--space-4);">
+          <a href="#s-buttons" class="datum-link">
+            Tertiary Link 範例（軸線箭頭）<span class="datum-link__axis" aria-hidden="true"></span>
+          </a>
+        </p>
+      </section>
+
+      <!-- ================= 7. Form states ================= -->
+      <section class="preview-section" aria-labelledby="s-form">
+        <h2 id="s-form">7. Form 基本狀態</h2>
+        <div style="max-width: 480px; display: flex; flex-direction: column; gap: var(--space-4);">
+          <FormField id="preview-default" label="預設欄位" placeholder="請輸入內容" />
+          <FormField id="preview-required" label="必填欄位" required requiredLabel="必填" placeholder="請輸入內容" />
+        </div>
+        <p style="margin-top: var(--space-4);">
+          既有 Badge 元件（相容性確認）：
+          <Badge variant="neutral">Neutral</Badge>{' '}
+          <Badge variant="demo">Demo Data</Badge>{' '}
+          <Badge variant="accent">Accent</Badge>
+        </p>
+      </section>
+
+      <!-- ================= 8. Brand components ================= -->
+      <section class="preview-section" aria-labelledby="s-brand">
+        <h2 id="s-brand">8. 六個品牌視覺元件</h2>
+
+        <h3>8.1 DatumOrigin</h3>
+        <div class="cluster" style="gap: var(--space-8); align-items: center; flex-wrap: wrap;">
+          <DatumOrigin size={56} label="0,0" />
+          <DatumOrigin size={56} orientation="horizontal" />
+          <DatumOrigin size={56} orientation="vertical" />
+          <div class="preview-dark-panel" style="padding: var(--space-4);">
+            <DatumOrigin size={56} label="X,Y" animated />
+            <p class="text-small" style="color: var(--color-invert-muted); margin: var(--space-2) 0 0;">Animated（重新整理頁面可重播一次）</p>
+          </div>
+        </div>
+
+        <h3>8.2 ToleranceBand</h3>
+        <div style="max-width: 480px; margin-bottom: var(--space-6);">
+          <ToleranceBand min={0} max={100} target={50} value={62} unit="%" />
+        </div>
+        <div style="height: 200px; margin-bottom: var(--space-4);">
+          <ToleranceBand orientation="vertical" min={0} max={50} target={25} value={18} unit="mm" />
+        </div>
+
+        <h3>8.3 VisionLockFrame</h3>
+        <div class="cluster" style="gap: var(--space-6); flex-wrap: wrap;">
+          <div style="width: 220px;">
+            <VisionLockFrame featurePoints={2} animated label="產品模組定位特寫（示範框選）">
+              <div class="vlf-demo-media" aria-hidden="true"></div>
+            </VisionLockFrame>
+          </div>
+          <div style="width: 220px;">
+            <VisionLockFrame featurePoints={4}>
+              <div class="vlf-demo-media" aria-hidden="true"></div>
+            </VisionLockFrame>
+          </div>
+        </div>
+
+        <h3>8.4 AssemblySpine</h3>
+        <AssemblySpine orientation="horizontal" nodes={spineNodes} interactive />
+        <p class="text-small" style="color: var(--color-steel-700)">互動示範：點擊節點圓標可循環 未連接 → 已對齊 → 已連接。</p>
+        <div style="max-width: 320px; margin-top: var(--space-6);">
+          <AssemblySpine orientation="vertical" nodes={spineNodes} />
+        </div>
+
+        <h3>8.5 ProcessStamp</h3>
+        <div class="cluster" style="gap: var(--space-4); flex-wrap: wrap;">
+          <ProcessStamp status="reviewed" date="2026-08-05" reference="DOC-014" />
+          <ProcessStamp status="evaluated" date="2026-08-05" />
+          <ProcessStamp status="configured" reference="CFG-002" />
+          <ProcessStamp status="verified" date="2026-08-05" reference="QA-118" />
+        </div>
+
+        <h3>8.6 CutawayWindow</h3>
+        <div class="cluster" style="gap: var(--space-6); flex-wrap: wrap; align-items: flex-start;">
+          <div style="width: 260px;">
+            <CutawayWindow caption="FIG. 01 — 模組剖面示意（尚無素材）" />
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 9. Light / Dark pairing ================= -->
+      <section class="preview-section" aria-labelledby="s-theme">
+        <h2 id="s-theme">9. Light／Dark 背景版本</h2>
+        <div class="theme-pair">
+          <div class="theme-pair__light">
+            <p class="text-technical" style="color: var(--color-copper-600)">LIGHT / PAPER</p>
+            <h3 style="margin: var(--space-2) 0;">淺色背景標題</h3>
+            <p>一般內文段落於淺色背景下的呈現。</p>
+            <Button variant="primary">Primary CTA</Button>
+          </div>
+          <div class="theme-pair__dark">
+            <p class="text-technical" style="color: var(--color-copper-500)">DARK / INK</p>
+            <h3 style="margin: var(--space-2) 0; color: var(--color-invert-text);">深色背景標題</h3>
+            <p style="color: var(--color-invert-muted);">一般內文段落於深色背景下的呈現。</p>
+            <Button variant="secondary-invert">Secondary Invert CTA</Button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 10. Reduced motion note ================= -->
+      <section class="preview-section" aria-labelledby="s-motion">
+        <h2 id="s-motion">10. Reduced Motion</h2>
+        <p>
+          所有動態元件（DatumOrigin、VisionLockFrame）皆使用 <code class="mono">prefers-reduced-motion: reduce</code> 媒體查詢：
+          啟用時直接呈現最終狀態，不播放位移／描邊動畫。在作業系統設定中開啟「減少動態效果」後重新整理本頁即可驗證上方兩個
+          Animated 範例改為立即完成狀態。
+        </p>
+      </section>
+    </main>
+
+    <style>
+      .preview-banner {
+        background: var(--color-ink-950);
+        color: var(--color-paper-50);
+        padding: var(--space-3) var(--space-4);
+        font-size: var(--fs-small);
+        text-align: center;
+      }
+      .preview-main {
+        max-width: var(--container-content);
+        margin-inline: auto;
+        padding: var(--space-8) var(--page-gutter-mobile) var(--space-32);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-16);
+        /*
+         * <body> is `display: flex; flex-direction: column` site-wide (see
+         * global.css's shared reset). <main> is a flex item of <body>; at
+         * 360px viewport width it was measured via real Playwright
+         * getBoundingClientRect() to render ~13.8px WIDER than <body>'s own
+         * 360px content box (373.78px), confirmed reproducible across
+         * multiple full rebuilds and fresh server ports (not a stale-cache
+         * artifact). `min-width: 0` alone (the textbook fix for a flex
+         * item's automatic min-content-width floor) measurably did not
+         * change the rendered width in this case; only an explicit `width`
+         * on the item resolved it in testing. Setting both `width: 100%`
+         * and `min-width: 0` together removes any ambiguity in how the
+         * flex algorithm resolves this item's cross-axis size — `width:
+         * 100%` gives it an explicit definite size equal to its flex
+         * container's content box, which the layout engine has no
+         * remaining discretion to grow past.
+         */
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 768px) {
+        .preview-main {
+          padding-inline: var(--page-gutter-tablet);
+        }
+      }
+      @media (min-width: 1024px) {
+        .preview-main {
+          padding-inline: var(--page-gutter-desktop);
+        }
+      }
+      .preview-hero {
+        border-bottom: 1px solid var(--color-steel-600);
+        padding-bottom: var(--space-8);
+      }
+      .preview-section h2 {
+        border-top: 1px solid var(--color-steel-600);
+        padding-top: var(--space-8);
+        margin-bottom: var(--space-4);
+      }
+      .preview-section h3 {
+        margin-top: var(--space-8);
+      }
+      .swatch-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: var(--space-4);
+      }
+      .swatch__chip {
+        height: 64px;
+        border-radius: var(--radius-xs);
+        border: 1px solid var(--color-steel-600);
+      }
+      .swatch__name,
+      .swatch__value {
+        margin: var(--space-1) 0 0;
+        font-size: 0.75rem;
+      }
+      .swatch__usage {
+        margin: var(--space-1) 0 0;
+        font-size: var(--fs-small);
+        color: var(--color-steel-700);
+      }
+      .type-scale {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+      }
+      /* Visual-only replicas of h1-h4's computed style, applied to <p> so
+         this page keeps exactly one real <h1> (see the HTML comment above
+         these swatches for why). */
+      .preview-type-sample {
+        font-family: var(--font-display);
+        font-weight: 600;
+        color: var(--color-ink);
+      }
+      :lang(zh) .preview-type-sample {
+        font-family: 'Noto Sans TC', var(--font-display);
+        letter-spacing: 0;
+      }
+      .preview-type-sample--h1 {
+        font-size: var(--fs-h1);
+        line-height: var(--lh-h1);
+        letter-spacing: var(--ls-h1);
+      }
+      .preview-type-sample--h2 {
+        font-size: var(--fs-h2);
+        line-height: var(--lh-h2);
+        letter-spacing: var(--ls-h2);
+      }
+      .preview-type-sample--h3 {
+        font-size: var(--fs-h3);
+        line-height: var(--lh-h3);
+      }
+      .preview-type-sample--h4 {
+        font-size: var(--fs-h4);
+        line-height: var(--lh-h4);
+      }
+      .grid-demo-cell {
+        background: var(--color-copper-500);
+        color: var(--color-paper-50);
+        padding: var(--space-2);
+        font-size: var(--fs-small);
+        border-radius: var(--radius-xs);
+      }
+      .spacing-demo__row {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        margin-bottom: var(--space-2);
+      }
+      .spacing-demo__bar {
+        height: 12px;
+        background: var(--color-copper-600);
+        border-radius: 2px;
+      }
+      .demo-box {
+        background: var(--color-paper-100);
+        border: 1px solid var(--color-steel-600);
+        padding: var(--space-4);
+        font-size: var(--fs-small);
+        min-width: 140px;
+      }
+      .preview-dark-panel {
+        background: var(--color-ink-950);
+        color: var(--color-invert-text);
+        padding: var(--space-6);
+        border-radius: var(--radius-xs);
+        /*
+         * Root cause of a real 360px horizontal-overflow defect found via
+         * Playwright measurement during this stage's QA: this panel was
+         * `display: inline-block` (shrink-to-fit/max-content sizing). The
+         * two side-by-side buttons inside (each `white-space: nowrap` per
+         * Button.astro) sum wider than the viewport at 360px, and
+         * shrink-to-fit sizing (tried both as `inline-block` and as
+         * `block; width: fit-content`) kept resolving to the children's
+         * max-content width rather than deferring to the container — in a
+         * chain of nested flex/shrink-to-fit contexts, intrinsic sizing
+         * measured with Playwright kept reporting the pre-wrap width no
+         * matter which shrink-to-fit variant was used. A plain block box
+         * at `width: 100%` sidesteps the whole intrinsic-sizing question:
+         * it always takes exactly its container's width, `.cluster`'s
+         * `flex-wrap: wrap` then has a hard, unambiguous constraint to
+         * wrap against, and nothing upstream can be enlarged by this
+         * panel's content again. The visual difference (full-width dark
+         * panel vs. content-hugging one) is negligible in this preview
+         * context and is an acceptable trade for a defect-free 360px
+         * layout on a page that must pass the same overflow check as
+         * every other page.
+         */
+        width: 100%;
+      }
+      .vlf-demo-media {
+        aspect-ratio: 4 / 3;
+        background: linear-gradient(135deg, var(--color-ink-800), var(--color-ink-950));
+        border-radius: var(--radius-xs);
+      }
+      .theme-pair {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--space-4);
+      }
+      @media (min-width: 640px) {
+        .theme-pair {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .theme-pair__light,
+      .theme-pair__dark {
+        padding: var(--space-6);
+        border-radius: var(--radius-xs);
+      }
+      .theme-pair__light {
+        background: var(--color-paper-50);
+        border: 1px solid var(--color-steel-600);
+      }
+      .theme-pair__dark {
+        background: var(--color-ink-950);
+      }
+    </style>
+  </body>
+</html>

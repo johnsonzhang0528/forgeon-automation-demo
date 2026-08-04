@@ -1,0 +1,204 @@
+---
+/**
+ * VisionLockFrame — four L-shaped corner registration marks (machine-vision
+ * targeting convention) around content, with a small number of feature
+ * points marking specific areas of interest. Deliberately NOT a centered
+ * crosshair reticle (spec §10.3) and NOT a continuously scanning/sweeping
+ * animation (spec explicitly bans persistent scan loops) — motion is
+ * limited to a one-time lock/align/complete sequence that plays once, not
+ * a looping "scanning" effect.
+ *
+ * Used for: Hero media framing, industry photography, product detail
+ * close-ups, hover/focus emphasis on an image region. Wraps its slotted
+ * content (typically an <img>/<picture>/<svg>) and overlays the frame.
+ */
+export interface Props {
+  /** Number of feature points to render (0-4). Spec explicitly warns against "大量隨機點" — keep this small. */
+  featurePoints?: 0 | 1 | 2 | 3 | 4;
+  /** Plays the lock-on animation once when the frame enters the viewport (JS-driven via IntersectionObserver in the inline script; falls back to static "locked" state with no JS). */
+  animated?: boolean;
+  /** Accessible label for the framed content when it conveys meaning beyond decoration (e.g. "半導體無塵室組裝站定位特寫"). Omit for purely decorative framing over an already-labeled image. */
+  label?: string;
+  class?: string;
+}
+
+const { featurePoints = 2, animated = false, label, class: className = '' } = Astro.props;
+
+// Fixed, deliberate feature-point positions (not random) — spec explicitly
+// bans "大量隨機點". These sit at plausible "point of interest" locations
+// on a typical 4:3/16:10 framed image without clustering in one corner.
+const pointPositions = [
+  { x: 32, y: 28 },
+  { x: 68, y: 62 },
+  { x: 45, y: 78 },
+  { x: 78, y: 22 },
+].slice(0, featurePoints);
+
+const uid = `vlf-${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<div
+  class:list={['vision-lock', { 'vision-lock--animated': animated }, className]}
+  data-vision-lock={animated ? uid : undefined}
+  role={label ? 'img' : undefined}
+  aria-label={label}
+>
+  <div class="vision-lock__content">
+    <slot />
+  </div>
+
+  <svg class="vision-lock__frame" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    {/* Four L-shaped corner marks — 12% of each axis, not a full border box */}
+    <path class="vision-lock__corner vision-lock__corner--tl" d="M2 14 V2 H14" />
+    <path class="vision-lock__corner vision-lock__corner--tr" d="M86 2 H98 V14" />
+    <path class="vision-lock__corner vision-lock__corner--br" d="M98 86 V98 H86" />
+    <path class="vision-lock__corner vision-lock__corner--bl" d="M14 98 H2 V86" />
+  </svg>
+
+  {featurePoints > 0 && (
+    <svg class="vision-lock__points" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      {pointPositions.map((p, i) => (
+        <g class="vision-lock__point" style={`--point-delay: ${i * 90}ms`}>
+          <circle cx={p.x} cy={p.y} r="1.1" fill="var(--color-copper-500)" />
+          <circle cx={p.x} cy={p.y} r="3" fill="none" stroke="var(--color-copper-500)" stroke-width="0.5" opacity="0.6" />
+        </g>
+      ))}
+    </svg>
+  )}
+
+  {animated && (
+    <span class="vision-lock__status mono" data-vision-lock-status={uid} aria-hidden="true">LOCKING</span>
+  )}
+</div>
+
+{animated && (
+  <script define:vars={{ uid }}>
+    (function () {
+      const root = document.querySelector(`[data-vision-lock="${uid}"]`);
+      const status = document.querySelector(`[data-vision-lock-status="${uid}"]`);
+      if (!root) return;
+
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReduced) {
+        root.classList.add('is-locked');
+        if (status) status.textContent = 'LOCKED';
+        return;
+      }
+
+      if (!('IntersectionObserver' in window)) {
+        root.classList.add('is-locked');
+        if (status) status.textContent = 'LOCKED';
+        return;
+      }
+
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              root.classList.add('is-locking');
+              // One-shot: align -> lock -> complete, then stop observing.
+              // This is NOT a repeating scan loop (spec §10.3 ban) — it
+              // fires exactly once per page view.
+              window.setTimeout(() => {
+                root.classList.add('is-locked');
+                if (status) status.textContent = 'LOCKED';
+              }, 620);
+              io.unobserve(root);
+            }
+          }
+        },
+        { threshold: 0.4 }
+      );
+      io.observe(root);
+    })();
+  </script>
+)}
+
+<style>
+  .vision-lock {
+    position: relative;
+    display: block;
+  }
+  .vision-lock__content {
+    display: block;
+  }
+  .vision-lock__frame,
+  .vision-lock__points {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  /* Copper corner marks read against both flat paper backgrounds and
+     photographic/CGI imagery (the component's primary use case per
+     spec §10.3: Hero media, industry photography, product close-ups) —
+     unlike a neutral steel or paper-tone frame, which risks disappearing
+     against light photo content. */
+  .vision-lock__corner {
+    fill: none;
+    stroke: var(--color-copper-500);
+    stroke-width: 1.6;
+    vector-effect: non-scaling-stroke;
+  }
+  .vision-lock__point circle:first-child {
+    opacity: 0.9;
+  }
+  .vision-lock__status {
+    position: absolute;
+    bottom: var(--space-2);
+    right: var(--space-2);
+    font-size: 0.625rem;
+    letter-spacing: 0.08em;
+    color: var(--color-copper-500);
+    background: color-mix(in srgb, var(--color-ink-950) 55%, transparent);
+    padding: 0.2em 0.5em;
+    border-radius: var(--radius-xs);
+  }
+
+  /* ---- Animated states: align -> lock -> complete (one-shot) ---- */
+  .vision-lock--animated .vision-lock__corner {
+    stroke-dasharray: 24;
+    stroke-dashoffset: 24;
+    opacity: 0.5;
+    transition: stroke-dashoffset var(--duration-section) var(--ease-standard),
+      opacity var(--duration-section) var(--ease-standard);
+  }
+  .vision-lock--animated.is-locking .vision-lock__corner {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  .vision-lock--animated .vision-lock__point {
+    opacity: 0;
+    transform: scale(0.5);
+    transform-origin: center;
+    transition: opacity var(--duration-ui) var(--ease-standard),
+      transform var(--duration-ui) var(--ease-standard);
+    transition-delay: var(--point-delay, 0ms);
+  }
+  .vision-lock--animated.is-locking .vision-lock__point {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .vision-lock--animated .vision-lock__status {
+    opacity: 0;
+    transition: opacity var(--duration-ui) var(--ease-standard);
+  }
+  .vision-lock--animated.is-locking .vision-lock__status {
+    opacity: 1;
+  }
+  .vision-lock--animated.is-locked .vision-lock__corner {
+    stroke: var(--color-copper-600);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vision-lock--animated .vision-lock__corner,
+    .vision-lock--animated .vision-lock__point,
+    .vision-lock--animated .vision-lock__status {
+      transition: none;
+      stroke-dashoffset: 0;
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>

@@ -7,6 +7,7 @@ export interface Props {
   class?: string;
   id?: string;
   disabled?: boolean;
+  loading?: boolean;
   ariaLabel?: string;
   trackEvent?: string;
 }
@@ -19,13 +20,16 @@ const {
   class: className = '',
   id,
   disabled = false,
+  loading = false,
   ariaLabel,
   trackEvent,
   ...rest
 } = Astro.props;
 
 const Tag = href ? 'a' : 'button';
-const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boolean).join(' ');
+const classes = ['btn', `btn--${variant}`, `btn--${size}`, className, loading ? 'is-loading' : '']
+  .filter(Boolean)
+  .join(' ');
 ---
 
 <Tag
@@ -33,11 +37,19 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
   type={!href ? type : undefined}
   class={classes}
   id={id}
-  disabled={!href ? disabled : undefined}
+  disabled={!href ? disabled || loading : undefined}
+  aria-disabled={href && (disabled || loading) ? 'true' : undefined}
+  aria-busy={loading ? 'true' : undefined}
   aria-label={ariaLabel}
   data-track={trackEvent}
   {...rest}
 >
+  {loading && (
+    <svg class="btn__spinner" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="2" stroke-opacity="0.3" />
+      <path d="M14.5 8a6.5 6.5 0 0 0-6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+    </svg>
+  )}
   <slot />
 </Tag>
 
@@ -75,10 +87,22 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
     color: var(--color-accent-contrast);
     border-color: var(--color-accent);
   }
+  /*
+   * Primary hover per spec §9: "Hover 不只變亮，可有 1-2px 的軸線位移;
+   * 不得大幅跳動" — a restrained 1.5px lift (transform, not layout-shifting
+   * margin/padding) alongside the darker fill, distinct from the ordinary
+   * :active press-down. prefers-reduced-motion already zeroes
+   * --duration-fast site-wide (tokens.css), so the transform still applies
+   * instantly with no animated motion when reduced motion is requested.
+   */
   .btn--primary:hover {
     background: var(--color-accent-dark);
     border-color: var(--color-accent-dark);
     color: var(--color-accent-contrast);
+    transform: translateY(-1.5px);
+  }
+  .btn--primary:active {
+    transform: translateY(0.5px);
   }
   .btn--secondary {
     background: transparent;
@@ -124,5 +148,24 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
   .btn[disabled] {
     opacity: 0.55;
     cursor: not-allowed;
+  }
+  .btn[disabled]:hover {
+    transform: none;
+  }
+
+  /* ---- Loading state (spec §9: Default/Hover/Focus/Active/Disabled/Loading) ---- */
+  .btn__spinner {
+    animation: btn-spin 800ms linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes btn-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn__spinner {
+      animation-duration: 1ms;
+    }
   }
 </style>

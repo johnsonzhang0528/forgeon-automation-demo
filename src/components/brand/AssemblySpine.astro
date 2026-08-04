@@ -1,0 +1,279 @@
+---
+/**
+ * AssemblySpine — a single main axis line with 3-6 module nodes attached
+ * along it, each in one of three states: unconnected, aligned, connected.
+ * Represents the "modules assemble along one system axis" idea (spec
+ * §10.4) — product assembly, project workflow stages, cross-section
+ * visual continuity, System Architecture diagrams.
+ *
+ * No heavy JavaScript: node connection state is driven entirely by CSS
+ * (`data-state` attribute set at build time via props, or toggled by a
+ * ~20-line vanilla-JS click handler when `interactive` is set — no
+ * framework, no animation library). Mobile gets a simplified vertical
+ * layout with smaller node markers per spec §10.4's explicit mobile
+ * requirement, handled by a single CSS breakpoint, not a second markup
+ * tree.
+ */
+export interface Props {
+  orientation?: 'horizontal' | 'vertical';
+  nodes: Array<{
+    label: string;
+    state?: 'unconnected' | 'aligned' | 'connected';
+    /** Optional short technical caption under the label, e.g. a model code. */
+    caption?: string;
+  }>;
+  /** Clicking a node cycles/sets its visual state locally — for the design-system preview only; real pages should pass fixed `state` per node. */
+  interactive?: boolean;
+  class?: string;
+}
+
+const { orientation = 'horizontal', nodes, interactive = false, class: className = '' } = Astro.props;
+
+// Spec §10.4: "支援 3-6 個節點" — clamp defensively rather than silently
+// rendering an unbounded spine if a caller passes more/fewer.
+const clamped = nodes.slice(0, 6);
+if (clamped.length < 3) {
+  console.warn(`[AssemblySpine] expected 3-6 nodes per spec §10.4, received ${clamped.length}`);
+}
+
+const uid = `spine-${Math.random().toString(36).slice(2, 9)}`;
+const stateLabel: Record<string, string> = {
+  unconnected: '未連接',
+  aligned: '已對齊',
+  connected: '已連接',
+};
+---
+
+<div
+  class:list={['assembly-spine', `assembly-spine--${orientation}`, className]}
+  data-assembly-spine={interactive ? uid : undefined}
+>
+  <div class="assembly-spine__axis" aria-hidden="true"></div>
+  <ol class="assembly-spine__nodes">
+    {clamped.map((node, i) => {
+      const state = node.state ?? 'unconnected';
+      return (
+        <li
+          class:list={['assembly-spine__node', `assembly-spine__node--${state}`]}
+          data-node-index={interactive ? i : undefined}
+          data-node-state={state}
+        >
+          <button
+            type="button"
+            class="assembly-spine__marker"
+            disabled={!interactive}
+            aria-label={`${node.label}：${stateLabel[state]}`}
+          >
+            <span class="assembly-spine__marker-dot" aria-hidden="true"></span>
+          </button>
+          <div class="assembly-spine__meta">
+            <span class="assembly-spine__label">{node.label}</span>
+            {node.caption && <span class="assembly-spine__caption mono">{node.caption}</span>}
+            <span class="assembly-spine__state-tag mono" data-node-state-tag={interactive ? i : undefined}>
+              {stateLabel[state]}
+            </span>
+          </div>
+        </li>
+      );
+    })}
+  </ol>
+</div>
+
+{interactive && (
+  <script define:vars={{ uid }}>
+    (function () {
+      const root = document.querySelector(`[data-assembly-spine="${uid}"]`);
+      if (!root) return;
+      const order = ['unconnected', 'aligned', 'connected'];
+      const stateLabel = { unconnected: '未連接', aligned: '已對齊', connected: '已連接' };
+
+      root.querySelectorAll('[data-node-index]').forEach((li) => {
+        const btn = li.querySelector('button');
+        const tag = li.querySelector('[data-node-state-tag]');
+        if (!btn) return;
+        btn.addEventListener('click', () => {
+          const current = li.getAttribute('data-node-state') || 'unconnected';
+          const next = order[(order.indexOf(current) + 1) % order.length];
+          li.setAttribute('data-node-state', next);
+          li.className = li.className.replace(/assembly-spine__node--\S+/, `assembly-spine__node--${next}`);
+          const label = li.querySelector('.assembly-spine__label')?.textContent || '';
+          btn.setAttribute('aria-label', `${label}：${stateLabel[next]}`);
+          if (tag) tag.textContent = stateLabel[next];
+        });
+      });
+    })();
+  </script>
+)}
+
+<style>
+  .assembly-spine {
+    position: relative;
+  }
+
+  /* ---- Horizontal (desktop default) ---- */
+  .assembly-spine--horizontal {
+    padding-block: var(--space-8);
+  }
+  .assembly-spine--horizontal .assembly-spine__axis {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 2px;
+    background: var(--color-steel-600);
+    transform: translateY(-50%);
+  }
+  .assembly-spine--horizontal .assembly-spine__nodes {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .assembly-spine--horizontal .assembly-spine__node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    flex: 1;
+  }
+
+  /* ---- Vertical ---- */
+  .assembly-spine--vertical .assembly-spine__axis {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 15px;
+    width: 2px;
+    background: var(--color-steel-600);
+  }
+  .assembly-spine--vertical .assembly-spine__nodes {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .assembly-spine--vertical .assembly-spine__node {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .assembly-spine__marker {
+    all: unset;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--color-paper-50);
+    border: 2px solid var(--color-steel-600);
+    cursor: default;
+    flex-shrink: 0;
+    transition: border-color var(--duration-ui) var(--ease-standard),
+      background var(--duration-ui) var(--ease-standard);
+  }
+  [data-assembly-spine] .assembly-spine__marker {
+    cursor: pointer;
+  }
+  .assembly-spine__marker:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+  .assembly-spine__marker-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-steel-600);
+    transition: background var(--duration-ui) var(--ease-standard),
+      transform var(--duration-ui) var(--ease-standard);
+  }
+
+  .assembly-spine__node--aligned .assembly-spine__marker {
+    border-color: var(--color-copper-500);
+  }
+  .assembly-spine__node--aligned .assembly-spine__marker-dot {
+    background: var(--color-copper-500);
+  }
+  .assembly-spine__node--connected .assembly-spine__marker {
+    border-color: var(--color-copper-600);
+    background: var(--color-copper-600);
+  }
+  .assembly-spine__node--connected .assembly-spine__marker-dot {
+    background: var(--color-paper-50);
+    transform: scale(1.15);
+  }
+
+  .assembly-spine__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: center;
+  }
+  .assembly-spine--vertical .assembly-spine__meta {
+    text-align: left;
+  }
+  .assembly-spine__label {
+    font-size: var(--fs-small);
+    font-weight: 600;
+    color: var(--color-ink-800);
+  }
+  .assembly-spine__caption {
+    font-size: 0.6875rem;
+    color: var(--color-steel-700);
+  }
+  .assembly-spine__state-tag {
+    font-size: 0.625rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-steel-700);
+  }
+  .assembly-spine__node--connected .assembly-spine__state-tag {
+    color: var(--color-copper-700);
+  }
+
+  /* ---- Mobile simplified mode (spec §10.4: "Mobile 必須有簡化模式") ----
+     Below 640px, horizontal spines switch to the vertical layout pattern
+     (stacked, smaller markers, left-aligned meta) rather than trying to
+     cram 3-6 wide items into a narrow viewport or force horizontal
+     scrolling — a single breakpoint swap, not a duplicated markup tree. */
+  @media (max-width: 639px) {
+    .assembly-spine--horizontal .assembly-spine__axis {
+      left: 15px;
+      right: auto;
+      top: 0;
+      bottom: 0;
+      height: auto;
+      width: 2px;
+      transform: none;
+    }
+    .assembly-spine--horizontal .assembly-spine__nodes {
+      flex-direction: column;
+      gap: var(--space-6);
+    }
+    .assembly-spine--horizontal .assembly-spine__node {
+      flex-direction: row;
+      align-items: center;
+      text-align: left;
+    }
+    .assembly-spine--horizontal .assembly-spine__meta {
+      text-align: left;
+    }
+    .assembly-spine__marker {
+      width: 28px;
+      height: 28px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .assembly-spine__marker,
+    .assembly-spine__marker-dot {
+      transition: none;
+    }
+  }
+</style>

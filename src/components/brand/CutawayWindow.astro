@@ -1,0 +1,144 @@
+---
+/**
+ * CutawayWindow — reveals product/system media through a non-rectangular
+ * "cutaway" shape (an angled hexagon-ish window with one clipped corner,
+ * evoking a machined cross-section), built with `clip-path: polygon()`.
+ *
+ * Cross-browser handling (spec §10.6 hard requirement — "必須提供 Safari／
+ * Firefox 可行的 Fallback；不可依靠無法降級的複雜 Mask"):
+ * `clip-path: polygon()` is a CSS Basic Shape, not an SVG mask reference —
+ * it has been supported in Safari and Firefox since well before this
+ * project's browser support floor, unlike `clip-path: url(#svg-mask)`,
+ * which has known cross-browser inconsistencies (Firefox/older Safari
+ * historically mishandled `objectBoundingBox` SVG mask units). Using the
+ * polygon() form specifically avoids that failure mode; `@supports
+ * (clip-path: polygon(...))` still guards the shape for the small set of
+ * browsers with no clip-path support at all, falling back to a plain
+ * rounded-rect crop.
+ *
+ * No image / placeholder: renders a readable technical placeholder (not a
+ * blank gray box) with a labeled datum note, per spec's "無圖片時要有可
+ * 讀的 Placeholder" requirement. Mobile gets a simplified (fewer-vertex)
+ * shape per spec's explicit mobile requirement.
+ */
+export interface Props {
+  /** Image src. Omit to render the labeled placeholder state. */
+  src?: string;
+  alt?: string;
+  /** Caption shown as a technical annotation under/beside the window. */
+  caption?: string;
+  class?: string;
+}
+
+const { src, alt = '', caption, class: className = '' } = Astro.props;
+---
+
+<figure class:list={['cutaway-window', className]}>
+  <div class="cutaway-window__shape">
+    {src ? (
+      <img src={src} alt={alt} loading="lazy" />
+    ) : (
+      <div class="cutaway-window__placeholder" role="img" aria-label={alt || '模組剖面示意 · 尚無素材'}>
+        <svg viewBox="0 0 120 90" aria-hidden="true">
+          <line x1="10" y1="10" x2="110" y2="80" stroke="var(--color-steel-600)" stroke-width="1" stroke-dasharray="4 3" />
+          <line x1="110" y1="10" x2="10" y2="80" stroke="var(--color-steel-600)" stroke-width="1" stroke-dasharray="4 3" />
+          <circle cx="60" cy="45" r="3" fill="var(--color-copper-500)" />
+        </svg>
+        <span class="cutaway-window__placeholder-label mono">CUTAWAY · NO MEDIA</span>
+      </div>
+    )}
+    <div class="cutaway-window__frame-line" aria-hidden="true"></div>
+  </div>
+  {caption && <figcaption class="cutaway-window__caption mono">{caption}</figcaption>}
+</figure>
+
+<style>
+  .cutaway-window {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .cutaway-window__shape {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: var(--color-ink-950);
+    border-radius: var(--radius-xs);
+    overflow: hidden;
+  }
+  .cutaway-window__shape img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* clip-path: polygon() — supported Safari/Firefox/Chromium alike, see
+     file-header note. Angled cutaway: two corners clipped at different
+     depths so it doesn't read as a simple rectangle or a symmetric
+     diamond. */
+  @supports (clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%)) {
+    .cutaway-window__shape {
+      clip-path: polygon(6% 0%, 100% 0%, 100% 82%, 92% 100%, 0% 100%, 0% 18%);
+    }
+  }
+  /* No @supports match (extremely old browser): shape falls back to the
+     plain rounded-rect box declared above — a real, readable image crop,
+     not a broken/invisible element. */
+
+  .cutaway-window__frame-line {
+    position: absolute;
+    inset: 0;
+    border: 1px solid color-mix(in srgb, var(--color-copper-500) 55%, transparent);
+    pointer-events: none;
+  }
+  @supports (clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%)) {
+    .cutaway-window__frame-line {
+      clip-path: polygon(6% 0%, 100% 0%, 100% 82%, 92% 100%, 0% 100%, 0% 18%);
+    }
+  }
+
+  .cutaway-window__placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    background: repeating-linear-gradient(
+      135deg,
+      var(--color-ink-950),
+      var(--color-ink-950) 10px,
+      var(--color-ink-800) 10px,
+      var(--color-ink-800) 11px
+    );
+  }
+  .cutaway-window__placeholder svg {
+    width: 55%;
+    height: auto;
+  }
+  .cutaway-window__placeholder-label {
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    color: var(--color-steel-500);
+  }
+
+  .cutaway-window__caption {
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+    color: var(--color-steel-700);
+  }
+
+  /* ---- Mobile simplification (spec §10.6: "Mobile 需簡化形狀") ----
+     Fewer clipped vertices — a single-corner cut instead of the two-corner
+     desktop shape — so the silhouette stays legible at small sizes rather
+     than shrinking six angle changes into a few dozen px of edge. */
+  @media (max-width: 639px) {
+    @supports (clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%)) {
+      .cutaway-window__shape,
+      .cutaway-window__frame-line {
+        clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 14% 100%, 0% 84%);
+      }
+    }
+  }
+</style>

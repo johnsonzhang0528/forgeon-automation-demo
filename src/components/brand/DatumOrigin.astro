@@ -1,0 +1,190 @@
+---
+/**
+ * DatumOrigin — the Precision Datum System's core mark: a horizontal axis,
+ * a vertical axis, and a copper origin point at their intersection, with an
+ * optional coordinate label. Not a crosshair/reticle (spec §10.1 explicitly
+ * bans that reading) — the axes are asymmetric (one arm longer than its
+ * opposite, like a real machinist's datum callout on an engineering
+ * drawing), and only the origin point carries color; the axes stay steel.
+ *
+ * Used as: Logo mark companion, Hero anchor point, Section heading marker,
+ * Focus/Active indicator, chart/diagram origin. This component renders the
+ * mark only — it does not lay out surrounding content.
+ */
+export interface Props {
+  /** Overall square footprint in px. Axis length and origin dot scale off this. */
+  size?: number;
+  orientation?: 'horizontal' | 'vertical' | 'both';
+  /** Visible coordinate label. Omit for no label. */
+  label?: '0,0' | 'X,Y' | string;
+  /** Reveal axes + origin on mount (respects prefers-reduced-motion). */
+  animated?: boolean;
+  /** Pure decoration (true, default) vs. a meaningful graphic that needs a name (false + label required for a11y). */
+  decorative?: boolean;
+  class?: string;
+}
+
+const {
+  size = 48,
+  orientation = 'both',
+  label,
+  animated = false,
+  decorative = true,
+  class: className = '',
+} = Astro.props;
+
+// Asymmetric axis arms: the short arm is 38% of size, the long arm is the
+// remainder — this is what keeps the mark from reading as a centered
+// crosshair/reticle. Origin dot radius scales with size but is clamped so
+// it stays a precise point, not a blob, at large sizes.
+const short = size * 0.38;
+const long = size - short;
+const center = short;
+const dotR = Math.max(2, Math.min(4, size * 0.045));
+const uid = `datum-origin-${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<svg
+  class:list={['datum-origin', { 'datum-origin--animated': animated }, className]}
+  width={size}
+  height={size}
+  viewBox={`0 0 ${size} ${size}`}
+  fill="none"
+  role={decorative ? undefined : 'img'}
+  aria-hidden={decorative ? 'true' : undefined}
+  aria-label={!decorative ? (label ? `基準原點 ${label}` : '基準原點') : undefined}
+>
+  {(orientation === 'horizontal' || orientation === 'both') && (
+    <line
+      class="datum-origin__axis datum-origin__axis--h"
+      x1={0}
+      y1={center}
+      x2={size}
+      y2={center}
+      stroke="var(--color-steel-600)"
+      stroke-width="1"
+      pathLength="1"
+    />
+  )}
+  {(orientation === 'vertical' || orientation === 'both') && (
+    <line
+      class="datum-origin__axis datum-origin__axis--v"
+      x1={center}
+      y1={0}
+      x2={center}
+      y2={size}
+      stroke="var(--color-steel-600)"
+      stroke-width="1"
+      pathLength="1"
+    />
+  )}
+  {/* Short tick marks at each axis end — engineering-drawing datum-line convention, not decoration */}
+  <line x1={center - 3} y1={long} x2={center + 3} y2={long} stroke="var(--color-steel-600)" stroke-width="1" />
+  <line x1={long} y1={center - 3} x2={long} y2={center + 3} stroke="var(--color-steel-600)" stroke-width="1" />
+
+  <circle
+    class="datum-origin__point"
+    cx={center}
+    cy={center}
+    r={dotR}
+    fill="var(--color-copper-600)"
+  />
+  <circle
+    class="datum-origin__ring"
+    cx={center}
+    cy={center}
+    r={dotR + 3}
+    fill="none"
+    stroke="var(--color-copper-500)"
+    stroke-width="1"
+    opacity="0.5"
+  />
+
+  {label && (
+    <text
+      x={center + dotR + 6}
+      y={center - dotR - 4}
+      class="datum-origin__label"
+      fill="var(--color-copper-700)"
+      font-family="var(--font-mono)"
+    >
+      {label}
+    </text>
+  )}
+</svg>
+
+<style define:vars={{ uid }}>
+  .datum-origin {
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .datum-origin__label {
+    font-size: 8px;
+    letter-spacing: 0.04em;
+  }
+  .datum-origin__ring {
+    transform-origin: center;
+  }
+
+  /*
+   * Animated variant: axes draw in via stroke-dashoffset (pathLength="1"
+   * normalizes dash math regardless of actual pixel length), then the
+   * origin point and ring fade/scale in once the axes finish. This is the
+   * ONLY motion this component performs — spec §10.1 explicitly restricts
+   * DatumOrigin's animation to "軸線展開與原點亮起" (axis extension + origin
+   * lighting up), nothing else (no pulsing, no looping, no rotation).
+   */
+  .datum-origin--animated .datum-origin__axis {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: datum-axis-draw var(--duration-section) var(--ease-standard) forwards;
+  }
+  .datum-origin--animated .datum-origin__axis--v {
+    animation-delay: 80ms;
+  }
+  .datum-origin--animated .datum-origin__point,
+  .datum-origin--animated .datum-origin__ring {
+    opacity: 0;
+    transform: scale(0.4);
+    animation: datum-point-light var(--duration-ui) var(--ease-standard) forwards;
+    animation-delay: calc(var(--duration-section) + 80ms);
+  }
+  .datum-origin--animated .datum-origin__label {
+    opacity: 0;
+    animation: datum-point-light var(--duration-ui) var(--ease-standard) forwards;
+    animation-delay: calc(var(--duration-section) + 200ms);
+  }
+  @keyframes datum-axis-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes datum-point-light {
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /*
+   * Reduced motion: show the finished state immediately, per every stage's
+   * shared rule (spec's global reduced-motion requirement + CC-01 §14).
+   * tokens.css already zeroes --duration-section/--duration-ui to 0ms under
+   * prefers-reduced-motion, which collapses the animations to their end
+   * state in a single frame — but the initial opacity:0/dashoffset:1 start
+   * state would otherwise still flash before the (now instant) animation
+   * fires. This explicit override removes that flash by never entering the
+   * "not yet drawn" state at all.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    .datum-origin--animated .datum-origin__axis,
+    .datum-origin--animated .datum-origin__point,
+    .datum-origin--animated .datum-origin__ring,
+    .datum-origin--animated .datum-origin__label {
+      animation: none;
+      stroke-dashoffset: 0;
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>
