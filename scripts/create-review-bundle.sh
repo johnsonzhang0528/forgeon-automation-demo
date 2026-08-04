@@ -56,6 +56,12 @@ EXCLUDE_GLOBS=(
   ".review-bundles/*"
   ".env"
   ".env.*"
+  # Third-party skill packages are installed tooling, not this project's
+  # own source under review — excluded from source/ the same way
+  # .gitattributes export-ignores them from --full mode's git-archive
+  # output, so both modes stay consistent and a bundle doesn't balloon
+  # with unrelated skill documentation a reviewer didn't ask to see.
+  ".claude/skills/*"
 )
 
 # ---------------------------------------------------------------------------
@@ -339,6 +345,21 @@ fi
 
 mkdir -p "$WORK_DIR/docs"
 
+# This repo's specs/tickets/reviews are named by CC-stage ("CC-01-...",
+# "CC-02-..."), not by a bundle's specific sub-label ("cc01-chatgpt-review",
+# "cc01-posthoc") — so matching only the full label against doc filenames
+# would silently drop every stage doc whenever the label is a sub-label
+# rather than the bare stage id. Extract a stage prefix from the label
+# (its leading "cc" + digits run, e.g. "cc01" out of "cc01-chatgpt-review")
+# when present, and match docs against EITHER the full label OR that stage
+# prefix — so both a bare-stage label and a descriptive sub-label find the
+# same stage's docs, without requiring every doc filename to literally
+# repeat the sub-label.
+STAGE_PREFIX=""
+if [[ "$LABEL" =~ ^([Cc][Cc][0-9]+) ]]; then
+  STAGE_PREFIX="${BASH_REMATCH[1]}"
+fi
+
 copy_label_scoped_dir() {
   # copy_label_scoped_dir <src-dir> <dest-subdir-name>
   local src="$1"
@@ -350,17 +371,34 @@ copy_label_scoped_dir() {
     matches+=("$f")
   done < <(find "$src" -type f -iname "*${LABEL}*" -print0 2>/dev/null)
 
+  if [ -n "$STAGE_PREFIX" ]; then
+    while IFS= read -r -d '' f; do
+      matches+=("$f")
+    done < <(find "$src" -type f -iname "*${STAGE_PREFIX}*" -print0 2>/dev/null)
+  fi
+
   if [ "${#matches[@]}" -gt 0 ]; then
+    # De-duplicate — a file can satisfy both the full-label and
+    # stage-prefix searches above.
+    local seen=()
+    local f rel already
     for f in "${matches[@]}"; do
-      local rel="${f#$PROJECT_ROOT/}"
+      rel="${f#$PROJECT_ROOT/}"
+      already=0
+      for s in "${seen[@]:-}"; do
+        [ "$s" = "$rel" ] && { already=1; break; }
+      done
+      [ "$already" -eq 1 ] && continue
+      seen+=("$rel")
       copy_preserving_dirs "$rel" "$WORK_DIR"
     done
   fi
 }
 
-# Label-scoped copy for specs/tickets/reviews (only files whose path
-# contains the label — e.g. label "cc01-posthoc" matches files under a
-# "CC-01-posthoc" ticket directory case-insensitively).
+# Label-scoped copy for specs/tickets/reviews (matches the full label,
+# e.g. "cc01-posthoc" against a "CC-01-posthoc-*" ticket file, OR the
+# stage prefix alone, e.g. "cc01" against any "CC-01-*" doc — see
+# STAGE_PREFIX above for why both are needed).
 copy_label_scoped_dir "docs/engineering/specs" "specs"
 copy_label_scoped_dir "docs/engineering/tickets" "tickets"
 copy_label_scoped_dir "docs/engineering/reviews" "reviews"

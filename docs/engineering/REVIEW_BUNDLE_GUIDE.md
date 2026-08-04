@@ -88,24 +88,43 @@ runs the same way.
 
 ### Label matching, precisely
 
-The "label-scoped" copies (specs/tickets/reviews, screenshots) use simple
-case-insensitive substring matching against the label you pass — a file's
-full path is checked for `*<label>*`. This means:
+The "label-scoped" doc copies (specs/tickets/reviews) match a file's full
+path against **either** of two things, case-insensitively:
 
-- Passing `cc01-posthoc` matches a review file named
-  `CC-01-posthoc-fix-review.md` (case-insensitive, hyphen included).
-- Passing a label that doesn't appear in any existing doc's path returns
-  nothing for that category — the bundle is still created, just without
-  those docs. This is deliberate (§four of the source spec: don't
-  indiscriminately copy the whole history), not a bug — check
-  `metadata/changed-files.txt` and the terminal output if a bundle looks
-  thinner than expected.
-- Screenshot matching is exact-name only
-  (`docs/screenshots/<label>-desktop.png` etc.), not substring — if no
-  exact match exists, `screenshots/NO_EXACT_MATCH.txt` lists what's
-  actually in `docs/screenshots/` so you can see what to rename or
-  regenerate, rather than the bundle silently including every historical
-  screenshot.
+1. The full label you passed, as a substring — e.g. label
+   `cc01-posthoc` matches a review file named
+   `CC-01-posthoc-fix-review.md`.
+2. The label's leading stage prefix alone (its `cc` + digits run, if it
+   has one) — e.g. label `cc01-chatgpt-review` extracts stage prefix
+   `cc01` and, via that prefix, still matches `CC-01-verification-spec.md`,
+   `CC-01-two-axis-review.md`, and every other `CC-01-*` doc, even though
+   none of those filenames contain the literal string
+   "chatgpt-review". Without this second match, any bundle whose label is
+   a *descriptive sub-label* rather than the bare stage id would silently
+   come back with zero matched specs/tickets/reviews, since this repo's
+   docs are named after their CC-stage, not after individual bundle runs.
+
+A label with no `ccNN` prefix (e.g. `milestone-launch`) only gets the
+full-label substring match — there's no stage to fall back to.
+
+A label that matches neither returns nothing for that category — the
+bundle is still created, just without those docs. This is deliberate
+(§four of the source spec: don't indiscriminately copy the whole history),
+not a bug — check `metadata/changed-files.txt` and the terminal output if
+a bundle looks thinner than expected.
+
+Screenshot matching is exact-name only
+(`docs/screenshots/<label>-desktop.png` etc., full label, no stage-prefix
+fallback) — if no exact match exists, `screenshots/NO_EXACT_MATCH.txt`
+lists what's actually in `docs/screenshots/` so you can see what to rename
+or regenerate, rather than the bundle silently including every historical
+screenshot. If a stage's screenshots use a different naming convention
+than the label you want for this bundle (e.g. screenshots are
+`cc01-design-system-*.png` but you're building a `cc01-chatgpt-review`
+bundle), the screenshots won't auto-match — pass the exact screenshot
+label prefix as your bundle's label instead, or accept the
+`NO_EXACT_MATCH.txt` listing and reference the screenshots by their real
+path in whatever you're handing the bundle to.
 
 ### What's excluded, always
 
