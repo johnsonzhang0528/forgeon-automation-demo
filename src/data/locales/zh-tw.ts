@@ -58,9 +58,9 @@ export const zhTW = {
     budget: '預算區間',
     hasSpec: '是否已有技術規格',
     needNda: '是否需要保密協議',
-    fileUpload: '上傳附件（選填）',
-    fileUploadHint: '可上傳圖面、規格書或產線照片，單檔上限 10MB',
-    privacyConsent: '我已閱讀並同意隱私權政策，同意鋒岳自動化以此資料與我聯絡。',
+    attachmentNote: '若有圖面、規格書或產線照片，請於送出後以 Email 附件方式提供，我們會在下方留下聯絡信箱。',
+    privacyConsent: '我已閱讀並同意{privacyLink}，同意鋒岳自動化以此資料與我聯絡。',
+    privacyLinkLabel: '隱私權政策',
     submit: '送出需求',
     submitting: '送出中…',
     yes: '是',
@@ -77,10 +77,10 @@ export const zhTW = {
     successTitle: '需求已送出',
     successBody: '感謝您的詢問，我們的技術團隊將於 2 個工作天內與您聯繫。',
     demoModeNotice:
-      '示範模式：此表單目前未串接正式送出端點，內容不會被寄出或儲存。實際上線時將串接真實 API，詳見 README。',
-    demoModeSubmitTitle: '示範模式已模擬驗證流程',
+      '示範模式：此頁展示 RFQ 表單的完整驗證流程。資料不會被送出或儲存，也沒有實際回覆承諾。實際上線時將串接真實 API，詳見 README。',
+    demoModeSubmitTitle: '驗證流程示範完成',
     demoModeSubmitBody:
-      '表單驗證通過，但因目前為 Demo Mode，資料未實際送出。這是作品集展示網站的預期行為。',
+      '表單驗證已通過，這示範了完整的 RFQ 驗證體驗。因目前為 Demo Mode，資料並未實際送出或儲存，也不會有人與您聯繫——這是作品集展示網站的預期行為，非系統錯誤。',
     errorTitle: '送出失敗',
     errorBody: '請稍後再試，或直接以 Email 聯絡我們的技術團隊。',
   },
@@ -103,6 +103,12 @@ export const zhTW = {
     publishedOn: '發布日期',
     demoDataBadge: 'Demo 資料',
     conceptImageBadge: '概念示意圖',
+  },
+  contactIntent: {
+    projectHeading: '提交您的專案需求',
+    projectBody: '填寫下方表單，說明您的製程背景與需求。本頁展示 RFQ 表單的完整驗證流程；此為作品集 Demo，表單資料不會被送出或儲存，也沒有實際回覆承諾。',
+    technicalHeading: '索取技術建議',
+    technicalBody: '若您尚未準備好完整專案需求，也可以先說明遇到的技術問題，我們會協助評估初步方向。本頁為 RFQ 表單驗證流程的展示，資料不會被送出或儲存。',
   },
 };
 

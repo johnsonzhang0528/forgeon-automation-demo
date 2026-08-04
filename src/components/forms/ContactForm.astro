@@ -11,6 +11,11 @@ export interface Props {
 const { locale } = Astro.props;
 const dict = getDictionary(locale);
 const hasEndpoint = Boolean(siteConfig.rfqEndpoint);
+const privacyHref = `/${locale}/privacy/`;
+// dict.form.privacyConsent contains a {privacyLink} placeholder — split it
+// so the link can be a real, keyboard-focusable, screen-reader-navigable
+// <a> rather than plain unlinked text (spec P0.5: "同意文字必須含可操作連結").
+const [privacyBefore, privacyAfter] = dict.form.privacyConsent.split('{privacyLink}');
 
 const countryOptions =
   locale === 'zh-tw'
@@ -148,12 +153,12 @@ const budgetOptions =
       />
     </div>
 
-    <FormField id="attachment" label={dict.form.fileUpload} type="file" hint={dict.form.fileUploadHint} />
+    <p class="contact-form__attachment-note">{dict.form.attachmentNote}</p>
 
     <div class="form-field contact-form__consent">
       <label class="form-field__radio">
-        <input type="checkbox" id="privacyConsent" name="privacyConsent" required />
-        <span>{dict.form.privacyConsent}</span>
+        <input type="checkbox" id="privacyConsent" name="privacyConsent" required aria-describedby="privacyConsent-error" />
+        <span>{privacyBefore}<a href={privacyHref} target="_blank" rel="noopener">{dict.form.privacyLinkLabel}</a>{privacyAfter}</span>
       </label>
       <p id="privacyConsent-error" class="form-field__error" role="alert" hidden></p>
     </div>
@@ -166,7 +171,7 @@ const budgetOptions =
     </div>
   </form>
 
-  <div class="contact-form__result" data-form-result hidden></div>
+  <div class="contact-form__result" data-form-result role="status" aria-live="polite" hidden></div>
 </div>
 
 <style>
@@ -198,9 +203,17 @@ const budgetOptions =
     gap: var(--space-md);
     grid-template-columns: 1fr;
   }
+  .contact-form__attachment-note {
+    font-size: var(--fs-xs);
+    color: var(--color-muted);
+    margin: calc(-1 * var(--space-sm)) 0 0;
+  }
   .contact-form__consent {
     padding-top: var(--space-xs);
     border-top: 1px solid var(--color-border);
+  }
+  .contact-form__consent a {
+    color: var(--color-accent);
   }
   .contact-form__consent .form-field__radio {
     align-items: flex-start;
@@ -280,6 +293,17 @@ const budgetOptions =
     const resultEl = document.querySelector('[data-form-result]');
     let isSubmitting = false;
 
+    // Fires rfq_start once, on the visitor's first real interaction with
+    // the form, rather than only on a failed submit attempt (spec P0.5:
+    // "rfq_start 不應在每次無效提交才觸發，應在首次與表單互動時記錄").
+    let hasStarted = false;
+    function markStarted() {
+      if (hasStarted) return;
+      hasStarted = true;
+      window.dispatchEvent(new CustomEvent('forgeon:analytics', { detail: { event: 'rfq_start', payload: { locale } } }));
+    }
+    form.addEventListener('focusin', markStarted, { once: true });
+
     function setFieldError(fieldName, message) {
       const errorEl = document.getElementById(`${fieldName}-error`);
       if (errorEl) {
@@ -288,6 +312,20 @@ const budgetOptions =
       }
       const fieldWrap = document.querySelector(`[data-form-field="${fieldName}"]`);
       if (fieldWrap) fieldWrap.setAttribute('data-invalid', message ? 'true' : 'false');
+
+      // aria-invalid belongs on the actual form control(s), not just the
+      // wrapper's data-invalid attribute (spec P0.5). For radio-group
+      // fields there is no single input with that name/id — every radio
+      // sharing the name gets it; for everything else it's the one control
+      // whose id equals the field name.
+      const isInvalid = String(Boolean(message));
+      const radios = form.querySelectorAll(`input[type="radio"][name="${fieldName}"]`);
+      if (radios.length > 0) {
+        radios.forEach((r) => r.setAttribute('aria-invalid', isInvalid));
+      } else {
+        const control = document.getElementById(fieldName);
+        if (control) control.setAttribute('aria-invalid', isInvalid);
+      }
     }
 
     function validate() {
@@ -343,11 +381,13 @@ const budgetOptions =
           errorEl.textContent = strings.consent;
           errorEl.hidden = false;
         }
+        if (consentEl) consentEl.setAttribute('aria-invalid', 'true');
         valid = false;
         firstInvalid = firstInvalid || consentEl;
       } else {
         const errorEl = document.getElementById('privacyConsent-error');
         if (errorEl) errorEl.hidden = true;
+        if (consentEl) consentEl.setAttribute('aria-invalid', 'false');
       }
 
       if (!valid && firstInvalid && 'focus' in firstInvalid) {
@@ -360,7 +400,7 @@ const budgetOptions =
       e.preventDefault();
       if (isSubmitting) return;
 
-      window.dispatchEvent(new CustomEvent('forgeon:analytics', { detail: { event: 'rfq_start' } }));
+      markStarted();
 
       if (!validate()) return;
 
@@ -371,6 +411,11 @@ const budgetOptions =
 
       try {
         if (hasEndpoint) {
+          // No File input exists in this form (spec P0.5 decision B — see
+          // docs/REMEDIATION_PLAN.md), so every remaining field is a plain
+          // string/boolean value and JSON.stringify no longer silently
+          // drops binary content the way it did when an <input type="file">
+          // shared this same code path.
           const formData = new FormData(form);
           const payload = Object.fromEntries(formData.entries());
           const res = await fetch(endpoint, {
@@ -380,16 +425,17 @@ const budgetOptions =
           });
           if (!res.ok) throw new Error('Submission failed');
 
-          window.dispatchEvent(new CustomEvent('forgeon:analytics', { detail: { event: 'rfq_submit', payload: { mode: 'live' } } }));
+          window.dispatchEvent(new CustomEvent('forgeon:analytics', { detail: { event: 'rfq_submit', payload: { mode: 'live', locale } } }));
           showResult('success', strings.successTitle, strings.successBody);
         } else {
           // Demo Mode: validate fully, never actually send, never claim success.
           await new Promise((resolve) => setTimeout(resolve, 500));
-          window.dispatchEvent(new CustomEvent('forgeon:analytics', { detail: { event: 'rfq_submit', payload: { mode: 'demo' } } }));
+          window.dispatchEvent(new CustomEvent('forgeon:analytics', { detail: { event: 'rfq_submit', payload: { mode: 'demo', locale } } }));
           showResult('demo', strings.demoTitle, strings.demoBody);
         }
         form.reset();
       } catch (err) {
+        window.dispatchEvent(new CustomEvent('forgeon:analytics', { detail: { event: 'rfq_submit', payload: { mode: 'failed', locale } } }));
         showResult('error', strings.errorTitle, strings.errorBody);
       } finally {
         isSubmitting = false;
@@ -401,12 +447,23 @@ const budgetOptions =
 
     function showResult(state, title, body) {
       if (!resultEl) return;
+      // Clear the "Submitting…" live-region text first so it doesn't sit
+      // alongside the result announcement — two role="status" regions
+      // updating in the same tick can cause a screen reader to announce
+      // both, which reads as a double-announcement (spec P0.5).
+      if (statusEl) statusEl.textContent = '';
       resultEl.hidden = false;
       resultEl.setAttribute('data-state', state);
       resultEl.innerHTML = `<h3>${title}</h3><p>${body}</p>`;
       resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       resultEl.setAttribute('tabindex', '-1');
-      resultEl.focus();
+      // Move focus without letting the browser also auto-scroll a second
+      // time (scrollIntoView above already handled positioning) — this is
+      // a single, deliberate focus move, not a repeated one, so it does
+      // not re-announce on every keystroke: showResult only runs once per
+      // submit attempt, and the `input` handler below only clears
+      // per-field errors, it never touches resultEl or calls .focus().
+      resultEl.focus({ preventScroll: true });
     }
 
     // Clear individual field errors as the user fixes them.

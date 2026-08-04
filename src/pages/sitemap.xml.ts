@@ -19,7 +19,7 @@ export const GET: APIRoute = async () => {
   const products = await getSortedProducts();
   const industries = await getSortedIndustries();
 
-  const staticSegments = ['', 'solutions/', 'products/', 'industries/', 'about/', 'insights/', 'contact/'];
+  const staticSegments = ['', 'solutions/', 'products/', 'industries/', 'about/', 'insights/', 'contact/', 'privacy/'];
 
   const urls: string[] = [];
 

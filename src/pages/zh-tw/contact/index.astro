@@ -4,8 +4,10 @@ import SectionHeading from '../../../components/ui/SectionHeading.astro';
 import Breadcrumb from '../../../components/navigation/Breadcrumb.astro';
 import ContactForm from '../../../components/forms/ContactForm.astro';
 import { siteConfig } from '../../../config/site';
+import { getDictionary } from '../../../utils/i18n';
 
 const locale = 'zh-tw' as const;
+const dict = getDictionary(locale);
 ---
 
 <BaseLayout
@@ -22,12 +24,14 @@ const locale = 'zh-tw' as const;
   <section class="section section--tight">
     <div class="container contact-layout">
       <div class="contact-layout__intro">
-        <SectionHeading
-          level="h1"
-          eyebrow="聯絡我們"
-          title="提交您的專案需求"
-          description="填寫下方表單，說明您的製程背景與需求。本頁展示 RFQ 表單的完整驗證流程；此為作品集 Demo，表單資料不會被送出或儲存，也沒有實際回覆承諾。"
-        />
+        <div data-contact-intent>
+          <SectionHeading
+            level="h1"
+            eyebrow="聯絡我們"
+            title={dict.contactIntent.projectHeading}
+            description={dict.contactIntent.projectBody}
+          />
+        </div>
         <div class="contact-info">
           <h2>直接聯絡窗口</h2>
           <ul>
@@ -93,3 +97,40 @@ const locale = 'zh-tw' as const;
     }
   }
 </style>
+
+<script define:vars={{
+  locale,
+  strings: {
+    technicalHeading: dict.contactIntent.technicalHeading,
+    technicalBody: dict.contactIntent.technicalBody,
+  },
+}}>
+  // CTA intent handling (spec P0.5): ?intent=project (default copy, no
+  // change needed) vs ?intent=technical-advice (swaps the opening headline/
+  // body to a lower-commitment framing and pre-selects the "Technical
+  // Consultation" project type).
+  function initContactIntent() {
+    const params = new URLSearchParams(window.location.search);
+    const intent = params.get('intent');
+    if (intent !== 'technical-advice' && intent !== 'project') return;
+
+    if (intent === 'technical-advice') {
+      const wrap = document.querySelector('[data-contact-intent]');
+      const title = wrap?.querySelector('.section-heading__title');
+      const desc = wrap?.querySelector('.section-heading__desc');
+      if (title) title.textContent = strings.technicalHeading;
+      if (desc) desc.textContent = strings.technicalBody;
+
+      const projectTypeSelect = document.getElementById('projectType');
+      if (projectTypeSelect instanceof HTMLSelectElement) {
+        projectTypeSelect.value = 'consultation';
+      }
+    }
+
+    window.dispatchEvent(new CustomEvent('forgeon:analytics', {
+      detail: { event: 'cta_click', payload: { intent, locale, source: 'contact-page-landing' } },
+    }));
+  }
+
+  initContactIntent();
+</script>

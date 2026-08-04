@@ -21,6 +21,7 @@ const {
   disabled = false,
   ariaLabel,
   trackEvent,
+  ...rest
 } = Astro.props;
 
 const Tag = href ? 'a' : 'button';
@@ -35,6 +36,7 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
   disabled={!href ? disabled : undefined}
   aria-label={ariaLabel}
   data-track={trackEvent}
+  {...rest}
 >
   <slot />
 </Tag>

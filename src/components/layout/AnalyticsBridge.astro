@@ -12,7 +12,11 @@
     if (event) trackEvent(event, payload);
   });
 
-  // Delegate cta_click / spec_download / contact_click for any element with data-track
+  // Delegate cta_click / spec_download / contact_click for any element with
+  // data-track. data-intent / data-source (set on CTAs that carry a
+  // ?intent= query param — spec P0.5) are forwarded into the event payload
+  // when present, so cta_click events distinguish "Discuss Your Project"
+  // from "Request Technical Advice" and which page/section they fired from.
   document.addEventListener('click', (e) => {
     const el = (e.target as HTMLElement)?.closest('[data-track]');
     if (!el) return;
@@ -21,6 +25,9 @@
     trackEvent(eventName as import('../../utils/analytics').AnalyticsEvent, {
       label: el.textContent?.trim().slice(0, 80),
       href: el.getAttribute('href') || undefined,
+      intent: el.getAttribute('data-intent') || undefined,
+      source: el.getAttribute('data-source') || undefined,
+      locale: document.documentElement.lang || undefined,
     });
   });
 </script>

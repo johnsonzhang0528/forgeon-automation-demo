@@ -1,0 +1,91 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHeading from '../../../components/ui/SectionHeading.astro';
+import Breadcrumb from '../../../components/navigation/Breadcrumb.astro';
+import { siteConfig } from '../../../config/site';
+
+const locale = 'en' as const;
+---
+
+<BaseLayout
+  locale={locale}
+  path="/en/privacy/"
+  otherLocalePath="/zh-tw/privacy/"
+  title="Privacy Policy (Portfolio Demo) | FORGEON AUTOMATION"
+  description="How the FORGEON AUTOMATION portfolio demo site's RFQ form actually handles your data: this is a concept demonstration site, and form data is never sent, transmitted, or stored on any server."
+>
+  <div class="container section--tight">
+    <Breadcrumb locale={locale} items={[{ label: 'Privacy Policy', path: '/en/privacy/' }]} />
+  </div>
+
+  <section class="section section--tight">
+    <div class="container container--narrow">
+      <SectionHeading
+        level="h1"
+        eyebrow="Privacy Policy"
+        title="What Actually Happens to Data You Type Into This Form"
+        description="This document describes the actual behavior of this portfolio concept site, not a translated template of a generic corporate privacy policy."
+      />
+
+      <div class="privacy-notice">
+        <p><strong>Concept case disclosure:</strong> "FORGEON AUTOMATION" is a fictional portfolio concept case built by Yegou Studio (頁構所) for market validation, not a real operating company. This page exists to demonstrate the complete information architecture a real B2B site needs — including a consent checkbox that links to an actual, real page — rather than to serve as a legally reviewed compliance document.</p>
+      </div>
+
+      <h2>What actually happens to Demo Mode form submissions</h2>
+      <p class="measure">
+        The <a href="/en/contact/">Contact &amp; RFQ form</a> on this site currently runs in Demo Mode: it performs full client-side validation in your browser (required fields, email format, minimum requirement-description length, and so on), but once validation passes, <strong>no field data is transmitted to any server</strong> and no network request of any kind is made. Everything you type exists only in your current browser tab's memory; refreshing the page discards it. No database, spreadsheet, or CRM ever receives it.
+      </p>
+      <p class="measure">
+        If the <code>PUBLIC_RFQ_ENDPOINT</code> environment variable is later set to a real API endpoint (switching the site to Live Mode), the form will <code>fetch()</code> your field data as JSON to that endpoint. Before any real production launch, the site operator is responsible for replacing this page with a legally reviewed privacy policy that discloses actual data retention periods, any third-party processors, and how users can exercise access, correction, and deletion rights.
+      </p>
+
+      <h2>What kind of information the form asks for</h2>
+      <p class="measure">
+        Company name, contact name, job title, email, phone, country/region, industry, project type, requirement description, target timeline, budget range, and checkbox fields for whether you already have technical specifications or require an NDA. These fields are designed so a sales or engineering team could do a first-pass qualification before ever making contact (see <a href="/en/about/">About</a>) — but in Demo Mode, as described above, none of it leaves your browser.
+      </p>
+
+      <h2>Cookies and tracking</h2>
+      <p class="measure">
+        No real GA4/GTM tracking ID is wired into this codebase (<code>PUBLIC_GA4_ID</code>/<code>PUBLIC_GTM_ID</code> are blank in the example environment file). The site has an account-agnostic event layer (<code>window.dataLayer</code>) that only loads any tracking script once a site operator sets a real Analytics ID; during this portfolio demonstration phase, no third-party tracking service is loaded and no cookies are set.
+      </p>
+
+      <h2>Contact</h2>
+      <p class="measure">
+        Questions about how this demo site handles privacy, or interested in the real privacy policy template Yegou Studio provides for actual client engagements, can be sent to <a href={`mailto:${siteConfig.contact.emailEn}`}>{siteConfig.contact.emailEn}</a> (demo address).
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .container--narrow {
+    max-width: 720px;
+  }
+  .privacy-notice {
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    margin-bottom: var(--space-xl);
+  }
+  .privacy-notice p {
+    margin: 0;
+    font-size: var(--fs-sm);
+    color: var(--color-ink-soft);
+  }
+  h2 {
+    font-size: var(--fs-lg);
+    margin: var(--space-xl) 0 var(--space-sm);
+  }
+  p.measure {
+    color: var(--color-muted);
+    margin: 0 0 var(--space-md);
+  }
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background: var(--color-surface-alt);
+    padding: 0.1em 0.35em;
+    border-radius: var(--radius-sm);
+  }
+</style>

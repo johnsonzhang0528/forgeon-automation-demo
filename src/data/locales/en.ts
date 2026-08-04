@@ -61,10 +61,10 @@ export const en: Dictionary = {
     budget: 'Budget Range',
     hasSpec: 'Do you have technical specifications?',
     needNda: 'Do you require an NDA?',
-    fileUpload: 'Attachment (optional)',
-    fileUploadHint: 'Drawings, spec sheets, or line photos accepted. 10MB max per file.',
+    attachmentNote: 'Have drawings, spec sheets, or line photos to share? Email them as attachments to the address below after submitting.',
     privacyConsent:
-      'I have read and agree to the privacy policy and consent to being contacted by FORGEON AUTOMATION regarding this inquiry.',
+      'I have read and agree to the {privacyLink} and consent to being contacted by FORGEON AUTOMATION regarding this inquiry.',
+    privacyLinkLabel: 'privacy policy',
     submit: 'Submit Request',
     submitting: 'Submitting…',
     yes: 'Yes',
@@ -81,10 +81,10 @@ export const en: Dictionary = {
     successTitle: 'Request Received',
     successBody: 'Thank you for reaching out. Our engineering team will follow up within 2 business days.',
     demoModeNotice:
-      'Demo mode: this form is not connected to a live submission endpoint. Nothing you enter is sent or stored. See README for production API setup.',
-    demoModeSubmitTitle: 'Demo mode validated your submission',
+      'Demo mode: this page demonstrates the full RFQ form validation flow. Nothing you enter is sent or stored, and there is no reply commitment. See README for production API setup.',
+    demoModeSubmitTitle: 'Validation flow demonstrated',
     demoModeSubmitBody:
-      'Form validation passed, but because this is a demo environment, no data was actually sent. This is expected behavior for a portfolio showcase site.',
+      'Form validation passed, demonstrating the complete RFQ validation experience. Because this is a demo environment, no data was actually sent or stored, and no one will follow up — that is expected behavior for a portfolio showcase site, not an error.',
     errorTitle: 'Submission Failed',
     errorBody: 'Please try again later, or email our engineering team directly.',
   },
@@ -108,5 +108,11 @@ export const en: Dictionary = {
     publishedOn: 'Published',
     demoDataBadge: 'Demo Data',
     conceptImageBadge: 'Concept Illustration',
+  },
+  contactIntent: {
+    projectHeading: 'Submit Your Project Request',
+    projectBody: 'Fill out the form below with your process background and requirements. This page demonstrates the full RFQ validation flow; as a portfolio demo, nothing you submit is sent or stored, and there is no reply commitment.',
+    technicalHeading: 'Request Technical Advice',
+    technicalBody: "Not ready to submit a full project brief yet? Describe the technical question you're facing and we'll help evaluate a starting direction. This page demonstrates the RFQ form's validation flow; nothing you submit is sent or stored.",
   },
 };

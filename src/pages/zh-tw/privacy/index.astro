@@ -1,0 +1,91 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHeading from '../../../components/ui/SectionHeading.astro';
+import Breadcrumb from '../../../components/navigation/Breadcrumb.astro';
+import { siteConfig } from '../../../config/site';
+
+const locale = 'zh-tw' as const;
+---
+
+<BaseLayout
+  locale={locale}
+  path="/zh-tw/privacy/"
+  otherLocalePath="/en/privacy/"
+  title="隱私權政策（作品集 Demo）｜鋒岳自動化"
+  description="本頁說明鋒岳自動化作品集 Demo 網站的 RFQ 表單資料處理方式：這是概念展示網站，表單資料不會被送出、傳輸或儲存於任何伺服器。"
+>
+  <div class="container section--tight">
+    <Breadcrumb locale={locale} items={[{ label: '隱私權政策', path: '/zh-tw/privacy/' }]} />
+  </div>
+
+  <section class="section section--tight">
+    <div class="container container--narrow">
+      <SectionHeading
+        level="h1"
+        eyebrow="隱私權政策"
+        title="本頁如何處理您在表單中輸入的資料"
+        description="本文件說明的是這個作品集概念案例網站的實際行為，而非一般公司制式隱私權政策範本的翻譯。"
+      />
+
+      <div class="privacy-notice">
+        <p><strong>概念案例聲明：</strong>「鋒岳自動化 FORGEON AUTOMATION」是頁構所（Yegou Studio）用於市場驗證的虛構作品集案例，並非真實營運中的公司。本頁所稱「隱私權政策」是為了展示一個真實 B2B 網站應具備的完整資訊架構（包含表單同意連結指向真實存在的頁面），而非法律事務所審閱過的正式法遵文件。</p>
+      </div>
+
+      <h2>Demo 表單的實際資料處理方式</h2>
+      <p class="measure">
+        本站 <a href="/zh-tw/contact/">聯絡與 RFQ 表單</a> 目前運作於 Demo Mode：表單會在您的瀏覽器內完整執行前端驗證（必填欄位、Email 格式、需求說明字數等），但驗證通過後<strong>不會將任何欄位資料傳送到任何伺服器</strong>，也不會有任何形式的網路請求被送出。您輸入的內容只存在於您瀏覽器目前分頁的記憶體中，重新整理頁面即會消失，沒有任何資料庫、試算表或 CRM 收到這些內容。
+      </p>
+      <p class="measure">
+        若日後 <code>PUBLIC_RFQ_ENDPOINT</code> 環境變數被設定為真實 API 端點（切換為正式模式），表單會以 <code>fetch()</code> 將欄位資料以 JSON 格式送出至該端點；正式上線前，網站經營者有義務將這裡的說明替換為法遵審閱過的正式隱私權政策，並揭露實際的資料保存期限、第三方處理者與使用者權利（查閱、更正、刪除）行使方式。
+      </p>
+
+      <h2>您在表單中會被要求提供的資訊類型</h2>
+      <p class="measure">
+        公司名稱、聯絡人姓名、職稱、Email、電話、國家／地區、產業別、專案類型、需求說明、預計時程、預算區間，以及是否已有技術規格／是否需要保密協議等勾選欄位。這些欄位的設計目的是讓業務與工程團隊在第一次聯繫前就能做初步篩選（見 <a href="/zh-tw/about/">關於我們</a>），但在 Demo Mode 下，如前述，這些內容不會离開您的瀏覽器。
+      </p>
+
+      <h2>Cookie 與追蹤</h2>
+      <p class="measure">
+        本站原始碼中未內建任何真實 GA4／GTM 追蹤 ID（<code>PUBLIC_GA4_ID</code>／<code>PUBLIC_GTM_ID</code> 於範例環境變數中為空值）。網站具備一個帳號無關的事件層（<code>window.dataLayer</code>），僅在網站經營者自行設定真實 Analytics ID 後才會實際載入任何追蹤腳本；本次作品集展示階段沒有載入任何第三方追蹤服務，也未設定任何 Cookie。
+      </p>
+
+      <h2>聯絡窗口</h2>
+      <p class="measure">
+        對本 Demo 網站的隱私權處理方式有疑問，或想了解頁構所實際承接專案時提供的正式隱私權政策範本，可透過 <a href={`mailto:${siteConfig.contact.emailZh}`}>{siteConfig.contact.emailZh}</a>（示範信箱）聯絡。
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .container--narrow {
+    max-width: 720px;
+  }
+  .privacy-notice {
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    margin-bottom: var(--space-xl);
+  }
+  .privacy-notice p {
+    margin: 0;
+    font-size: var(--fs-sm);
+    color: var(--color-ink-soft);
+  }
+  h2 {
+    font-size: var(--fs-lg);
+    margin: var(--space-xl) 0 var(--space-sm);
+  }
+  p.measure {
+    color: var(--color-muted);
+    margin: 0 0 var(--space-md);
+  }
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background: var(--color-surface-alt);
+    padding: 0.1em 0.35em;
+    border-radius: var(--radius-sm);
+  }
+</style>
