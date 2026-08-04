@@ -16,7 +16,8 @@
     "check:locale-routes": "node scripts/check-locale-routes.mjs",
     "build:datasheet": "node scripts/build-datasheet.mjs",
     "test:e2e": "playwright test",
-    "test:axe": "playwright test tests/e2e/axe.spec.ts"
+    "test:axe": "playwright test tests/e2e/axe.spec.ts",
+    "review:bundle": "bash scripts/create-review-bundle.sh"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.3.0",

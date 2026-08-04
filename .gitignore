@@ -21,3 +21,7 @@ pnpm-debug.log*
 playwright-report/
 test-results/
 lighthouse-reports/
+
+# review bundles (generated zips + staging dirs — see scripts/create-review-bundle.sh)
+.review-bundles/*
+!.review-bundles/.gitkeep
