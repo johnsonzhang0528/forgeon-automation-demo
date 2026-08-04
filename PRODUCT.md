@@ -2,6 +2,15 @@
 
 <!-- impeccable:product-schema 1 -->
 
+> **2026-08 修正 Pass 附註**：本文件描述的產品事實未變更（品牌、定位、
+> 客群、能力範圍皆與初版相同）。這輪修正是 QA／缺陷修復與內容深化
+> Pass，不是產品重新定義；技術執行層級的變更（Bug 修復、真實瀏覽器
+> 測試、內容深化）記錄於 `docs/REMEDIATION_PLAN.md` 與
+> `docs/CODEX_REVIEW_HANDOFF.md`，此處僅補充與產品事實直接相關的
+> 兩項變更：(1) 表單移除檔案上傳欄位（見下方 Capabilities and
+> Constraints）；(2) 新增 Demo Mode／Production Mode 索引開關，正式
+> 上線前需明確決定使用哪一種模式。
+
 ## Platform
 
 web
@@ -77,9 +86,19 @@ engineering behind them. Tagline: "精準驅動，更有效率的生產流程" /
 - Contact form ships in two modes: live API (when `PUBLIC_RFQ_ENDPOINT` is
   set) and Demo Mode (default): validates fully client-side, never fakes a
   successful send, and visibly labels itself as non-functional demo
-  behavior.
-- No real GA4/GTM IDs are wired in; a dataLayer-based event layer is present
-  but degrades silently when `window.dataLayer` doesn't exist.
+  behavior. No file-upload field: an earlier version had one, but its live
+  submit path silently dropped file binaries via `JSON.stringify`, and this
+  project has no real backend to fix that against — removed in favor of an
+  email-attachment note (see `docs/REMEDIATION_PLAN.md` P0.5).
+- No real GTM ID is wired in (GA4 is meant to route through a GTM tag, not a
+  separate direct integration — the earlier separate `PUBLIC_GA4_ID` was
+  removed as dead, never-consumed config); a dataLayer-based event layer is
+  present but degrades silently when `window.dataLayer` doesn't exist.
+- Demo Mode (`PUBLIC_DEMO_MODE`, default true) gates search-engine
+  indexing site-wide: noindex meta, `robots.txt` Disallow, Concept-Project-
+  labeled structured data, and a visible footer badge. Production Mode
+  requires explicitly setting both `PUBLIC_DEMO_MODE=false` and
+  `PUBLIC_ALLOW_INDEXING=true`.
 - Every fictional spec, claim, or figure is labeled `demoData: true` in its
   content entry and rendered with a visible on-page disclaimer.
 - No real customers, certifications (ISO/CE/patents), revenue figures, or

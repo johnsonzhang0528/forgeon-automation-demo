@@ -3,6 +3,17 @@
 本文件記錄本專案（鋒岳自動化 FORGEON AUTOMATION Demo）實際使用之 Claude Skills，
 依 Phase 0 Preflight 要求建立。所有紀錄於實際呼叫後即時更新。
 
+> **2026-08 修正 Pass 更新**：本輪為全面 QA／缺陷修復與內容深化 Pass，
+> 在有真實瀏覽器（Playwright + Chromium）的環境中執行，因此第 3 節
+> 「Impeccable」記錄的「無法執行需要真實瀏覽器渲染截圖的 live 迭代
+> 模式」限制在本輪**已解除**：本輪確實用 Playwright 對 production
+> build 實際截圖並人工審視（`docs/screenshots/site-*.png`），發現並
+> 修正 3 個真實渲染缺陷（Mobile Nav Inert、Footer Logo 對比、CTABanner
+> 按鈕文字消失），完整記錄於新增文件 `docs/IMPECCABLE_REVIEW_LOG.md`。
+> `anti-ai-writing` 也在本輪對新增文案執行了第二輪審查，記錄於
+> `docs/COPY_REVIEW_LOG.md`「第二輪審查」章節。以下原始紀錄（Phase 0–10）
+> 保留不變，作為初版建置過程的忠實記錄。
+
 ---
 
 ## 1. 已安裝 Skill 清單（環境實際掃描結果）
@@ -122,3 +133,19 @@
 - **原因**：本專案技術架構固定為 Astro，不得另建 React 或 TanStack 網站。
 - **驗證**：全程未讀取其 `reference/*.md` 實作細節、未執行任何其 CLI 或腳本、
   未產生任何檔案。僅於 Phase 0 掃描目錄結構以確認其存在並記錄於本文件第 1 節。
+
+---
+
+## 6. 本輪修正 Pass（2026-08）Skill 使用紀錄
+
+| Skill | 本輪是否使用 | 說明 |
+|---|---|---|
+| `anti-ai-writing` | 是（第二輪） | 對本輪新增的決策型內容（首頁適合／不適合、雙路徑入口、產品選型比較、方案適合／不適合、Concept Scenario、隱私權頁）執行完整審查，發現並修正 12 處 Em dash／全形破折號結構性違規，英文慣用詞與中文 AI 語感詞彙掃描零命中。記錄於 `docs/COPY_REVIEW_LOG.md`「第二輪審查」。 |
+| `impeccable` | 是（真實瀏覽器模式，初版未能執行） | 本輪在有 Playwright/Chromium 的環境中，實際對 production build 截圖並人工審視（非僅程式碼審視），發現並修正 3 個真實渲染缺陷。完整記錄於新增文件 `docs/IMPECCABLE_REVIEW_LOG.md`。 |
+| `higgsfield-generate` / `higgsfield-brandkit` / `higgsfield-product-photoshoot` | 否，計畫性不執行（原因與初版相同，見上方第 4 節） | `docs/HIGGSFIELD_ASSET_PLAN.md` 已依本輪修正指令的第一輪核准上限重新裁切（Hero 2–3／產品每款 1–2／產業最多 4，總計最多 13 張，先前規劃約 23–25 張已超出上限）。 |
+| `higgsfield-websites` | 否，明確禁止 | 全程未呼叫，與初版相同。 |
+
+本輪修正主要工作（P0 Bug 修復、Playwright／axe-core／Lighthouse 測試
+建置、Demo Mode 索引安全機制、RFQ 表單重構、PDF 規格書重建、分析事件
+修正、字體決策）**不透過任何 Skill 執行**，屬於直接的程式碼修正、
+測試撰寫與文件撰寫工作，不在此表列出。

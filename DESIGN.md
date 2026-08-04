@@ -58,27 +58,41 @@ color-transition gradient).
 
 ## Typography
 
+**2026-08 revision (spec P1.2, option B — see `docs/REMEDIATION_PLAN.md`):**
+the original build declared Space Grotesk / IBM Plex Sans / JetBrains Mono
+by name in `tokens.css` but never actually loaded any font file, CDN link,
+or Fontsource package — every visitor's browser was silently falling
+through to whatever the next name in the stack resolved to. That is a real
+"documentation says X, code does Y" gap, not a cosmetic one. This sandbox
+has no network access to fetch and verify real font binaries, so rather
+than leave the mismatch in place, the token declarations were replaced with
+deliberately-chosen system font stacks that keep the calibration intent
+below (not Inter-default, some engineering-grade personality) without
+claiming a webfont that isn't actually shipped. The calibration reasoning
+this section originally documented is preserved below as the *intent*
+that the current system-stack tokens now honestly deliver on.
+
 Calibration check applied: this subject (industrial/engineering) has its own
 default-cluster risk — generic "tech mono + Inter" — which was avoided in
 favor of faces with more editorial presence while remaining a legitimate fit
 for technical content (Operate/Read register inside a Persuade shell for the
 spec tables).
 
-- **Display / headings:** **Space Grotesk** — geometric but with enough
-  personality to avoid the Inter-default trap; reads as engineered rather
-  than generic-corporate. Loaded as self-hosted variable font (no Google
-  Fonts CDN at runtime — see Performance).
-- **Body & UI text:** **IBM Plex Sans** — a workhorse face with a real
-  technical/engineering heritage (IBM's own design system), sets long
-  bilingual paragraphs cleanly, and has full latin + reasonable CJK-adjacent
-  metrics pairing.
+- **Display / headings:** system sans-serif stack led by `-apple-system,
+  "Segoe UI", "Century Gothic", "Avenir Next"` — geometric-leaning options
+  that read as engineered rather than generic-corporate, without the
+  Inter-default trap. See `--font-display` in `src/styles/tokens.css`.
+- **Body & UI text:** system sans-serif stack led by `-apple-system,
+  "Segoe UI", "Helvetica Neue", Roboto` — sets long bilingual paragraphs
+  cleanly across platforms. See `--font-body`.
 - **Chinese body & headings:** system CJK stack (`"PingFang TC", "Noto Sans
-  TC", "Microsoft JhengHei"`) paired against the Latin faces above — no
+  TC", "Microsoft JhengHei"`) paired against the Latin stacks above — no
   webfont CJK subset is shipped (file size), but weight/size scale is tuned
   to visually match the Latin type rhythm.
-- **Monospace (spec values, model codes):** **JetBrains Mono** at small
+- **Monospace (spec values, model codes):** system monospace stack led by
+  `ui-monospace, "SF Mono", "SFMono-Regular", "Cascadia Code"` at small
   sizes for spec tables and model numbers (AXM-400, VISION-X2) — gives
-  technical data a "measured" feel distinct from prose.
+  technical data a "measured" feel distinct from prose. See `--font-mono`.
 - **Scale:** modular scale ~1.25, base 16px/1rem. Headings never exceed
   line-length-appropriate widths (`max-width: 62ch` on body copy blocks).
 
@@ -144,3 +158,15 @@ Phase 9 in `docs/PROJECT_BRIEF.md`'s execution order) rather than the
 subagent `impeccable-finish-reviewer` chain, because this session has no
 browser/screenshot capability. Findings and resolutions are logged in
 `docs/QA_CHECKLIST.md`.
+
+**2026-08 real-browser finish review addendum**: a follow-up remediation
+pass ran Impeccable with an actual Playwright/Chromium browser for the
+first time (see `docs/IMPECCABLE_REVIEW_LOG.md`). It confirmed the design
+direction above still holds under real rendering, but surfaced three
+rendering-level defects static code review could not have caught: the
+mobile nav overlay's `backdrop-filter`-induced containing-block bug (left
+background content clickable while the menu was "open"), a footer logo
+text color hardcoded for light backgrounds showing at 2.97:1 contrast on
+the dark footer, and a CTABanner secondary button whose text color matched
+its own background (completely invisible). All three are fixed; none
+required revisiting the color/type/layout decisions recorded above.

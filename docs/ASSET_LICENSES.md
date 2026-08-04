@@ -12,22 +12,29 @@
 | Favicon | `public/icons/favicon.svg` | 本專案手繪 SVG | 專案自有 | 是 | 否 | 否 |
 | OG 預設分享圖 | `public/images/og-default.svg` | 本專案手繪 SVG | 專案自有 | 是 | 否 | 否 |
 | 流程圖示（各類 Icon：checkmark、chevron、hamburger、close 等） | 各元件內聯 SVG | 本專案手繪 | 專案自有 | 是 | 否 | 否 |
-| 規格 PDF 示範檔 | `public/documents/axm-400-datasheet-demo.pdf` | 本專案以純文字內容產生的最小 PDF | 專案自有 | 是 | **是，明確標示為 Demo Placeholder** | 否 |
+| 規格 PDF 示範檔 | `public/documents/forgeon-axm-400-datasheet.pdf` | **2026-08 修正**：以 `scripts/datasheet-template.html` 為來源、透過 Playwright `page.pdf()` 產生的真實 6 頁 PDF（取代先前 899-byte 最小 Placeholder） | 專案自有 | 是 | 否（正式、可展示品質，內含明確 Concept/Fictional Data 聲明頁，非最小佔位檔） | 否 |
 
 ## 字體
 
-| 字體 | 用途 | 授權狀態 | 備註 |
+**2026-08 修正（spec P1.2，選擇方案 B）**：先前版本宣告 Space Grotesk／
+IBM Plex Sans／JetBrains Mono 但從未內嵌字體檔，屬於「文件宣稱使用、
+實際未載入」的落差。本輪修正改為明確採用系統字體堆疊，移除不存在的
+字型宣告，不再有此落差。詳細決策理由見 `docs/REMEDIATION_PLAN.md`
+「P1.2 字體決策說明」與 `DESIGN.md` Typography 章節。
+
+| 字體堆疊 | 用途 | 授權狀態 | 備註 |
 |---|---|---|---|
-| Space Grotesk | 標題（拉丁字） | Open Font License（Google Fonts 開源字體） | **本次建置未內嵌實際字體檔**，`tokens.css` 中以 `font-family` 宣告 fallback 至系統字體；正式上線前需自行引入字體檔或 `@font-face`／Google Fonts 連結，並確認授權條款 |
-| IBM Plex Sans | 內文（拉丁字） | IBM Plex 為 SIL Open Font License 開源字體 | 同上，未內嵌字體檔 |
-| JetBrains Mono | 型號／規格數值 | JetBrains Mono 為 SIL Open Font License 開源字體 | 同上，未內嵌字體檔 |
+| `-apple-system, "Segoe UI", "Century Gothic", "Avenir Next"` + CJK 系統堆疊 | 標題（`--font-display`） | 系統內建字體，無需額外授權 | 已確定生效，非宣稱未載入的狀態 |
+| `-apple-system, "Segoe UI", "Helvetica Neue", Roboto` + CJK 系統堆疊 | 內文（`--font-body`） | 系統內建字體，無需額外授權 | 已確定生效 |
+| `ui-monospace, "SF Mono", "SFMono-Regular", "Cascadia Code", Consolas, Menlo` | 型號／規格數值（`--font-mono`） | 系統內建字體，無需額外授權 | 已確定生效 |
 | 系統 CJK 字體堆疊（PingFang TC / Noto Sans TC / 微軟正黑體） | 中文標題與內文 | 使用作業系統內建字體，無需額外授權 | 依訪客裝置實際安裝字體顯示，未強制下載 Web Font |
 
-**待辦（正式上線前）**：目前 `tokens.css` 僅宣告字體名稱，瀏覽器會 fallback
-至系統字體或最接近的替代字體。若要讓 Space Grotesk / IBM Plex Sans /
-JetBrains Mono 實際生效，需在 `BaseLayout.astro` 加入 `@font-face` 或
-Google Fonts 連結，並在正式上線前確認該字體檔案的散布授權（上述三款字體
-本身皆為開源授權，可合法商用，但需要實際引入檔案）。
+**不再有「待辦」項目**：因為系統字體堆疊不依賴外部字型檔案下載，沒有
+授權檔案需要確認、沒有需要引入的 `@font-face` 宣告。若未來要改用真正的
+Web Font（例如重新導入 Space Grotesk），需要：(1) 取得授權合規的字體檔
+（本沙盒環境無網路存取，未執行此步驟）、(2) 加入 `@font-face` 或
+Fontsource 套件並設定 `font-display: swap`、(3) 更新本表與 `DESIGN.md`
+為方案 A 狀態，屆時才需要重新確認授權條款。
 
 ## 圖片來源與授權檢查狀態總結
 

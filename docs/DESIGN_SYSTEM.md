@@ -6,28 +6,40 @@
 
 ## 色彩
 
+**2026-08 修正（P0.3）**：以下為修正後數值。修正前後完整對比與 WCAG
+計算過程見 `docs/CONTRAST_AUDIT.md`——`--color-accent`／
+`--color-accent-dark`／`--color-accent-light`／`--color-muted-soft`
+皆因未達 WCAG AA 門檻而調深，色相家族（銅橘／金屬灰）維持不變。
+
 | Token | 值 | 用途 |
 |---|---|---|
 | `--color-ink` | `#12181f` | 主要文字、深色結構（非純黑） |
 | `--color-surface` | `#f7f5f1` | 頁面背景（暖白，非冷藍白） |
 | `--color-card` | `#ffffff` | 卡片背景 |
 | `--color-border` | `#e2e0da` | 一般分隔線 |
-| `--color-muted` | `#5b6470` | 次要文字（金屬灰） |
-| `--color-accent` | `#c1622b` | 唯一強調色（銅橘），僅用於 CTA、互動狀態、關鍵數據 |
+| `--color-muted` | `#5b6470` | 次要文字（金屬灰），5.51:1 on surface |
+| `--color-muted-soft` | `#636b75`（**修正前 `#838c96`，3.13:1 未達標**） | 次要裝飾文字，修正後 4.96:1 on surface |
+| `--color-accent` | `#a34c1f`（**修正前 `#c1622b`，3.82:1 未達標**） | 唯一強調色（銅橘），修正後 5.34:1 on surface，僅用於 CTA、互動狀態、關鍵數據 |
+| `--color-accent-dark` | `#873e18`（修正前 `#9c4d21`） | Hover 狀態，7.06:1 on surface |
+| `--color-accent-light` | `#c06f39`（**修正前 `#e79a68`，2.09:1 未達 3:1 UI 邊界門檻**） | 邊框／深色背景文字，修正後 3.46:1（邊框）／4.74:1（深色背景文字） |
 | `--color-invert-bg` | `#12181f` | 頁尾與反轉區塊背景 |
-| `--color-focus` | `#1d6fbf` | 鍵盤 Focus 外框（電光藍，與 CTA 色區隔避免混淆） |
+| `--color-focus` | `#1d6fbf` | 鍵盤 Focus 外框（電光藍，與 CTA 色區隔避免混淆），4.73:1 on surface |
 
 **色彩策略**：Restrained（中性色為主 + 單一強調色），刻意避開 AI 紫藍漸層、
 賭場黑金與多重科技強調色（見指令 §14「避免」清單）。
 
 ## 字體
 
-| 角色 | 字體 | 備註 |
+**2026-08 修正（P1.2，選擇方案 B）**：先前宣告的 Space Grotesk／IBM Plex
+Sans／JetBrains Mono 從未實際載入（無字體檔、無 CDN 連結），已改為系統
+字體堆疊，確保「文件宣稱＝實際生效」。理由見 `docs/REMEDIATION_PLAN.md`。
+
+| 角色 | 字體堆疊 | 備註 |
 |---|---|---|
-| 標題（英文/數字） | Space Grotesk | 避免 Inter 預設樣板感 |
-| 內文（英文） | IBM Plex Sans | 工程系統血統，長段落易讀 |
+| 標題（英文/數字） | `-apple-system, "Segoe UI", "Century Gothic", "Avenir Next"` | 避免 Inter 預設樣板感，系統字體確定生效 |
+| 內文（英文） | `-apple-system, "Segoe UI", "Helvetica Neue", Roboto` | 長段落易讀，系統字體確定生效 |
 | 中文（標題與內文） | 系統 CJK 堆疊（PingFang TC / Noto Sans TC / 微軟正黑體） | 未內嵌 CJK Web Font（檔案體積考量） |
-| 規格數值／型號 | JetBrains Mono | 型號與規格表數值使用等寬字體，強化「量測感」 |
+| 規格數值／型號 | `ui-monospace, "SF Mono", "SFMono-Regular", "Cascadia Code", Consolas, Menlo` | 型號與規格表數值使用等寬字體，強化「量測感」，系統字體確定生效 |
 
 比例尺度約 1.25，基準 16px。內文區塊 `max-width: 62ch` 控制行寬。
 

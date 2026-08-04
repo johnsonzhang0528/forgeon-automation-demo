@@ -1,11 +1,20 @@
 # FINAL_REPORT.md
 
 專案：鋒岳自動化 FORGEON AUTOMATION — 頁構所（Yegou Studio）市場驗證作品集
-建置日期：2026-08-04
+初版建置日期：2026-08-04
+**修正 Pass 日期：2026-08-04（同日全面 QA／缺陷修復／內容深化 Pass）**
+
+> **重要**：本文件第 30.1–30.10 節為初版建置的原始報告，保留不變作為
+> 建置過程的忠實記錄。**第 31 節「2026-08 修正 Pass 總結」是本次全面
+> QA Pass 的權威摘要**，記錄了初版聲明中哪些「未執行」項目在本輪中
+> 已實際執行、發現了哪些初版審查未能發現的真實缺陷，以及最終真實測試
+> 數字。若第 30 節與第 31 節內容有出入，以第 31 節為準——第 30 節反映
+> 的是初版建置當下的認知與限制，第 31 節反映的是本輪實際驗證後的事實。
+> 完整、面向 Codex 審查的入口文件是 `docs/CODEX_REVIEW_HANDOFF.md`。
 
 ---
 
-## 30.1 完成摘要
+## 30.1 完成摘要（初版，2026-08-04）
 
 **頁面（48 個靜態頁面，zh-tw 與 en 各 24 個 + sitemap/robots/根路徑重導）**
 
@@ -285,3 +294,88 @@ insights 檔案，皆為本次會話內部的自我修正，非移除既有交�
 **未觸碰**：`demo-1/` 目錄外的所有檔案（父層 `leo-projects` repo 的
 `boro*`／`outdoorfun`／`memory/` 等既有未提交變更，本次會話完全未讀取
 或修改，符合任務範圍限制）。
+
+---
+
+## 31. 2026-08 修正 Pass 總結（本次全面 QA／缺陷修復／內容深化）
+
+基準 Commit：`cb23949`（初版建置）。本輪為 P0/P1/SEO/QA 全面修正 Pass，
+完整計畫見 `docs/REMEDIATION_PLAN.md`，逐項驗收證據見
+`docs/CODEX_REVIEW_HANDOFF.md`。
+
+### 31.1 P0 修正（正式展示前必須完成，全部完成）
+
+1. **手機 Header Scoped CSS Bug**：確認為真——`Header.astro` 的
+   `.site-header__cta`／`.mobile-nav__cta` 規則因 Astro Scoped CSS 機制
+   永遠不命中子元件 `Button` 渲染出的實際 DOM，導致 390px 下桌面 CTA
+   全寬顯示。修正：改用 Wrapper `<div>` 承接顯示控制樣式。同一 Pattern
+   另外發現並修正 3 處：`ProductCard`（`padding: 0` 與
+   `:global(.product-glyph)` 皆失效，真實影響每張產品卡片的視覺呈現）、
+   `IndustryIcon` Size 控制失效、多個 Dead Class 清理。
+2. **缺少 H1**：確認為真——About／Contact／Products／Solutions／
+   Industries／Insights 總覽（中英文共 12 頁）缺少 `level="h1"`，全數
+   修正並建立 `scripts/check-h1.mjs` 建置後自動驗證，**48 個內容頁
+   全數恰有 1 個 H1，0 個失敗**。
+3. **色彩對比**：確認為真——Accent／Accent-contrast／Muted-soft 三組
+   Token 實測未達 WCAG AA。以 WCAG 公式重新計算並調深，完整 Before/
+   After 記錄於新增文件 `docs/CONTRAST_AUDIT.md`。
+4. **Demo 索引安全機制**：先前不存在，本輪新增
+   `PUBLIC_DEMO_MODE`／`PUBLIC_ALLOW_INDEXING`，Demo Mode 下
+   `noindex`＋`robots.txt Disallow`＋Concept Project Schema／徽章
+   全部生效，並用 Lighthouse 驗證切換 Production Mode 後 SEO 分數
+   由 66 恢復至 100。
+5. **RFQ 表單**：Demo Mode 承諾回覆的矛盾文案已改寫；新增雙語
+   `/privacy/` 頁並讓同意文字連結至真實頁面；附件欄位（有真實資料
+   遺失 Bug）已移除，決策記錄於 `docs/REMEDIATION_PLAN.md`；
+   `aria-invalid` 補齊至所有欄位類型；CTA `?intent=` 機制完整實作。
+6. **PDF 規格書**：899-byte Placeholder 已重建為真實 6 頁、可選取文字、
+   通過 `pdfinfo`／`pdftotext` 驗證的 PDF（`forgeon-axm-400-datasheet.pdf`）。
+
+### 31.2 真實瀏覽器 QA 發現的額外缺陷（初版程式碼審視未能發現）
+
+過程中用 Playwright 實際互動測試與 axe-core 掃描，另外發現並修正
+**3 個初版 Remediation Plan 未列出的真實缺陷**：
+
+1. Mobile Nav 背景在選單開啟時並非真正 Inert（`backdrop-filter`
+   Containing Block 問題，導致背景內容可被點擊／鍵盤到達）。
+2. Footer Logo 英文字重在深色背景對比僅 2.97:1（axe-core 判定
+   Serious），全站每頁皆受影響（Footer 為共用元件）。
+3. CTABanner 次要按鈕文字色與背景色相同，導致按鈕文字完全不可見
+   （純視覺渲染缺陷，只有實際截圖比對才能發現）。
+
+完整記錄於 `docs/IMPECCABLE_REVIEW_LOG.md`。
+
+### 31.3 測試基礎建設（先前完全不存在）
+
+新增 `tests/e2e/`（Playwright，198 個測試）、`playwright.config.ts`、
+`scripts/check-h1.mjs`／`check-links.mjs`／`check-locale-routes.mjs`／
+`build-datasheet.mjs`。真實執行結果：
+
+- Playwright：**198/198 通過**（含 axe-core 15/15，0 Critical／0 Serious）
+- 內部連結：**1951 個，0 個失效**
+- Lighthouse（5 個必要頁面）：**Performance 100／Accessibility 100／
+  Best Practices 100**（全部一致）；SEO 66（Demo Mode `is-crawlable`
+  刻意失敗，已用 Production Mode 重測驗證恢復 100）
+- TypeScript／Astro Check：**0 錯誤**
+- Build：**50 個頁面**（較初版 48 頁增加 `/privacy/` 雙語頁）
+
+### 31.4 P1 內容深化
+
+首頁新增適合／不適合區塊與雙路徑入口（依三種買主角色分流）；產品總覽
+新增選型條件與比較表；解決方案完整深度頁（視覺定位自動化組裝）新增
+適合／不適合區塊與明確標示的 Concept Scenario（虛構問題背景、使用者
+角色、資料輸入、方案選擇、交付物、驗收方式，不含任何真實成果數字）。
+`anti-ai-writing` 對全部新增文案執行第二輪審查（`docs/COPY_REVIEW_LOG.md`）。
+
+### 31.5 誠實聲明：仍未完成項目
+
+1. Higgsfield 付費素材生成——計畫但未執行（原因與初版相同：需使用者
+   帳號登入，沙盒環境無法完成）。`docs/HIGGSFIELD_ASSET_PLAN.md` 已
+   依本輪核准上限重新裁切。
+2. 真實螢幕閱讀器（NVDA/VoiceOver）人工操作測試——axe-core 自動化掃描
+   可驗證 ARIA 正確性，但無法完全取代人工操作體驗驗證。
+3. 真實跨瀏覽器（Firefox／Safari／Edge）渲染比對——僅測試 Chromium。
+4. 字體决策選擇系統字體堆疊（方案 B）而非內嵌真實 Web Font（方案 A）
+   ——因沙盒環境無網路存取下載並驗證字體檔案授權。
+
+完整、逐項可重現的驗證指令與數字見 `docs/CODEX_REVIEW_HANDOFF.md`。
