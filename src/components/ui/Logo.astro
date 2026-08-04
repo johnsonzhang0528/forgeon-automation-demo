@@ -9,6 +9,12 @@ export interface Props {
 const { locale, variant = 'default' } = Astro.props;
 const stroke = variant === 'invert' ? 'var(--color-invert-text)' : 'var(--color-ink)';
 const accent = 'var(--color-accent)';
+// .logo__en used to hardcode var(--color-muted) regardless of variant — on
+// the invert (dark footer) background that resolved to a real, axe-core-
+// confirmed WCAG AA failure (2.97:1, needs 4.5:1). --color-muted is tuned
+// for light backgrounds only; --color-invert-muted is the token actually
+// designed to sit on --color-invert-bg (6.99:1) — see docs/CONTRAST_AUDIT.md.
+const subtleColor = variant === 'invert' ? 'var(--color-invert-muted)' : 'var(--color-muted)';
 ---
 
 <a href={`/${locale}/`} class="logo" aria-label={`${siteConfig.brandNameZh} ${siteConfig.brandNameEn}`}>
@@ -22,7 +28,7 @@ const accent = 'var(--color-accent)';
   </span>
 </a>
 
-<style define:vars={{ textColor: stroke }}>
+<style define:vars={{ textColor: stroke, subtleColor }}>
   .logo {
     display: inline-flex;
     align-items: center;
@@ -45,6 +51,6 @@ const accent = 'var(--color-accent)';
     font-family: var(--font-mono);
     font-size: 0.6rem;
     letter-spacing: 0.08em;
-    color: var(--color-muted);
+    color: var(--subtleColor);
   }
 </style>

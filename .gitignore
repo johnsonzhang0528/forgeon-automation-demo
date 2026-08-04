@@ -16,3 +16,8 @@ pnpm-debug.log*
 # editor
 .DS_Store
 *.log
+
+# test artifacts
+playwright-report/
+test-results/
+lighthouse-reports/

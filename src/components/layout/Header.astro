@@ -61,42 +61,57 @@ function isActive(itemPath: string) {
       </button>
     </div>
   </div>
+</header>
 
-  <div id="mobile-nav" class="mobile-nav" data-mobile-nav hidden>
-    <div class="mobile-nav__panel">
-      <div class="mobile-nav__top">
-        <Logo locale={locale} />
-        <button
-          type="button"
-          class="mobile-nav-toggle"
-          data-mobile-nav-close
-          aria-label={dict.nav.menuClose}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
-      <ul class="mobile-nav__list">
-        {navItems.map((item) => (
-          <li>
-            <a href={item.path(locale)} class="mobile-nav__link" aria-current={isActive(item.path(locale)) ? 'page' : undefined}>
-              {dict.nav[item.labelKey]}
-            </a>
-          </li>
-        ))}
-      </ul>
-      <div class="mobile-nav__footer">
-        <LanguageSwitcher locale={locale} path={path} otherLocalePath={otherLocalePath} />
-        <div class="mobile-nav__cta">
-          <Button href={`/${locale}/contact/?intent=project`} size="lg" trackEvent="cta_click" data-intent="project" data-source="header-mobile">
-            {dict.nav.ctaPrimary}
-          </Button>
-        </div>
+<!--
+  Mobile nav overlay lives as a SIBLING of <header>, not nested inside it.
+  This is a real bug fix (found via Playwright testing this pass, not in
+  the original spec write-up): .site-header has `backdrop-filter: blur()`,
+  and per the CSS spec, backdrop-filter (like filter/transform/contain)
+  creates a new containing block for descendant `position: fixed`
+  elements. With #mobile-nav nested inside <header>, its `position: fixed;
+  inset: 0` resolved against the HEADER's box, not the viewport — so the
+  "full-screen dim overlay" only ever covered the header's own ~72px
+  height. Background page content below the header was fully visible,
+  clickable, and reachable by keyboard/screen reader while the menu was
+  "open," failing the spec's background-must-be-inert requirement. Moving
+  this markup outside <header> removes it from that containing block so
+  `inset: 0` resolves against the real viewport again.
+-->
+<div id="mobile-nav" class="mobile-nav" data-mobile-nav hidden>
+  <div class="mobile-nav__panel">
+    <div class="mobile-nav__top">
+      <Logo locale={locale} />
+      <button
+        type="button"
+        class="mobile-nav-toggle"
+        data-mobile-nav-close
+        aria-label={dict.nav.menuClose}
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    <ul class="mobile-nav__list">
+      {navItems.map((item) => (
+        <li>
+          <a href={item.path(locale)} class="mobile-nav__link" aria-current={isActive(item.path(locale)) ? 'page' : undefined}>
+            {dict.nav[item.labelKey]}
+          </a>
+        </li>
+      ))}
+    </ul>
+    <div class="mobile-nav__footer">
+      <LanguageSwitcher locale={locale} path={path} otherLocalePath={otherLocalePath} />
+      <div class="mobile-nav__cta">
+        <Button href={`/${locale}/contact/?intent=project`} size="lg" trackEvent="cta_click" data-intent="project" data-source="header-mobile">
+          {dict.nav.ctaPrimary}
+        </Button>
       </div>
     </div>
   </div>
-</header>
+</div>
 
 <style>
   .site-header {
