@@ -616,16 +616,33 @@ fi
 # variants x multiple viewports, as CC-02's Hero prototypes do) organizes
 # them under docs/screenshots/<stage-prefix>/ instead of the flat
 # <label>-{desktop,tablet,mobile}.png convention the 3-file case above
-# covers. Fall back to copying that whole directory — by stage prefix
-# (e.g. "cc02" from label "cc02-hero-spike") first, then by exact label —
-# when the flat 3-file match finds nothing, rather than leaving a bundle
-# that's supposed to carry 11 required screenshots with zero.
+# covers. Fall back to copying that whole directory when the flat 3-file
+# match finds nothing, rather than leaving a bundle that's supposed to
+# carry many required screenshots with zero.
+#
+# Directory match priority: exact label directory FIRST, then stage
+# prefix. This was a real bug (found and fixed in the CC-02F round): a
+# later sub-stage sharing a stage prefix with an earlier one —
+# "cc02-final-hero" and "cc02-hero-spike" both extract STAGE_PREFIX="cc02"
+# — used to always match the generic docs/screenshots/cc02/ directory
+# (CC-02's OWN screenshots) before ever trying the more specific
+# docs/screenshots/cc02-final/ directory this round actually populated,
+# silently bundling the wrong round's screenshots. An exact match on the
+# full label is always at least as specific as a stage-prefix match, so
+# it must be tried first.
 if [ "${#SCREENSHOT_MATCHES[@]}" -eq 0 ] && [ -d "docs/screenshots" ]; then
   SCREENSHOT_DIR=""
-  if [ -n "$STAGE_PREFIX" ] && [ -d "docs/screenshots/${STAGE_PREFIX}" ]; then
-    SCREENSHOT_DIR="docs/screenshots/${STAGE_PREFIX}"
-  elif [ -d "docs/screenshots/${LABEL}" ]; then
+  if [ -d "docs/screenshots/${LABEL}" ]; then
     SCREENSHOT_DIR="docs/screenshots/${LABEL}"
+  elif [ -n "$STAGE_PREFIX" ] && [ -d "docs/screenshots/${STAGE_PREFIX}-final" ]; then
+    # A "<stage-prefix>-final" directory (e.g. cc02-final/) is a more
+    # specific match than the bare stage-prefix directory whenever both
+    # exist — a later "-final" round's own screenshots should win over an
+    # earlier same-stage-prefix round's, without requiring every future
+    # final-round label to exactly equal its directory name.
+    SCREENSHOT_DIR="docs/screenshots/${STAGE_PREFIX}-final"
+  elif [ -n "$STAGE_PREFIX" ] && [ -d "docs/screenshots/${STAGE_PREFIX}" ]; then
+    SCREENSHOT_DIR="docs/screenshots/${STAGE_PREFIX}"
   fi
   if [ -n "$SCREENSHOT_DIR" ]; then
     while IFS= read -r -d '' f; do
