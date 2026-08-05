@@ -49,6 +49,40 @@
           "required_tests": []
         }
       ]
+    },
+    "WF-COMM-01": {
+      "title": "Traditional Chinese Communication Policy",
+      "type": "maintenance",
+      "claimable": true,
+      "external_reviewer": "ChatGPT",
+      "tickets": [
+        {
+          "id": "WF-COMM-01-01",
+          "title": "建立繁體中文共用溝通規則",
+          "status": "ready",
+          "allowed_files": [
+            "CLAUDE.md",
+            "AGENTS.md",
+            "docs/agents/**",
+            ".claude/skills/dual-agent/**",
+            "tests/tooling/**"
+          ],
+          "required_tests": []
+        },
+        {
+          "id": "WF-COMM-01-02",
+          "title": "驗證 Claude 與 Codex 指令入口",
+          "status": "ready",
+          "allowed_files": [
+            "CLAUDE.md",
+            "AGENTS.md",
+            "docs/agents/**",
+            ".claude/skills/dual-agent/**",
+            "tests/tooling/**"
+          ],
+          "required_tests": []
+        }
+      ]
     }
   }
 }

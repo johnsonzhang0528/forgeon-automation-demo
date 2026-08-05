@@ -17,3 +17,7 @@ authority. No force claim or generic release exists.
 Never push, rewrite history, use repository-wide staging, or develop in the
 integration checkout. CC-02I is unclaimable until ChatGPT supplies its spec and
 registered tickets.
+
+Handoff and recovery-report narratives follow
+`docs/agents/COMMUNICATION_POLICY.md` (zh-TW). Machine-readable schema keys
+are unaffected.

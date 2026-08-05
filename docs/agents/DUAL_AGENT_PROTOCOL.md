@@ -82,3 +82,12 @@ Ticket-specific allowlist: Stage metadata, Tickets, and permitted paths come
 from the authorization. An agent cannot create that authorization, overwrite an
 existing Stage or Ticket, or use maintenance registration to unlock a blocked
 Product Stage. The ChatGPT/user Stage Gate remains authoritative.
+
+## Communication policy
+
+`docs/agents/COMMUNICATION_POLICY.md` is the canonical language policy for
+both agents. Claude → Codex and Codex → Claude handoff narratives, and
+sudden-stop recovery reports, use Traditional Chinese (zh-TW). Handoff and
+recovery machine-readable schema keys are unchanged by the policy. A quota
+rollover or new session does not reset either agent back to an English
+default.
