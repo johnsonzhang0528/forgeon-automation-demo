@@ -1,0 +1,98 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Agent: Status",
+      "type": "shell",
+      "command": "pnpm agent:status",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Agent: Watcher",
+      "type": "shell",
+      "command": "pnpm agent:watch",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "runOptions": { "runOn": "default" }
+    },
+    {
+      "label": "Agent: Claim (Claude)",
+      "type": "shell",
+      "command": "pnpm agent:claim -- --agent claude --stage ${input:agentStage} --ticket ${input:agentTicket}",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Agent: Claim (Codex)",
+      "type": "shell",
+      "command": "pnpm agent:claim -- --agent codex --stage ${input:agentStage} --ticket ${input:agentTicket}",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Agent: Checkpoint",
+      "type": "shell",
+      "command": "pnpm agent:checkpoint",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Agent: Handoff",
+      "type": "shell",
+      "command": "pnpm agent:handoff -- --from ${input:agentFrom} --to ${input:agentTo} --reason ${input:agentReason}",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Agent: Recovery",
+      "type": "shell",
+      "command": "pnpm agent:recover -- --agent ${input:agentSelf}",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Agent: Release",
+      "type": "shell",
+      "command": "pnpm agent:release -- --agent ${input:agentSelf}",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "agentStage",
+      "type": "promptString",
+      "description": "Stage (e.g. CC-02I)"
+    },
+    {
+      "id": "agentTicket",
+      "type": "promptString",
+      "description": "Ticket slug"
+    },
+    {
+      "id": "agentFrom",
+      "type": "pickString",
+      "description": "Handing off from",
+      "options": ["claude", "codex"]
+    },
+    {
+      "id": "agentTo",
+      "type": "pickString",
+      "description": "Handing off to",
+      "options": ["claude", "codex"]
+    },
+    {
+      "id": "agentReason",
+      "type": "promptString",
+      "description": "Reason for handoff (e.g. quota)"
+    },
+    {
+      "id": "agentSelf",
+      "type": "pickString",
+      "description": "Which agent is this?",
+      "options": ["claude", "codex"]
+    }
+  ]
+}
