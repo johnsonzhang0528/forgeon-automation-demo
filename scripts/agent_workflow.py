@@ -14,6 +14,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import stat
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -31,6 +32,7 @@ EXCLUDED = (
 )
 SECRET_NAMES = (".env", "id_rsa", "id_ed25519", "credentials", "secrets")
 SECRET_RE = re.compile(r"(?i)(api[_-]?key|token|password|secret)\s*[:=]\s*['\"]?[A-Za-z0-9_/+=.-]{12,}")
+PRIVATE_PATH_RE = re.compile(r"(?:^|[\s'\"])/(?:home|Users)/[^\s'\"]+")
 
 
 class WorkflowError(RuntimeError):
@@ -74,6 +76,26 @@ def atomic_json(path: Path, value) -> None:
     finally:
         with contextlib.suppress(FileNotFoundError):
             os.unlink(tmp)
+
+
+def fsync_dir(path: Path) -> None:
+    fd = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+def atomic_bytes(path: Path, value: bytes, mode: int = 0o600) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        os.fchmod(fd, mode)
+        with os.fdopen(fd, "wb") as f:
+            f.write(value); f.flush(); os.fsync(f.fileno())
+        os.replace(tmp, path); fsync_dir(path.parent)
+    finally:
+        with contextlib.suppress(FileNotFoundError): os.unlink(tmp)
 
 
 def read_json(path: Path):
@@ -146,6 +168,143 @@ def verify_repo() -> dict:
     if cfg.get("repository_layout") != "standalone-worktrees":
         raise WorkflowError("repository is not configured for isolated worktrees")
     return cfg
+
+
+def canonical_json(value) -> bytes:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
+
+
+def authorization_has_unsafe_value(value) -> bool:
+    if isinstance(value, dict):
+        return any(authorization_has_unsafe_value(v) for v in value.values())
+    if isinstance(value, list):
+        return any(authorization_has_unsafe_value(v) for v in value)
+    if not isinstance(value, str):
+        return False
+    return bool(SECRET_RE.search(value) or PRIVATE_PATH_RE.search(value) or "-----BEGIN " in value)
+
+
+def maintenance_ticket(ticket: dict) -> dict:
+    scopes = {
+        "WF-SEC-04-01": ["scripts/agent_guard.py", ".claude/hooks/**", ".claude/settings.json",
+                          "tests/tooling/**", "docs/agents/TASK_REGISTRY.json"],
+        "WF-SEC-04-02": ["scripts/agent_workflow.py", "tests/tooling/**", "docs/agents/**",
+                          "AGENTS.md", "CLAUDE.md"],
+        "WF-SEC-04-03": ["docs/agents/**"],
+    }
+    ticket_id = ticket.get("id")
+    if ticket_id not in scopes or not isinstance(ticket.get("title"), str):
+        raise WorkflowError("authorization contains an unsupported maintenance ticket")
+    return {"id": ticket_id, "title": ticket["title"], "status": "ready",
+            "allowed_files": scopes[ticket_id], "required_tests": []}
+
+
+def cmd_register_maintenance(args):
+    cfg = verify_repo()
+    actual_role = role()
+    if actual_role not in VALID_AGENTS:
+        raise WorkflowError("maintenance registration requires an agent worktree")
+    if changed_paths():
+        raise WorkflowError("maintenance registration requires a clean worktree")
+    supplied = Path(args.authorization_file)
+    expected_parent = (state_dir() / "human-authorizations").resolve()
+    if supplied.is_symlink() or supplied.parent.resolve() != expected_parent:
+        raise WorkflowError("authorization file must be a direct runtime authorization file")
+    try:
+        info = supplied.stat()
+    except OSError as exc:
+        raise WorkflowError("authorization is missing or unreadable") from exc
+    if not stat.S_ISREG(info.st_mode) or stat.S_IMODE(info.st_mode) != 0o600:
+        raise WorkflowError("authorization permissions must be 0600")
+    auth = read_json(supplied)
+    required = {"authorization_id", "authorization_type", "authorized_agent", "authorized_base_head",
+                "authorized_branch", "bootstrap_allowed_paths", "forbidden_paths", "project_id",
+                "single_use", "consumed", "expires_at", "stage", "tickets"}
+    if not required.issubset(auth):
+        raise WorkflowError("authorization schema is incomplete")
+    if authorization_has_unsafe_value(auth):
+        raise WorkflowError("authorization contains a secret-shaped or private absolute-path value")
+    if auth["authorization_type"] != "maintenance-bootstrap" or not auth["single_use"] or auth["consumed"]:
+        raise WorkflowError("authorization is not an unused single-use maintenance authorization")
+    try:
+        expiry = datetime.fromisoformat(auth["expires_at"].replace("Z", "+00:00"))
+    except (TypeError, ValueError) as exc:
+        raise WorkflowError("authorization expiry is invalid") from exc
+    if expiry <= datetime.now(timezone.utc):
+        raise WorkflowError("authorization has expired")
+    if auth["project_id"] != cfg.get("project_id") or auth["authorized_agent"] != actual_role:
+        raise WorkflowError("authorization project or agent mismatch")
+    if auth["authorized_branch"] != branch():
+        raise WorkflowError("authorization branch mismatch")
+    base = auth["authorized_base_head"]
+    if run(["git", "merge-base", "--is-ancestor", base, head()], check=False).returncode:
+        raise WorkflowError("authorization base HEAD is not an ancestor")
+    changed = git("diff", "--name-only", base, head(), "--", ".").splitlines()
+    allowed = auth["bootstrap_allowed_paths"]
+    forbidden = auth["forbidden_paths"]
+    if any(not any(fnmatch.fnmatch(p, pattern) for pattern in allowed) for p in changed):
+        raise WorkflowError("bootstrap commit contains a path outside the authorization")
+    if any(any(fnmatch.fnmatch(p, pattern) for pattern in forbidden) for p in changed):
+        raise WorkflowError("bootstrap commit contains a forbidden path")
+    task = load_runtime()
+    if get_lock() or task.get("active_agent") is not None:
+        raise WorkflowError("runtime must be fully released before registration")
+    stage_auth = auth["stage"]
+    if stage_auth.get("id") != "WF-SEC-04" or stage_auth.get("claimable") is not True:
+        raise WorkflowError("authorization stage mismatch")
+    expected_ids = ["WF-SEC-04-01", "WF-SEC-04-02", "WF-SEC-04-03"]
+    if [x.get("id") for x in auth["tickets"]] != expected_ids:
+        raise WorkflowError("authorization ticket mismatch")
+
+    with critical():
+        registry_bytes = REGISTRY.read_bytes()
+        registry = read_json(REGISTRY)
+        before_cc = canonical_json(registry.get("stages", {}).get("CC-02I"))
+        stages = registry.setdefault("stages", {})
+        existing_ids = {t.get("id") for s in stages.values() for t in s.get("tickets", [])}
+        if stage_auth["id"] in stages or any(x in existing_ids for x in expected_ids):
+            raise WorkflowError("maintenance stage or ticket already exists")
+        stages[stage_auth["id"]] = {
+            "title": stage_auth["title"], "type": "maintenance", "claimable": True,
+            "external_reviewer": stage_auth["external_reviewer"],
+            "tickets": [maintenance_ticket(x) for x in auth["tickets"]],
+        }
+        if canonical_json(stages.get("CC-02I")) != before_cc:
+            raise WorkflowError("CC-02I changed during registration")
+        consumed = dict(auth)
+        consumed.update(consumed=True, consumed_at=now(), consumed_by=actual_role,
+                        registered_stage=stage_auth["id"], bootstrap_commit=head(),
+                        registry_digest=hashlib.sha256(canonical_json(registry)).hexdigest())
+        consumed_dir = expected_parent / "consumed"
+        consumed_path = consumed_dir / f"{auth['authorization_id']}.json"
+        audit_dir = state_dir() / "maintenance-audits"
+        audit_path = audit_dir / f"{auth['authorization_id']}.json"
+        audit = {"authorization_id": auth["authorization_id"], "stage": stage_auth["id"],
+                 "agent": actual_role, "branch": branch(), "bootstrap_commit": head(),
+                 "registry_digest": consumed["registry_digest"], "registered_at": now()}
+        if consumed_path.exists() or audit_path.exists():
+            raise WorkflowError("authorization was already consumed")
+        auth_bytes = supplied.read_bytes()
+        registry_written = auth_moved = audit_written = False
+        try:
+            atomic_bytes(REGISTRY, json.dumps(registry, indent=2, ensure_ascii=False).encode() + b"\n", 0o644)
+            registry_written = True
+            if os.environ.get("AGENT_TEST_FAIL_REGISTRY_WRITE") == "1": raise WorkflowError("injected registry failure")
+            consumed_dir.mkdir(parents=True, exist_ok=True)
+            atomic_bytes(consumed_path, json.dumps(consumed, indent=2, ensure_ascii=False).encode() + b"\n")
+            os.unlink(supplied); fsync_dir(expected_parent); auth_moved = True
+            if os.environ.get("AGENT_TEST_FAIL_AUTH_MOVE") == "1": raise WorkflowError("injected authorization failure")
+            atomic_json(audit_path, audit); audit_written = True; fsync_dir(audit_dir)
+            if os.environ.get("AGENT_TEST_FAIL_AUDIT_WRITE") == "1": raise WorkflowError("injected audit failure")
+        except Exception:
+            if audit_written:
+                with contextlib.suppress(FileNotFoundError): audit_path.unlink()
+            if auth_moved:
+                atomic_bytes(supplied, auth_bytes)
+            with contextlib.suppress(FileNotFoundError): consumed_path.unlink()
+            if registry_written: atomic_bytes(REGISTRY, registry_bytes, 0o644)
+            raise
+    print(f"registered maintenance stage {stage_auth['id']}; authorization consumed")
 
 
 def render_versioned(task: dict) -> str:
@@ -634,6 +793,7 @@ def cmd_validate(args):
 def parser():
     p = argparse.ArgumentParser(); sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("init-runtime"); sub.add_parser("status"); sub.add_parser("doctor")
+    q = sub.add_parser("register-maintenance"); q.add_argument("--authorization-file", required=True)
     q = sub.add_parser("claim"); q.add_argument("--agent", required=True); q.add_argument("--stage", required=True); q.add_argument("--ticket", required=True)
     q = sub.add_parser("step-start"); q.add_argument("--agent", required=True); q.add_argument("--summary", required=True); q.add_argument("--expected-files", default=""); q.add_argument("--verification", default="")
     q = sub.add_parser("step-complete"); q.add_argument("--agent", required=True)
@@ -652,6 +812,7 @@ def parser():
 
 
 COMMANDS = {"init-runtime": cmd_init_runtime, "status": cmd_status, "doctor": cmd_doctor,
+            "register-maintenance": cmd_register_maintenance,
             "claim": cmd_claim, "step-start": cmd_step_start, "step-complete": cmd_step_complete,
             "test": cmd_test, "stage-ticket": cmd_stage, "commit-ticket": cmd_commit, "checkpoint": cmd_checkpoint,
             "handoff": cmd_handoff, "resume": cmd_resume, "complete": cmd_complete, "human-abort": cmd_abort,

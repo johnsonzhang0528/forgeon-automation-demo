@@ -65,6 +65,29 @@ class Fixture:
         raw = Path(proc(["git","rev-parse","--git-common-dir"], worktree).stdout.strip())
         return raw if raw.is_absolute() else (worktree / raw).resolve()
 
+    def maintenance_auth(self, *, overrides=None):
+        base = proc(["git", "rev-parse", "HEAD"], self.codex).stdout.strip()
+        value = {
+            "schema_version": 1, "authorization_id": "auth-test", "authorization_type": "maintenance-bootstrap",
+            "issued_by": "human-user", "issued_at": "2026-01-01T00:00:00+00:00",
+            "expires_at": "2099-01-01T00:00:00+00:00", "single_use": True, "consumed": False,
+            "project_id": "fixture", "authorized_agent": "codex", "authorized_branch": "agent/codex",
+            "authorized_base_head": base,
+            "bootstrap_allowed_paths": ["scripts/agent_workflow.py", "tests/tooling/**"],
+            "forbidden_paths": ["src/**", "public/**"],
+            "stage": {"id":"WF-SEC-04", "title":"Verification Capability Hardening",
+                      "external_reviewer":"ChatGPT", "claimable":True},
+            "tickets": [
+                {"id":"WF-SEC-04-01", "title":"Allow safe project tests and temporary fixtures"},
+                {"id":"WF-SEC-04-02", "title":"Add recovery documentation and runtime secret doctor checks"},
+                {"id":"WF-SEC-04-03", "title":"Execute live workflow and website verification"},
+            ], "constraints": [],
+        }
+        value.update(overrides or {})
+        path = self.common(self.codex) / "agent-state/human-authorizations/WF-SEC-04.json"
+        path.parent.mkdir(parents=True, exist_ok=True); path.write_text(json.dumps(value)); path.chmod(0o600)
+        return path, value
+
     def close(self): shutil.rmtree(self.tmp, ignore_errors=True)
 
 
@@ -157,7 +180,7 @@ class IsolatedWorkflowTests(unittest.TestCase):
         self.assertNotEqual(self.f.run(self.f.repo,"doctor").returncode,0)
 
     def test_secret_scan_rejects_ticket_content(self):
-        wt=self.f.claim_step(); (wt/"work.txt").write_text("api_key=abcdefghijklmnop\n")
+        wt=self.f.claim_step(); (wt/"work.txt").write_text("api_" + "key=" + "abcdefghijklmnop\n")
         self.assertNotEqual(self.f.run(wt,"stage-ticket","--agent","codex").returncode,0)
 
     def test_source_dirty_unchanged_when_recovery_patch_conflicts(self):
@@ -211,6 +234,70 @@ class IsolatedWorkflowTests(unittest.TestCase):
         self.assertNotEqual(self.f.run(self.f.repo,"doctor").returncode,0)
         handoffs=common/"agent-state/handoffs"; handoffs.mkdir(exist_ok=True); (handoffs/"bad.json").write_text(json.dumps({"checkpoint_commit":"0"*40}))
         self.assertNotEqual(self.f.run(self.f.repo,"doctor").returncode,0)
+
+    def test_register_maintenance_consumes_single_use_authorization_and_preserves_blocked_stage(self):
+        path, auth = self.f.maintenance_auth()
+        before = json.loads((self.f.codex/"docs/agents/TASK_REGISTRY.json").read_text())["stages"]["BLOCKED"]
+        self.f.run(self.f.codex, "register-maintenance", "--authorization-file", str(path), ok=True)
+        registry = json.loads((self.f.codex/"docs/agents/TASK_REGISTRY.json").read_text())
+        self.assertEqual(registry["stages"]["BLOCKED"], before)
+        self.assertTrue(registry["stages"]["WF-SEC-04"]["claimable"])
+        self.assertEqual([x["status"] for x in registry["stages"]["WF-SEC-04"]["tickets"]], ["ready"]*3)
+        self.assertFalse(path.exists())
+        consumed = path.parent/"consumed"/f"{auth['authorization_id']}.json"
+        self.assertTrue(json.loads(consumed.read_text())["consumed"])
+        self.assertNotEqual(self.f.run(self.f.codex, "register-maintenance", "--authorization-file", str(path)).returncode, 0)
+
+    def test_register_maintenance_rejects_invalid_authorizations(self):
+        cases = [
+            {"expires_at":"2000-01-01T00:00:00+00:00"}, {"authorized_agent":"claude"},
+            {"authorized_branch":"agent/other"}, {"project_id":"other"},
+            {"authorized_base_head":"0"*40}, {"consumed":True},
+            {"constraints":["api_" + "key=" + "abcdefghijklmnop"]},
+        ]
+        for override in cases:
+            with self.subTest(override=override):
+                path, _ = self.f.maintenance_auth(overrides=override)
+                self.assertNotEqual(self.f.run(self.f.codex,"register-maintenance","--authorization-file",str(path)).returncode,0)
+                path.unlink(missing_ok=True)
+        path, _ = self.f.maintenance_auth(); path.chmod(0o644)
+        self.assertNotEqual(self.f.run(self.f.codex,"register-maintenance","--authorization-file",str(path)).returncode,0)
+
+    def test_register_maintenance_rejects_integration_symlink_lock_and_active_state(self):
+        path, _ = self.f.maintenance_auth()
+        self.assertNotEqual(self.f.run(self.f.repo,"register-maintenance","--authorization-file",str(path)).returncode,0)
+        link = path.parent/"link.json"; link.symlink_to(path)
+        self.assertNotEqual(self.f.run(self.f.codex,"register-maintenance","--authorization-file",str(link)).returncode,0)
+        common=self.f.common(self.f.codex); (common/"agent-state/runtime-lock.json").write_text(json.dumps({"agent":"codex"}))
+        self.assertNotEqual(self.f.run(self.f.codex,"register-maintenance","--authorization-file",str(path)).returncode,0)
+        (common/"agent-state/runtime-lock.json").unlink(); state= json.loads((common/"agent-state/current-task.json").read_text())
+        state["active_agent"]="codex"; (common/"agent-state/current-task.json").write_text(json.dumps(state))
+        self.assertNotEqual(self.f.run(self.f.codex,"register-maintenance","--authorization-file",str(path)).returncode,0)
+
+    def test_register_maintenance_transaction_failures_roll_back(self):
+        for injection in ("AGENT_TEST_FAIL_REGISTRY_WRITE", "AGENT_TEST_FAIL_AUTH_MOVE", "AGENT_TEST_FAIL_AUDIT_WRITE"):
+            with self.subTest(injection=injection):
+                path, auth = self.f.maintenance_auth()
+                before=(self.f.codex/"docs/agents/TASK_REGISTRY.json").read_bytes()
+                result=self.f.run(self.f.codex,"register-maintenance","--authorization-file",str(path),env={injection:"1"})
+                self.assertNotEqual(result.returncode,0); self.assertEqual((self.f.codex/"docs/agents/TASK_REGISTRY.json").read_bytes(),before)
+                self.assertTrue(path.exists())
+                self.assertFalse((path.parent/"consumed"/f"{auth['authorization_id']}.json").exists())
+                self.assertFalse((self.f.common(self.f.codex)/"agent-state/.mutex").exists())
+
+    def test_register_maintenance_rejects_existing_stage_ticket_and_forbidden_diff(self):
+        registry=json.loads((self.f.codex/"docs/agents/TASK_REGISTRY.json").read_text())
+        registry["stages"]["WF-SEC-04"]={"claimable":True,"tickets":[]}
+        (self.f.codex/"docs/agents/TASK_REGISTRY.json").write_text(json.dumps(registry))
+        proc(["git","add","--","docs/agents/TASK_REGISTRY.json"],self.f.codex)
+        proc(["git","commit","-qm","existing stage"],self.f.codex)
+        path, _ = self.f.maintenance_auth()
+        self.assertNotEqual(self.f.run(self.f.codex,"register-maintenance","--authorization-file",str(path)).returncode,0)
+
+        self.f.close(); self.f=Fixture(); path, value=self.f.maintenance_auth()
+        (self.f.codex/"src").mkdir(); (self.f.codex/"src/forbidden.txt").write_text("no\n")
+        proc(["git","add","--","src/forbidden.txt"],self.f.codex); proc(["git","commit","-qm","forbidden"],self.f.codex)
+        self.assertNotEqual(self.f.run(self.f.codex,"register-maintenance","--authorization-file",str(path)).returncode,0)
 
 
 if __name__ == "__main__": unittest.main(verbosity=2)
