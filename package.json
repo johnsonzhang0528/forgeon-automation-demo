@@ -17,7 +17,21 @@
     "build:datasheet": "node scripts/build-datasheet.mjs",
     "test:e2e": "playwright test",
     "test:axe": "playwright test tests/e2e/axe.spec.ts",
-    "review:bundle": "bash scripts/create-review-bundle.sh"
+    "review:bundle": "bash scripts/create-review-bundle.sh",
+    "agent:doctor": "python3 scripts/agent_workflow.py doctor",
+    "agent:status": "python3 scripts/agent_workflow.py status",
+    "agent:claim": "python3 scripts/agent_workflow.py claim",
+    "agent:step-start": "python3 scripts/agent_workflow.py step-start",
+    "agent:step-complete": "python3 scripts/agent_workflow.py step-complete",
+    "agent:checkpoint": "python3 scripts/agent_workflow.py checkpoint",
+    "agent:handoff": "python3 scripts/agent_workflow.py handoff",
+    "agent:resume": "python3 scripts/agent_workflow.py resume",
+    "agent:recover": "python3 scripts/agent_workflow.py recover",
+    "agent:complete": "python3 scripts/agent_workflow.py complete",
+    "agent:release": "python3 scripts/agent_workflow.py release",
+    "agent:validate": "python3 scripts/agent_workflow.py validate",
+    "agent:snapshot": "python3 scripts/agent_workflow.py snapshot",
+    "agent:watch": "python3 scripts/agent_watcher.py"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.3.0",

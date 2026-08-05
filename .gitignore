@@ -17,6 +17,10 @@ pnpm-debug.log*
 .DS_Store
 *.log
 
+# python (scripts/agent_workflow.py, scripts/agent_watcher.py, tests/tooling/*.py)
+__pycache__/
+*.pyc
+
 # test artifacts
 playwright-report/
 test-results/
@@ -25,3 +29,8 @@ lighthouse-reports/
 # review bundles (generated zips + staging dirs — see scripts/create-review-bundle.sh)
 .review-bundles/*
 !.review-bundles/.gitkeep
+
+# dual-agent runtime state (lock/autosnapshot/watcher pid) — never committed,
+# see docs/agents/DUAL_AGENT_PROTOCOL.md
+.agent-state/*
+!.agent-state/.gitkeep
