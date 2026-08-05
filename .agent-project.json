@@ -1,10 +1,14 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "project_id": "forgeon-automation-demo",
   "project_name": "FORGEON AUTOMATION Demo",
   "studio": "頁構所",
   "package_name": "forgeon-automation-demo",
-  "expected_working_directory": ".",
-  "nested_git_repository": true,
+  "repository_layout": "standalone-worktrees",
+  "integration_branch": "main",
+  "agent_branches": {
+    "claude": "agent/claude",
+    "codex": "agent/codex"
+  },
   "external_reviewer": "ChatGPT"
 }
