@@ -199,6 +199,19 @@ def json_strings(value):
         yield value
 
 
+def json_field_findings(value) -> bool:
+    if isinstance(value, dict):
+        for key, item in value.items():
+            normalized = re.sub(r"[^a-z0-9]", "", str(key).lower())
+            ignored = normalized.endswith(("status", "rule", "check", "enabled"))
+            sensitive = any(name in normalized for name in ("password", "credential", "apikey", "accesstoken", "secret"))
+            if sensitive and not ignored and item not in (None, "", False, [], {}): return True
+            if json_field_findings(item): return True
+    elif isinstance(value, list):
+        return any(json_field_findings(item) for item in value)
+    return False
+
+
 def runtime_json_files() -> list[Path]:
     base = state_dir()
     files = [base / "current-task.json", base / "runtime-lock.json"]
@@ -212,6 +225,7 @@ def runtime_value_findings() -> list[tuple[str, str]]:
     for path in runtime_json_files():
         value = read_json(path)
         matched = set()
+        if json_field_findings(value): matched.add("credential-value")
         for text_value in json_strings(value):
             for rule, pattern in RUNTIME_RULES:
                 if pattern.search(text_value): matched.add(rule)
@@ -258,6 +272,8 @@ def cmd_register_maintenance(args):
                 "single_use", "consumed", "expires_at", "stage", "tickets"}
     if not required.issubset(auth):
         raise WorkflowError("authorization schema is incomplete")
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}", str(auth["authorization_id"])):
+        raise WorkflowError("authorization ID is invalid")
     if authorization_has_unsafe_value(auth):
         raise WorkflowError("authorization contains a secret-shaped or private absolute-path value")
     if auth["authorization_type"] != "maintenance-bootstrap" or not auth["single_use"] or auth["consumed"]:
@@ -286,11 +302,18 @@ def cmd_register_maintenance(args):
     if get_lock() or task.get("active_agent") is not None:
         raise WorkflowError("runtime must be fully released before registration")
     stage_auth = auth["stage"]
-    if stage_auth.get("id") != "WF-SEC-04" or stage_auth.get("claimable") is not True:
+    if stage_auth != {"id": "WF-SEC-04", "title": "Verification Capability Hardening",
+                      "external_reviewer": "ChatGPT", "claimable": True}:
         raise WorkflowError("authorization stage mismatch")
     expected_ids = ["WF-SEC-04-01", "WF-SEC-04-02", "WF-SEC-04-03"]
     if [x.get("id") for x in auth["tickets"]] != expected_ids:
         raise WorkflowError("authorization ticket mismatch")
+    if [x.get("title") for x in auth["tickets"]] != [
+        "Allow safe project tests and temporary fixtures",
+        "Add recovery documentation and runtime secret doctor checks",
+        "Execute live workflow and website verification",
+    ]:
+        raise WorkflowError("authorization ticket metadata mismatch")
 
     with critical():
         registry_bytes = REGISTRY.read_bytes()

@@ -222,6 +222,11 @@ class IsolatedWorkflowTests(unittest.TestCase):
                 self.assertIn("current-task.json",result.stdout); self.assertNotIn(secret_value,result.stdout+result.stderr)
         state_path.write_text(json.dumps({**baseline,"secret_scan_status":"documented secret token password api key"}))
         self.assertEqual(self.f.run(self.f.repo,"doctor").returncode,0)
+        for key in ("password", "credential", "api_key", "access_token"):
+            state_path.write_text(json.dumps({**baseline,key:"not-a-real-value"}))
+            result=self.f.run(self.f.repo,"doctor")
+            self.assertNotEqual(result.returncode,0); self.assertIn("credential-value",result.stdout)
+            self.assertNotIn("not-a-real-value",result.stdout+result.stderr)
 
     def test_doctor_scans_nested_runtime_collections(self):
         common=self.f.common(self.f.repo)
@@ -306,6 +311,8 @@ class IsolatedWorkflowTests(unittest.TestCase):
             {"authorized_branch":"agent/other"}, {"project_id":"other"},
             {"authorized_base_head":"0"*40}, {"consumed":True},
             {"constraints":["api_" + "key=" + "abcdefghijklmnop"]},
+            {"authorization_id":"../escape"},
+            {"stage":{"id":"WF-SEC-04","title":"Wrong","external_reviewer":"ChatGPT","claimable":True}},
         ]
         for override in cases:
             with self.subTest(override=override):
