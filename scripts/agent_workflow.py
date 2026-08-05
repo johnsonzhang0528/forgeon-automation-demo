@@ -242,15 +242,18 @@ def validate_authorized_paths(allowed, forbidden) -> tuple[list[str], list[str]]
     dangerous = re.compile(r"(?:^|/)(?:\.git|agent-state|\.env(?:\..*)?)(?:/|$)")
     for label, paths in (("allowed", allowed), ("forbidden", forbidden)):
         for pattern in paths:
-            if (not isinstance(pattern, str) or not pattern or pattern == "**" or
-                    Path(pattern).is_absolute() or "\\" in pattern or
-                    any(part == ".." for part in pattern.split("/"))):
+            if not isinstance(pattern, str):
                 raise WorkflowError(f"authorization {label} path is unsafe")
-            if label == "allowed" and dangerous.search(pattern):
+            recursive = pattern.endswith("/**")
+            literal = pattern[:-3] if recursive else pattern
+            if (not literal or literal == "." or Path(literal).is_absolute() or
+                    "\\" in literal or any(char in literal for char in "*?[") or
+                    any(part in ("", "..") for part in literal.split("/"))):
+                raise WorkflowError(f"authorization {label} path is unsafe")
+            if label == "allowed" and dangerous.search(literal):
                 raise WorkflowError("authorization allowed path targets protected state")
-            literal_prefix = pattern.split("*", 1)[0].rstrip("/")
-            candidate = ROOT / literal_prefix if literal_prefix else ROOT
-            if candidate.exists() and candidate.resolve() != ROOT and not candidate.resolve().is_relative_to(ROOT):
+            candidate = (ROOT / literal).resolve()
+            if candidate != ROOT and not candidate.is_relative_to(ROOT):
                 raise WorkflowError("authorization path escapes repository through a symlink")
     return list(allowed), list(forbidden)
 
@@ -320,13 +323,16 @@ def cmd_register_maintenance(args):
     auth = read_json(supplied)
     required = {"authorization_id", "authorization_type", "authorized_agent", "authorized_base_head",
                 "authorized_branch", "bootstrap_allowed_paths", "forbidden_paths", "project_id",
-                "single_use", "consumed", "expires_at", "stage", "tickets"}
+                "single_use", "consumed", "expires_at", "stage", "tickets", "constraints"}
     if not required.issubset(auth):
         raise WorkflowError("authorization schema is incomplete")
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}", str(auth["authorization_id"])):
         raise WorkflowError("authorization ID is invalid")
     if authorization_has_unsafe_value(auth):
         raise WorkflowError("authorization contains a secret-shaped or private absolute-path value")
+    if (not isinstance(auth["constraints"], list) or
+            any(not isinstance(item, str) or not item.strip() for item in auth["constraints"])):
+        raise WorkflowError("authorization constraints must be an array of non-empty strings")
     if auth["authorization_type"] != "maintenance-bootstrap" or not auth["single_use"] or auth["consumed"]:
         raise WorkflowError("authorization is not an unused single-use maintenance authorization")
     try:

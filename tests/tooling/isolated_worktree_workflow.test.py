@@ -326,6 +326,10 @@ class IsolatedWorkflowTests(unittest.TestCase):
                 self.assertEqual([x["allowed_files"] for x in stage["tickets"]],
                                  [auth["bootstrap_allowed_paths"]] * count)
                 self.assertEqual(registry["stages"]["BLOCKED"], blocked_before)
+                self.assertFalse(path.exists())
+                self.assertTrue((path.parent/"consumed"/f"{auth['authorization_id']}.json").exists())
+                self.assertNotEqual(self.f.run(self.f.codex, "register-maintenance",
+                                               "--authorization-file", str(path)).returncode, 0)
 
     def test_register_maintenance_rejects_invalid_authorizations(self):
         cases = [
@@ -334,6 +338,7 @@ class IsolatedWorkflowTests(unittest.TestCase):
             {"authorized_base_head":"0"*40}, {"consumed":True},
             {"constraints":["api_" + "key=" + "abcdefghijklmnop"]},
             {"authorization_id":"../escape"},
+            {"constraints":None}, {"constraints":[""]},
             {"stage":{"id":"WF-SEC-04","title":"Wrong","external_reviewer":"ChatGPT","claimable":False}},
         ]
         for override in cases:
@@ -362,8 +367,9 @@ class IsolatedWorkflowTests(unittest.TestCase):
                 path.unlink(missing_ok=True)
 
     def test_register_maintenance_rejects_unsafe_authorized_paths(self):
-        for allowed in ([], [""], ["**"], ["/tmp/outside"], ["../outside"], [".git/**"],
-                        ["agent-state/**"], [".env"], [".env.*"]):
+        for allowed in ([], [""], ["**"], ["*/**"], ["[.]env"], [".en[v]"], [".g[it]/**"],
+                        ["/tmp/outside"], ["../outside"], [".git/**"], ["agent-state/**"],
+                        [".env"], [".env.*"]):
             with self.subTest(allowed=allowed):
                 path, _ = self.f.maintenance_auth(overrides={"bootstrap_allowed_paths":allowed})
                 self.assertNotEqual(self.f.run(self.f.codex,"register-maintenance","--authorization-file",str(path)).returncode,0)
@@ -401,6 +407,15 @@ class IsolatedWorkflowTests(unittest.TestCase):
         proc(["git","add","--","docs/agents/TASK_REGISTRY.json"],self.f.codex)
         proc(["git","commit","-qm","existing stage"],self.f.codex)
         path, _ = self.f.maintenance_auth()
+        self.assertNotEqual(self.f.run(self.f.codex,"register-maintenance","--authorization-file",str(path)).returncode,0)
+
+        self.f.close(); self.f=Fixture()
+        registry=json.loads((self.f.codex/"docs/agents/TASK_REGISTRY.json").read_text())
+        registry["stages"]["S1"]["tickets"].append({"id":"WF-TEST-99-01","status":"ready"})
+        (self.f.codex/"docs/agents/TASK_REGISTRY.json").write_text(json.dumps(registry))
+        proc(["git","add","--","docs/agents/TASK_REGISTRY.json"],self.f.codex)
+        proc(["git","commit","-qm","existing ticket"],self.f.codex)
+        path, _ = self.f.maintenance_auth(stage_id="WF-TEST-99", ticket_count=1)
         self.assertNotEqual(self.f.run(self.f.codex,"register-maintenance","--authorization-file",str(path)).returncode,0)
 
         self.f.close(); self.f=Fixture(); path, value=self.f.maintenance_auth()
