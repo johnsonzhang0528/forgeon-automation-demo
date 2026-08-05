@@ -1,16 +1,5 @@
 #!/usr/bin/env python3
-"""Background watcher: keeps .agent-state/autosnapshot.json fresh while an
-agent holds the dual-agent claim, so a sudden quota loss still leaves a
-recent breadcrumb for `agent_workflow.py recover` to read.
-
-Stdlib only. Does not commit, stash, or touch CURRENT_TASK's semantic
-fields — it only calls agent_workflow.cmd_snapshot when the project's git
-status (scoped to this project path) has changed since the last poll.
-Exits quietly if no agent currently holds the runtime lock; a stopped
-watcher process does not invalidate or corrupt the lock file.
-
-Usage: python3 scripts/agent_watcher.py [--interval-seconds N]
-"""
+"""Singleton watcher for the active isolated agent worktree."""
 
 import argparse
 import os
@@ -19,83 +8,59 @@ import sys
 import time
 from pathlib import Path
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-sys.path.insert(0, str(SCRIPT_DIR))
-import agent_workflow as aw  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import agent_workflow as aw
 
-DEFAULT_INTERVAL = 25  # seconds, within the 20-30s window from the spec
-
-_should_stop = False
+stop = False
 
 
-def _handle_signal(signum, frame):
-    global _should_stop
-    _should_stop = True
+def on_signal(_signum, _frame):
+    global stop
+    stop = True
 
 
-def write_pid():
-    aw.AGENT_STATE_DIR.mkdir(exist_ok=True)
-    aw.WATCHER_PID.write_text(str(os.getpid()) + "\n")
-
-
-def clear_pid():
-    if aw.WATCHER_PID.is_file():
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--agent", required=True, choices=aw.VALID_AGENTS)
+    ap.add_argument("--interval-seconds", type=float, default=25)
+    args = ap.parse_args()
+    aw.verify_repo(); aw.require_claim(args.agent)
+    pidfile = aw.state_dir() / "watcher.pid"
+    pidfile.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        fd = os.open(pidfile, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    except FileExistsError:
         try:
-            aw.WATCHER_PID.unlink()
+            pid = int(pidfile.read_text().strip())
+        except (OSError, ValueError):
+            pid = -1
+        if aw.pid_is_watcher(pid):
+            print("error: watcher already running", file=sys.stderr)
+            return 1
+        print("error: stale watcher PID; run doctor and request human abort", file=sys.stderr)
+        return 1
+    with os.fdopen(fd, "w") as f:
+        f.write(f"{os.getpid()}\n")
+    signal.signal(signal.SIGINT, on_signal); signal.signal(signal.SIGTERM, on_signal)
+    last = None
+    try:
+        while not stop:
+            try:
+                task, _ = aw.require_claim(args.agent, step=True)
+            except aw.WorkflowError:
+                break
+            marker = (aw.head(), tuple(aw.changed_paths()), task.get("current_step"))
+            if marker != last:
+                aw.cmd_snapshot(argparse.Namespace(agent=args.agent))
+                last = marker
+            time.sleep(max(args.interval_seconds, 0.1))
+    finally:
+        try:
+            if pidfile.read_text().strip() == str(os.getpid()): pidfile.unlink()
         except OSError:
             pass
-
-
-def poll_once(last_status):
-    lock = aw.load_lock()
-    if not lock:
-        return last_status, False
-
-    agent = lock.get("agent")
-    try:
-        current_status = aw.git_status_short()
-    except aw.WorkflowError:
-        return last_status, False
-
-    if current_status != last_status:
-        aw.cmd_snapshot(argparse.Namespace(agent=agent))
-        return current_status, True
-
-    return last_status, False
-
-
-def main(argv=None):
-    parser = argparse.ArgumentParser(prog="agent_watcher.py")
-    parser.add_argument("--interval-seconds", type=int, default=DEFAULT_INTERVAL)
-    args = parser.parse_args(argv)
-
-    aw.verify_project_root()
-
-    signal.signal(signal.SIGTERM, _handle_signal)
-    signal.signal(signal.SIGINT, _handle_signal)
-
-    write_pid()
-    print(f"agent_watcher: watching (interval={args.interval_seconds}s, "
-          f"pid={os.getpid()})")
-
-    last_status = None
-    try:
-        while not _should_stop:
-            lock = aw.load_lock()
-            if lock:
-                last_status, updated = poll_once(last_status)
-                if updated:
-                    print(f"agent_watcher: autosnapshot updated "
-                          f"(agent={lock.get('agent')})")
-            else:
-                last_status = None
-            time.sleep(args.interval_seconds)
-    finally:
-        clear_pid()
-        print("agent_watcher: stopped")
-
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())
