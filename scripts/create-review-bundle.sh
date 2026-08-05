@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Supports both the historical nested layout and the WF-SEC-02 standalone repo.
 # Build a small, redacted, reviewable zip of one dev stage's changes so it can
 # be uploaded to a local ChatGPT session without cloning the private repo.
 # See docs/engineering/REVIEW_BUNDLE_GUIDE.md for the workflow this fits into.

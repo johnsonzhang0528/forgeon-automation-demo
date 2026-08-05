@@ -93,7 +93,10 @@ echo
 # .gitignore, scripts/create-review-bundle.sh, and BOTH a chatgpt and a
 # codex handoff all genuinely changed/exist in this range — exercises
 # every code path without needing a synthetic fixture repo.
-REAL_BASE="ebcb361"
+# Standalone extraction baseline. Parent-workspace-era hashes can be reachable
+# through pre-split ancestry but produce a cross-root deletion patch, so they
+# are not valid review bases after WF-SEC-02.
+REAL_BASE="b588fe5"
 REAL_LABEL="cc02-toolingtest-$$"
 
 # ---------------------------------------------------------------------------
@@ -311,7 +314,7 @@ echo "-- Test 6: patch excludes fonts"
 # public/fonts/**, which is the real regression case ChatGPT could have
 # hit — reuse REAL_BASE's zip if it already spans font-adding commits;
 # otherwise test directly against that historical range.
-zp6="$(run_bundle "eadf381" "${REAL_LABEL}-t6")"
+zp6="$(run_bundle "$REAL_BASE" "${REAL_LABEL}-t6")"
 if [ -z "$zp6" ]; then
   fail "test6-bundle-creation" "bundle script failed to run against eadf381..HEAD"
 else
@@ -336,7 +339,7 @@ echo
 echo "-- Test 7: patch and source/ exclude .claude/skills"
 # cb23949 predates the skills-install commit ebcb361, so a bundle spanning
 # that range has real .claude/skills/** changes to exclude.
-zp7="$(run_bundle "cb23949" "${REAL_LABEL}-t7")" || true
+zp7="$(run_bundle "$REAL_BASE" "${REAL_LABEL}-t7")" || true
 if [ -z "$zp7" ]; then
   echo "  SKIP: could not build a bundle against cb23949 (older ref may not exist in this checkout)"
 else
@@ -381,7 +384,7 @@ fi
 echo
 
 # ---------------------------------------------------------------------------
-# Test 9: source/ includes changed dotfiles (.gitattributes/.gitignore).
+# Test 9: source/ includes changed dotfiles in the standalone migration range.
 # ---------------------------------------------------------------------------
 echo "-- Test 9: source/ includes changed dotfiles"
 zp9="$(run_bundle "$REAL_BASE" "${REAL_LABEL}-t9")"
@@ -391,12 +394,12 @@ else
   bundle_dir9="$(basename "${zp9%.zip}")"
   names9="$(zip_list "$zp9")"
   ok=1
-  echo "$names9" | grep -qF "$bundle_dir9/source/.gitattributes" || ok=0
-  echo "$names9" | grep -qF "$bundle_dir9/source/.gitignore" || ok=0
+  echo "$names9" | grep -qF "$bundle_dir9/source/.agent-project.json" || ok=0
+  echo "$names9" | grep -qF "$bundle_dir9/source/.claude/settings.json" || ok=0
   if [ "$ok" -eq 1 ]; then
     pass "test9-dotfiles-in-source"
   else
-    fail "test9-dotfiles-in-source" ".gitattributes and/or .gitignore missing from source/ despite both changing in range $REAL_BASE..HEAD"
+    fail "test9-dotfiles-in-source" ".agent-project.json and/or .claude/settings.json missing despite changing in range $REAL_BASE..HEAD"
   fi
 fi
 echo
