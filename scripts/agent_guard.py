@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shlex
 import sys
 from pathlib import Path
@@ -34,7 +35,10 @@ def owned_tmp(path: Path) -> bool:
         value = json.loads(marker.read_text())
         pid = int(value["creator_pid"])
         os.kill(pid, 0)
-        return (allowed_tmp(path) and marker.stat().st_uid == os.getuid()
+        nonce = os.environ.get("FORGEON_FIXTURE_NONCE", "")
+        return (bool(re.fullmatch(r"[a-f0-9]{32}", nonce))
+                and value.get("nonce") == nonce
+                and allowed_tmp(path) and marker.stat().st_uid == os.getuid()
                 and value.get("owner_uid") == os.getuid()
                 and Path(value.get("project_root", "")).resolve() == ROOT)
     except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
@@ -118,6 +122,8 @@ def allowed_segment(words: list[str]) -> bool:
         return False
     if repo_test(words) or allowed_git(words):
         return True
+    if words[0] == "rg":
+        return not any(x in ("--pre", "--pre-glob") or x.startswith(("--pre=", "--pre-glob=")) for x in words[1:])
     if words[0] in SIMPLE_PROGRAMS:
         return True
     if words[0] == "pnpm" and len(words) > 1 and words[1] in PNPM_COMMANDS:
