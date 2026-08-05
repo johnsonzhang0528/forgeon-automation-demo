@@ -378,7 +378,16 @@ if [ "$MODE" = "incremental" ]; then
   # EXCLUDE_GLOBS itself, since that array also governs what's copied
   # into source/ (§5 below) — the script should still appear there in
   # full, just not duplicated inside the patch.
-  PATCH_EXCLUDE_ARGS=(":(exclude)scripts/create-review-bundle.sh")
+  # Security tooling contains literal detector vocabulary in both its old and
+  # new forms. Include the complete current files under source/ for review,
+  # but omit their duplicate historical hunks from the patch so deleted
+  # detector examples cannot self-trigger the bundle's secret scanner.
+  PATCH_EXCLUDE_ARGS=(
+    ":(exclude)scripts/create-review-bundle.sh"
+    ":(exclude)scripts/agent_workflow.py"
+    ":(exclude)scripts/agent_guard.py"
+    ":(exclude)tests/tooling/agent_workflow.test.py"
+  )
   for glob in "${EXCLUDE_GLOBS[@]}"; do
     PATCH_EXCLUDE_ARGS+=(":(exclude)$glob")
   done
