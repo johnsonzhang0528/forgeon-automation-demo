@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(os.environ.get("CLAUDE_PROJECT_DIR", Path(__file__).resolve().parent.parent)).resolve()
 TMP_PREFIXES = ("forgeon-agent-test-", "forgeon-review-test-")
 READ_ONLY_GIT = {"status", "diff", "log", "show", "rev-parse", "cat-file", "merge-base", "ls-files", "ls-tree"}
-SIMPLE_PROGRAMS = {"pwd", "rg", "sed", "head", "tail", "wc", "find", "readlink", "sha256sum"}
+SIMPLE_PROGRAMS = {"pwd", "rg", "head", "tail", "wc", "readlink", "sha256sum"}
 PNPM_COMMANDS = {"agent:status", "agent:doctor", "agent:validate", "agent:claim", "agent:step-start",
                  "agent:step-complete", "agent:test", "agent:stage-ticket", "agent:commit-ticket",
                  "agent:checkpoint", "agent:handoff", "agent:complete", "agent:human-abort", "agent:snapshot",
@@ -29,7 +29,16 @@ def allowed_tmp(path: Path, *, may_not_exist: bool = False) -> bool:
 
 
 def owned_tmp(path: Path) -> bool:
-    return allowed_tmp(path) and (path / ".forgeon-fixture-owner").is_file()
+    marker = path / ".forgeon-fixture-owner"
+    try:
+        value = json.loads(marker.read_text())
+        pid = int(value["creator_pid"])
+        os.kill(pid, 0)
+        return (allowed_tmp(path) and marker.stat().st_uid == os.getuid()
+                and value.get("owner_uid") == os.getuid()
+                and Path(value.get("project_root", "")).resolve() == ROOT)
+    except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
+        return False
 
 
 def repo_test(words: list[str]) -> bool:
@@ -77,7 +86,8 @@ def allowed_git(words: list[str]) -> bool:
         args = args[2:]
     command, rest = args[0], args[1:]
     if command in READ_ONLY_GIT:
-        return True
+        unsafe = ("--output", "--ext-diff", "--textconv", "--no-index")
+        return not any(any(item == flag or item.startswith(flag + "=") for flag in unsafe) for item in rest)
     if command == "branch":
         return rest == ["--show-current"]
     if command == "worktree":
@@ -111,7 +121,13 @@ def allowed_segment(words: list[str]) -> bool:
     if words[0] in SIMPLE_PROGRAMS:
         return True
     if words[0] == "pnpm" and len(words) > 1 and words[1] in PNPM_COMMANDS:
-        return True
+        if words[1] != "agent:test":
+            return True
+        if "--" not in words[2:]:
+            return False
+        split = words.index("--", 2)
+        payload = words[split + 1:]
+        return bool(payload) and payload[:2] != ["pnpm", "agent:test"] and allowed_segment(payload)
     if words[:2] in (["python3", "scripts/agent_workflow.py"], ["python3", "scripts/agent_watcher.py"]):
         return True
     return False

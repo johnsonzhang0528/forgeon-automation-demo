@@ -171,7 +171,7 @@ class IsolatedWorkflowTests(unittest.TestCase):
 
     def test_guard_blocks_dangerous_and_allows_read_only(self):
         guard=self.f.repo/"scripts/agent_guard.py"
-        denied=("git add -A","git add .","git commit -am x","git commit --amend","git rebase main","git checkout -- .","git restore --worktree .","git push","git branch -d old","git clean -fd","git reset --hard", "/usr/bin/git push", "env git push", "command git push", "git 'push' origin main", "git    push", "sh -c 'git push'", "bash -c 'git push'", "git remote add origin x", "git remote remove origin", "git remote rename a b", "git remote set-url origin x", "git remote prune origin", "git remote update", "git clone https://example.invalid/x /tmp/forgeon-agent-test-x", "git clone git@example.invalid:x /tmp/forgeon-agent-test-x", "python3 -c 'print(1)'", "python3 /tmp/arbitrary.py", "bash /tmp/arbitrary.sh", "python3 tests/tooling/agent_workflow.test.py && git push")
+        denied=("git add -A","git add .","git commit -am x","git commit --amend","git rebase main","git checkout -- .","git restore --worktree .","git push","git branch -d old","git clean -fd","git reset --hard", "/usr/bin/git push", "env git push", "command git push", "git 'push' origin main", "git    push", "sh -c 'git push'", "bash -c 'git push'", "git remote add origin x", "git remote remove origin", "git remote rename a b", "git remote set-url origin x", "git remote prune origin", "git remote update", "git clone https://example.invalid/x /tmp/forgeon-agent-test-x", "git clone git@example.invalid:x /tmp/forgeon-agent-test-x", "python3 -c 'print(1)'", "python3 /tmp/arbitrary.py", "bash /tmp/arbitrary.sh", "python3 tests/tooling/agent_workflow.test.py && git push", "pnpm agent:test --agent codex -- git push", "pnpm agent:test --agent codex -- rm -rf /tmp/x", "sed -i x file", "find . -delete", "find . -exec git push ;", "git diff --output=/tmp/x", "git diff --ext-diff", "git show --textconv")
         for command in denied:
             r=subprocess.run([sys.executable,str(guard)],input=json.dumps({"tool_input":{"command":command}}),text=True,capture_output=True); self.assertEqual(r.returncode,2,command)
         allowed=("git status --short", "/usr/bin/git status", "env git status", "git remote", "git remote -v", "git remote get-url origin", "git branch --show-current", "git worktree list --porcelain", "python3 tests/tooling/agent_workflow.test.py", "python3 tests/tooling/agent_workflow.test.py -v", "bash tests/tooling/review-bundle.test.sh", "git status && git remote -v")
@@ -187,11 +187,13 @@ class IsolatedWorkflowTests(unittest.TestCase):
         try:
             self.assertEqual(check(f"git init {target}"),0)
             self.assertEqual(check(f"git clone --no-hardlinks {self.f.repo} {target}"),0)
-            target.mkdir(); (target/".forgeon-fixture-owner").write_text("fixture")
+            target.mkdir(); (target/".forgeon-fixture-owner").write_text(json.dumps({"creator_pid":os.getpid(),"owner_uid":os.getuid(),"project_root":str(self.f.repo)}))
             self.assertEqual(check(f"git -C {target} status"),0)
             self.assertEqual(check(f"git -C {target} push"),2)
             self.assertEqual(check("git init /tmp/unapproved-fixture"),2)
             self.assertEqual(check(f"git init {self.f.repo}"),2)
+            (target/".forgeon-fixture-owner").write_text("forged")
+            self.assertEqual(check(f"git -C {target} status"),2)
             link=Path("/tmp/forgeon-review-test-link"); link.unlink(missing_ok=True); link.symlink_to(self.f.repo)
             self.assertEqual(check(f"git -C {link} status"),2); link.unlink()
         finally:
