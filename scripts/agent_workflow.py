@@ -124,6 +124,17 @@ def role() -> str:
     return "unknown"
 
 
+def worktrees() -> list[dict]:
+    records, current = [], {}
+    for line in git("worktree", "list", "--porcelain").splitlines() + [""]:
+        if not line:
+            if current: records.append(current); current = {}
+        elif line.startswith("worktree "): current["path"] = line[9:]
+        elif line.startswith("HEAD "): current["head"] = line[5:]
+        elif line.startswith("branch refs/heads/"): current["branch"] = line[18:]
+    return records
+
+
 def verify_repo() -> dict:
     if Path(git("rev-parse", "--show-toplevel")).resolve() != ROOT:
         raise WorkflowError("not running from the standalone repository root")
@@ -166,6 +177,7 @@ def initial_runtime() -> dict:
         "active_agent": None, "current_ticket": None, "current_step": None,
         "step_status": None, "branch": None, "ticket_base": None,
         "last_checkpoint_commit": None, "test_evidence": [],
+        "head": None,
         "last_handoff": None, "last_recovery": None, "updated_at": now(),
     }
 
@@ -249,6 +261,11 @@ def changed_paths() -> list[str]:
     return sorted(values)
 
 
+def untracked_paths() -> list[str]:
+    return sorted(x.decode("utf-8", "surrogateescape") for x in
+                  git_bytes("ls-files", "--others", "--exclude-standard", "-z", "--", ".").split(b"\0") if x)
+
+
 def excluded(path: str) -> bool:
     return any(fnmatch.fnmatch(path, pattern) for pattern in EXCLUDED)
 
@@ -272,7 +289,7 @@ def cmd_init_runtime(_):
     if role() != "integration":
         raise WorkflowError("init-runtime must run from integration checkout")
     state_dir().mkdir(parents=True, exist_ok=True)
-    for name in ("autosnapshots", "handoffs", "recoveries", "patches"):
+    for name in ("autosnapshots", "checkpoints", "handoffs", "recoveries", "patches"):
         (state_dir() / name).mkdir(exist_ok=True)
     if runtime_path().exists() or lock_path().exists():
         raise WorkflowError("runtime state already exists; refusing overwrite")
@@ -305,9 +322,11 @@ def cmd_claim(args):
         task.update(status="in_progress", active_agent=args.agent,
                     current_stage=args.stage, current_ticket=args.ticket,
                     current_step=None, step_status=None, branch=branch(),
-                    ticket_base=head(), test_evidence=[])
+                    ticket_base=head(), head=head(), test_evidence=[])
         try:
             atomic_json(lock_path(), lock)
+            if os.environ.get("AGENT_TEST_FAIL_STATE_WRITE") == "1":
+                raise WorkflowError("injected state write failure")
             save_runtime(task)
         except Exception:
             with contextlib.suppress(FileNotFoundError): lock_path().unlink()
@@ -336,11 +355,14 @@ def cmd_step_complete(args):
 
 def cmd_test(args):
     verify_repo(); task, _ = require_claim(args.agent, step=True)
-    if not args.command:
+    command = list(args.command)
+    if command and command[0] == "--":
+        command.pop(0)
+    if not command:
         raise WorkflowError("test command is required after --")
-    started = now(); result = run(args.command, check=False)
+    started = now(); result = run(command, check=False)
     digest = hashlib.sha256((result.stdout + result.stderr).encode()).hexdigest()
-    evidence = {"command": " ".join(args.command), "exit_code": result.returncode,
+    evidence = {"command": " ".join(command), "exit_code": result.returncode,
                 "started_at": started, "finished_at": now(), "head": head(),
                 "output_digest": digest}
     task.setdefault("test_evidence", []).append(evidence); save_runtime(task)
@@ -379,8 +401,29 @@ def cmd_commit(args):
     secret_scan(staged)
     print(git("diff", "--cached", "--stat")); print("files:\n" + "\n".join(staged))
     run(["git", "commit", "-m", args.message, "--", *staged])
-    commit = head(); task["last_checkpoint_commit"] = commit; save_runtime(task)
+    commit = head(); task["last_checkpoint_commit"] = commit; task["head"] = commit
+    save_runtime(task)
     print(f"ticket commit: {commit}")
+
+
+def cmd_checkpoint(args):
+    verify_repo(); task, lock = require_claim(args.agent, step=True)
+    if not task.get("test_evidence"):
+        raise WorkflowError("checkpoint requires structured test evidence")
+    if changed_paths():
+        raise WorkflowError("checkpoint requires a clean committed worktree")
+    commit = head()
+    if commit == lock["base_commit"]:
+        raise WorkflowError("checkpoint commit is missing")
+    payload = {"agent": args.agent, "stage": task["current_stage"],
+               "ticket": task["current_ticket"], "step": task["current_step"],
+               "base_commit": lock["base_commit"], "checkpoint_commit": commit,
+               "branch": branch(), "tests": task["test_evidence"],
+               "changed_files": git("diff", "--name-only", lock["base_commit"], commit, "--", ".").splitlines(),
+               "next_step": args.next_step, "timestamp": now()}
+    dest = state_dir() / "checkpoints" / f"{stamp()}-{args.agent}.json"
+    atomic_json(dest, payload); task["last_checkpoint_commit"] = commit; task["head"] = commit; save_runtime(task)
+    print(f"checkpoint: {commit}")
 
 
 def write_handoff(task, lock, args) -> Path:
@@ -406,7 +449,7 @@ def write_handoff(task, lock, args) -> Path:
 def release_state(task: dict, status: str, handoff=None):
     task.update(status=status, active_agent=None, current_ticket=None,
                 current_step=None, step_status=None, branch=None,
-                ticket_base=None, last_handoff=handoff)
+                ticket_base=None, head=None, last_handoff=handoff)
     save_runtime(task)
     with contextlib.suppress(FileNotFoundError): lock_path().unlink()
 
@@ -423,6 +466,23 @@ def cmd_handoff(args):
         dest = write_handoff(task, lock, args)
         release_state(task, "handoff_ready", str(dest.relative_to(common_dir())))
     print(f"handoff ready: {dest.name}")
+
+
+def cmd_resume(args):
+    verify_repo(); require_agent_worktree(args.agent)
+    if get_lock():
+        raise WorkflowError("cannot resume while a claim exists")
+    candidates = sorted((state_dir() / "handoffs").glob(f"*-to-{args.agent}.json"))
+    if not candidates:
+        raise WorkflowError("no handoff targets this agent")
+    item = read_json(candidates[-1]); commit = item.get("checkpoint_commit")
+    if run(["git", "cat-file", "-e", f"{commit}^{{commit}}"], check=False).returncode:
+        raise WorkflowError("handoff checkpoint commit is missing")
+    if changed_paths():
+        raise WorkflowError("target worktree must be clean")
+    name = f"resume/{args.agent}/{stamp()}"
+    run(["git", "switch", "-c", name, commit])
+    print(f"resume branch created: {name} from {commit}")
 
 
 def cmd_complete(args):
@@ -456,8 +516,17 @@ def cmd_snapshot(args):
     snap = state_dir() / "autosnapshots" / f"{args.agent}-latest.json"
     pathspec = ["."] + [f":(exclude){p}" for p in EXCLUDED]
     result = run(["git", "diff", "--binary", base, "--", *pathspec], text=False)
-    patch.parent.mkdir(parents=True, exist_ok=True); patch.write_bytes(result.stdout)
-    digest = hashlib.sha256(result.stdout).hexdigest()
+    patch_data = bytearray(result.stdout)
+    for rel in untracked_paths():
+        if excluded(rel):
+            continue
+        extra = run(["git", "diff", "--binary", "--no-index", "--", "/dev/null", rel],
+                    check=False, text=False)
+        if extra.returncode not in (0, 1):
+            raise WorkflowError(f"cannot snapshot untracked path: {rel}")
+        patch_data.extend(extra.stdout)
+    patch.parent.mkdir(parents=True, exist_ok=True); patch.write_bytes(patch_data)
+    digest = hashlib.sha256(patch_data).hexdigest()
     payload = {"agent": args.agent, "worktree_identity": role(),
                "stage": task["current_stage"], "ticket": task["current_ticket"],
                "step": task["current_step"], "base_commit": base, "head": head(),
@@ -513,12 +582,35 @@ def cmd_doctor(_):
         if bool(lock) != bool(runtime.get("active_agent")): problems.append("runtime lock/state drift")
         if lock and (lock.get("agent") != runtime.get("active_agent") or lock.get("ticket") != runtime.get("current_ticket")):
             problems.append("runtime lock/state identity drift")
+        if lock:
+            if lock.get("branch") != runtime.get("branch"):
+                problems.append("runtime branch drift")
+            matches = [w for w in worktrees() if w.get("branch") == lock.get("branch")]
+            if len(matches) != 1:
+                problems.append("active branch is not checked out in exactly one worktree")
+            else:
+                expected_role = lock.get("agent")
+                b = matches[0].get("branch", "")
+                if not (b == f"agent/{expected_role}" or b.startswith(f"resume/{expected_role}/") or b.startswith(f"recovery/{expected_role}/")):
+                    problems.append("active agent/worktree identity drift")
+                if runtime.get("head") and matches[0].get("head") != runtime.get("head"):
+                    problems.append("active HEAD drift")
         pidfile = state_dir() / "watcher.pid"
         if pidfile.exists() and not pid_is_watcher(int(pidfile.read_text().strip())): problems.append("stale or foreign watcher PID")
         for snap in (state_dir() / "autosnapshots").glob("*-latest.json"):
             item = read_json(snap); patch = state_dir() / "patches" / snap.name.replace(".json", ".patch")
             if run(["git", "cat-file", "-e", f"{item.get('base_commit')}^{{commit}}"], check=False).returncode: problems.append(f"missing snapshot base: {snap.name}")
             if not patch.exists() or hashlib.sha256(patch.read_bytes()).hexdigest() != item.get("patch_sha256"): problems.append(f"patch hash drift: {snap.name}")
+        for checkpoint in (state_dir() / "checkpoints").glob("*.json"):
+            item = read_json(checkpoint); commit = item.get("checkpoint_commit"); base = item.get("base_commit")
+            if run(["git", "cat-file", "-e", f"{commit}^{{commit}}"], check=False).returncode:
+                problems.append(f"checkpoint commit missing: {checkpoint.name}")
+            elif run(["git", "merge-base", "--is-ancestor", base, commit], check=False).returncode:
+                problems.append(f"checkpoint commit unreachable: {checkpoint.name}")
+        for handoff in (state_dir() / "handoffs").glob("*.json"):
+            item = read_json(handoff); commit = item.get("checkpoint_commit")
+            if run(["git", "cat-file", "-e", f"{commit}^{{commit}}"], check=False).returncode:
+                problems.append(f"handoff commit missing: {handoff.name}")
         for path in ROOT.rglob("*"):
             if ".git" in path.parts: continue
             if path.is_symlink() and not path.resolve().is_relative_to(ROOT): problems.append(f"symlink escape: {path.relative_to(ROOT)}")
@@ -548,7 +640,9 @@ def parser():
     q = sub.add_parser("test"); q.add_argument("--agent", required=True); q.add_argument("command", nargs=argparse.REMAINDER)
     q = sub.add_parser("stage-ticket"); q.add_argument("--agent", required=True)
     q = sub.add_parser("commit-ticket"); q.add_argument("--agent", required=True); q.add_argument("--message", required=True)
+    q = sub.add_parser("checkpoint"); q.add_argument("--agent", required=True); q.add_argument("--next-step", required=True)
     q = sub.add_parser("handoff"); q.add_argument("--from", dest="frm", required=True); q.add_argument("--to", required=True); q.add_argument("--completed", required=True); q.add_argument("--remaining", required=True); q.add_argument("--known-failure", default="none"); q.add_argument("--next-step", required=True); q.add_argument("--risk", default="none")
+    q = sub.add_parser("resume"); q.add_argument("--agent", required=True)
     q = sub.add_parser("complete"); q.add_argument("--agent", required=True)
     q = sub.add_parser("human-abort"); q.add_argument("--agent", required=True); q.add_argument("--reason", required=True)
     q = sub.add_parser("snapshot"); q.add_argument("--agent", required=True)
@@ -559,8 +653,8 @@ def parser():
 
 COMMANDS = {"init-runtime": cmd_init_runtime, "status": cmd_status, "doctor": cmd_doctor,
             "claim": cmd_claim, "step-start": cmd_step_start, "step-complete": cmd_step_complete,
-            "test": cmd_test, "stage-ticket": cmd_stage, "commit-ticket": cmd_commit,
-            "handoff": cmd_handoff, "complete": cmd_complete, "human-abort": cmd_abort,
+            "test": cmd_test, "stage-ticket": cmd_stage, "commit-ticket": cmd_commit, "checkpoint": cmd_checkpoint,
+            "handoff": cmd_handoff, "resume": cmd_resume, "complete": cmd_complete, "human-abort": cmd_abort,
             "snapshot": cmd_snapshot, "recover": cmd_recover, "validate": cmd_validate}
 
 
