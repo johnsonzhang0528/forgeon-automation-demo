@@ -65,26 +65,43 @@ runs the same way.
 ├── metadata/
 │   ├── head.txt              # git rev-parse HEAD
 │   ├── base.txt               # git rev-parse <base-ref>  (full mode: a note, no base)
-│   ├── status.txt             # git status --short at bundle time
-│   ├── commits.txt            # git log <base>..HEAD --oneline
-│   ├── changed-files.txt      # git diff --name-status <base>..HEAD (full mode: full tree listing)
+│   ├── project-status.txt     # git status --short -- . at bundle time, project-scoped only
+│   ├── commits.txt            # git log <base>..HEAD --oneline -- .
+│   ├── changed-files.txt      # git diff --name-status <base>..HEAD -- . (policy-excluded paths filtered out; full mode: full tree listing)
+│   ├── excluded-files.txt     # changed paths that exist but were filtered out by EXCLUDE_GLOBS (e.g. .claude/skills/**)
 │   ├── file-sizes.txt         # size + path for each changed file (incremental only)
-│   └── excluded-binaries.txt  # binaries that exist in the diff but were left out of the patch
+│   ├── excluded-binaries.txt  # binaries that exist in the diff but were left out of the patch
+│   └── bundle-summary.txt     # one-page human index: counts of commits/changed/excluded/source files, handoff picked, etc.
 ├── diff/
-│   └── changes.patch          # git diff --binary <base>..HEAD, incremental mode only
+│   └── changes.patch          # git diff --binary --relative <base>..HEAD, incremental mode only — paths are project-relative, never the parent repo's full prefix
 ├── handoff/
-│   └── <latest>.md            # newest file in docs/engineering/handoffs/, or a MISSING.txt note
+│   └── <selected>.md          # the current stage's own handoff (matched by label/stage prefix, non-Codex preferred), or a MISSING.txt note
 ├── docs/
 │   ├── specs/…                # docs/engineering/specs/ files whose path contains the label
 │   ├── tickets/…               # docs/engineering/tickets/ files whose path contains the label
 │   ├── reviews/…               # docs/engineering/reviews/ files whose path contains the label
 │   ├── adr/…                   # all of docs/adr/, unfiltered — small and always relevant
 │   └── CONTEXT.md              # always included, unfiltered
-├── source/                     # incremental only: changed text files, by allowed extension, original paths preserved
+├── source/                     # incremental only: changed text files (astro/ts/js/mjs/sh/css/scss/md/json/yaml/yml/html + .gitattributes/.gitignore), by allowed extension, original paths preserved — always includes the bundle script itself and package.json when they changed
 ├── source-archive/             # full mode only: git archive output (see What's excluded below)
 ├── screenshots/                # <label>-desktop.png / -tablet.png / -mobile.png if present, else a listing of what IS available
 └── test-reports/                # whichever of DATUM_QA.md / QA_CHECKLIST.md / IMPECCABLE_REVIEW_LOG.md / CONTRAST_AUDIT.md exist
 ```
+
+### Project-scoping (CC-02-00 hardening)
+
+Every git command that reads or lists paths is scoped with `-- .` and, where
+git prints repo-root-relative paths (`diff`/`log`), stripped back down to
+project-relative — so a project nested inside a larger parent repo (this
+one included: the real repo root is several directories above
+`PROJECT_ROOT`) never leaks the parent repo's other, unrelated project
+changes into `metadata/project-status.txt`, `metadata/changed-files.txt`,
+or `diff/changes.patch`'s path headers. `docs/screenshots/**` is excluded
+from the patch/source-copy path (screenshots are staged separately, in
+full, under `screenshots/`) — a screenshot changing must never balloon
+`diff/changes.patch` with binary/base64 noise. See
+`tests/tooling/review-bundle.test.sh` for the executable verification of
+all of the above.
 
 ### Label matching, precisely
 

@@ -12,6 +12,22 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$PROJECT_ROOT"
 
+# Refuse to run from anywhere but this project's own root — a bundle built
+# from the wrong cwd would silently scope every git command to the wrong
+# tree. package.json is this project's own identity marker (checked instead
+# of e.g. .git, since .git may not even exist at PROJECT_ROOT when nested
+# inside a larger repo — see GIT_ROOT below).
+if [ ! -f "$PROJECT_ROOT/package.json" ]; then
+  echo "Error: package.json not found at $PROJECT_ROOT — this script must run from the project root." >&2
+  exit 1
+fi
+
+GIT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+if [ -z "$GIT_ROOT" ]; then
+  echo "Error: not inside a git repository." >&2
+  exit 1
+fi
+
 # Force `git` to print raw UTF-8 paths instead of C-style-quoting and
 # octal-escaping any non-ASCII byte (git's default `core.quotepath=true`).
 # This project's path contains Chinese characters (頁構所), and every path
@@ -42,8 +58,17 @@ strip_git_prefix() {
 BUNDLE_ROOT="$PROJECT_ROOT/.review-bundles"
 MAX_BUNDLE_BYTES=$((20 * 1024 * 1024)) # 20MB soft cap — warn, don't block
 
-# Text-source extensions eligible for inclusion under diff/source/
-SOURCE_EXTENSIONS="astro ts js mjs css scss md json yaml yml html"
+# Text-source extensions eligible for inclusion under diff/source/. `sh` and
+# `.gitattributes`/`.gitignore` (handled separately below, since they have no
+# extension) were missing before this fix (spec §4.1 finding #2/§4.5) —
+# scripts/create-review-bundle.sh itself, and any other shell tooling this
+# project's stages add, was silently never copied into source/ even when it
+# was the literal subject of the stage's own diff.
+SOURCE_EXTENSIONS="astro ts js mjs sh css scss md json yaml yml html"
+
+# Dotfiles with no extension that must still be picked up by the changed-
+# source copy when they appear in the diff (spec §4.5's explicit list).
+SOURCE_DOTFILES=(".gitattributes" ".gitignore")
 
 # Directories/globs never copied into a bundle, regardless of mode
 EXCLUDE_GLOBS=(
@@ -62,6 +87,11 @@ EXCLUDE_GLOBS=(
   # output, so both modes stay consistent and a bundle doesn't balloon
   # with unrelated skill documentation a reviewer didn't ask to see.
   ".claude/skills/*"
+  # Screenshots are binary and are already staged separately, in full,
+  # under screenshots/ (see §6 below) — they must never also land inside
+  # diff/changes.patch (which would balloon a patch to multiple MB of
+  # base64/binary diff noise) or metadata/changed-files.txt's source copy.
+  "docs/screenshots/*"
 )
 
 # ---------------------------------------------------------------------------
@@ -214,17 +244,52 @@ else
   echo "(full mode — no base ref; this is a complete tracked-source snapshot at HEAD)" > "$WORK_DIR/metadata/base.txt"
 fi
 
-git "${GIT_QUOTEPATH_OPTS[@]}" status --short > "$WORK_DIR/metadata/status.txt"
+# `git status --short` (no pathspec) reports the ENTIRE repo's working-tree
+# state, including any other project living in a sibling directory of the
+# larger parent repo this project is nested inside. `-- .` scopes it to
+# PROJECT_ROOT only.
+#
+# Unlike `git diff --name-status` (used below for changed-files.txt), which
+# always prints paths relative to the *repo root* regardless of cwd, `git
+# status --short` prints paths relative to the *current working directory*
+# — and this script already `cd`'d to PROJECT_ROOT at startup. So status
+# output here is already project-relative with no GIT_PATH_PREFIX stripping
+# needed; applying strip_git_prefix() to it (as an earlier draft of this fix
+# did) actively breaks it, since a project-relative path never starts with
+# GIT_PATH_PREFIX and the "did stripping do nothing -> must be outside the
+# project, skip it" defensive check then discards every real line. Renamed
+# to project-status.txt (not status.txt) so its project-scoped contract is
+# unambiguous from the filename alone, per spec §4.7.
+git "${GIT_QUOTEPATH_OPTS[@]}" status --short -- . > "$WORK_DIR/metadata/project-status.txt"
 
 if [ "$MODE" = "incremental" ]; then
-  git log "$BASE_REF..HEAD" --oneline > "$WORK_DIR/metadata/commits.txt"
+  # `git log` has no per-path "changed only inside this pathspec" concept for
+  # --oneline history the way diff/status do, but scoping with `-- .` still
+  # matters: without it, a merge/parent-repo-wide commit that touched zero
+  # files under this project would still appear here, which is exactly the
+  # kind of parent-repo noise this fix is removing project-wide.
+  git "${GIT_QUOTEPATH_OPTS[@]}" log "$BASE_REF..HEAD" --oneline -- . > "$WORK_DIR/metadata/commits.txt"
   # `git diff --name-status` reports paths relative to the repo root, which
   # differs from PROJECT_ROOT whenever this project is nested inside a
   # larger repo. Strip GIT_PATH_PREFIX here, once, so every downstream
   # consumer of changed-files.txt gets project-relative paths for free —
   # and so a file that changed outside this project (shouldn't happen given
   # the pathspec, but be defensive) is dropped rather than mis-copied.
+  #
+  # The exclude-glob pathspecs are applied here too (not just when copying
+  # into source/ later) — otherwise changed-files.txt itself lists every
+  # historically-touched .claude/skills/** file whenever BASE_REF predates
+  # the skills-install commit, which is pure reviewer noise for a doc whose
+  # entire purpose is "what changed in this project this stage" (spec §4.1
+  # finding #6). Excluded-but-real changes are still recorded, separately,
+  # in metadata/excluded-files.txt below — nothing is silently dropped from
+  # the bundle's account of what happened, just kept out of the noisy list.
+  CHANGED_FILES_EXCLUDE_ARGS=()
+  for glob in "${EXCLUDE_GLOBS[@]}"; do
+    CHANGED_FILES_EXCLUDE_ARGS+=(":(exclude)$glob")
+  done
   : > "$WORK_DIR/metadata/changed-files.txt"
+  : > "$WORK_DIR/metadata/excluded-files.txt"
   while IFS=$'\t' read -r status raw_path rest; do
     [ -z "$raw_path" ] && continue
     rel_path="$(strip_git_prefix "$raw_path")"
@@ -237,6 +302,24 @@ if [ "$MODE" = "incremental" ]; then
       printf '%s\t%s\t%s\n' "$status" "$rel_path" "$rest" >> "$WORK_DIR/metadata/changed-files.txt"
     else
       printf '%s\t%s\n' "$status" "$rel_path" >> "$WORK_DIR/metadata/changed-files.txt"
+    fi
+  done < <(git "${GIT_QUOTEPATH_OPTS[@]}" diff --name-status "$BASE_REF..HEAD" -- . "${CHANGED_FILES_EXCLUDE_ARGS[@]}")
+
+  # Separately record what WAS excluded, so a reviewer can see the full
+  # picture (e.g. "24 skill files changed but are intentionally out of
+  # scope") without those paths cluttering changed-files.txt itself. A
+  # direct second pass over the unfiltered diff, checked against the same
+  # is_excluded_path() glob matcher used everywhere else in this script —
+  # deliberately not a comm/diff between the two file lists, since that
+  # would depend on both files sharing identical sort order.
+  while IFS=$'\t' read -r status raw_path rest; do
+    [ -z "$raw_path" ] && continue
+    rel_path="$(strip_git_prefix "$raw_path")"
+    if [ -n "$GIT_PATH_PREFIX" ] && [ "$rel_path" = "$raw_path" ]; then
+      continue
+    fi
+    if is_excluded_path "$rel_path"; then
+      printf '%s\t%s\n' "$status" "$rel_path" >> "$WORK_DIR/metadata/excluded-files.txt"
     fi
   done < <(git "${GIT_QUOTEPATH_OPTS[@]}" diff --name-status "$BASE_REF..HEAD" -- .)
 else
@@ -299,7 +382,14 @@ if [ "$MODE" = "incremental" ]; then
     PATCH_EXCLUDE_ARGS+=(":(exclude)$glob")
   done
 
-  git "${GIT_QUOTEPATH_OPTS[@]}" diff --binary "$BASE_REF..HEAD" -- . "${PATCH_EXCLUDE_ARGS[@]}" \
+  # --relative rewrites a/ and b/ patch paths to be relative to the pathspec
+  # root (here, `.` = PROJECT_ROOT, since the script cd'd there at startup)
+  # instead of the git repo root — without it, every hunk header in a
+  # nested-project checkout reads "a/leo-projects/side_project/頁構所/
+  # demo-1/src/..." (the full parent-repo prefix, and in this repo's case, a
+  # private absolute-feeling path segment), not "a/src/...". This was
+  # ChatGPT finding #4 (spec §4.1): patch paths must be project-relative.
+  git "${GIT_QUOTEPATH_OPTS[@]}" diff --binary --relative "$BASE_REF..HEAD" -- . "${PATCH_EXCLUDE_ARGS[@]}" \
     > "$WORK_DIR/diff/changes.patch"
 
   # Record any changed binary file (regardless of whether it was excluded
@@ -326,14 +416,43 @@ fi
 # ---------------------------------------------------------------------------
 
 mkdir -p "$WORK_DIR/handoff"
-LATEST_HANDOFF=""
+SELECTED_HANDOFF=""
+
+# Prefer, in order: (1) a handoff matching this bundle's own label/stage
+# prefix — i.e. the doc actually written for the reviewer this bundle is
+# for; (2) failing that, the most recently modified handoff that is NOT a
+# *-codex-*.md file. A bare "most recent file by mtime" (the prior
+# behavior) can resurface a stale historical Codex handoff purely because
+# it happens to have a newer mtime than the current stage's real ChatGPT
+# handoff (e.g. after a rebase/checkout touches file times) — spec §4.1
+# finding #5: a ChatGPT bundle should not carry a historical Codex handoff
+# unless nothing else exists.
 if [ -d "docs/engineering/handoffs" ]; then
-  LATEST_HANDOFF=$(ls -t docs/engineering/handoffs/*.md 2>/dev/null | head -n 1 || true)
+  STAGE_MATCH=""
+  if [[ "$LABEL" =~ ^([Cc][Cc][0-9]+) ]]; then
+    STAGE_MATCH="${BASH_REMATCH[1]}"
+  fi
+  if [ -n "$STAGE_MATCH" ]; then
+    SELECTED_HANDOFF=$(ls -t docs/engineering/handoffs/*.md 2>/dev/null \
+      | grep -i "$STAGE_MATCH" \
+      | grep -iv "codex" \
+      | head -n 1 || true)
+  fi
+  if [ -z "$SELECTED_HANDOFF" ]; then
+    SELECTED_HANDOFF=$(ls -t docs/engineering/handoffs/*.md 2>/dev/null \
+      | grep -iv "codex" \
+      | head -n 1 || true)
+  fi
+  # Last resort: even a Codex handoff is better than nothing, but only if
+  # truly nothing else exists.
+  if [ -z "$SELECTED_HANDOFF" ]; then
+    SELECTED_HANDOFF=$(ls -t docs/engineering/handoffs/*.md 2>/dev/null | head -n 1 || true)
+  fi
 fi
 
-if [ -n "$LATEST_HANDOFF" ]; then
-  cp -p "$LATEST_HANDOFF" "$WORK_DIR/handoff/"
-  echo "-- handoff included: $LATEST_HANDOFF"
+if [ -n "$SELECTED_HANDOFF" ]; then
+  cp -p "$SELECTED_HANDOFF" "$WORK_DIR/handoff/"
+  echo "-- handoff included: $SELECTED_HANDOFF"
 else
   echo "WARNING: no docs/engineering/handoffs/*.md found — bundle will not include a handoff doc." >&2
   echo "(no handoff document found at bundle time)" > "$WORK_DIR/handoff/MISSING.txt"
@@ -421,28 +540,60 @@ echo "-- label-scoped docs copied (specs/tickets/reviews matching '*${LABEL}*', 
 
 if [ "$MODE" = "incremental" ]; then
   mkdir -p "$WORK_DIR/source"
+  SOURCE_COPY_COUNT=0
 
   while IFS=$'\t' read -r status path _rest; do
     [ -z "$path" ] && continue
     [ -f "$path" ] || continue
     is_excluded_path "$path" && continue
 
-    ext="${path##*.}"
+    base="$(basename "$path")"
     match=0
-    for allowed in $SOURCE_EXTENSIONS; do
-      if [ "$ext" = "$allowed" ]; then
+
+    # Dotfiles with no extension (.gitattributes, .gitignore) — matched by
+    # exact basename, since "${path##*.}" on a leading-dot-only filename
+    # returns the whole filename minus the dot, not a real extension.
+    for dotfile in "${SOURCE_DOTFILES[@]}"; do
+      if [ "$base" = "$dotfile" ]; then
         match=1
         break
       fi
     done
+
+    if [ "$match" -eq 0 ]; then
+      ext="${path##*.}"
+      for allowed in $SOURCE_EXTENSIONS; do
+        if [ "$ext" = "$allowed" ] && [ "$ext" != "$path" ]; then
+          match=1
+          break
+        fi
+      done
+    fi
+
     [ "$match" -eq 1 ] || continue
 
     rel_dest="source/$path"
     mkdir -p "$WORK_DIR/$(dirname "$rel_dest")"
     cp -p "$path" "$WORK_DIR/$rel_dest"
+    SOURCE_COPY_COUNT=$((SOURCE_COPY_COUNT + 1))
   done < "$WORK_DIR/metadata/changed-files.txt"
 
-  echo "-- changed source files copied under source/"
+  # Belt-and-suspenders (spec §4.5): this script's own source and
+  # package.json must always be present in source/ if they changed in this
+  # commit range, independent of the generic extension-match loop above —
+  # explicitly re-checked here so a future edit to SOURCE_EXTENSIONS can
+  # never silently drop them again.
+  for must_include in "scripts/create-review-bundle.sh" "package.json"; do
+    if grep -qF "	$must_include" "$WORK_DIR/metadata/changed-files.txt" 2>/dev/null \
+      && [ -f "$must_include" ] \
+      && [ ! -f "$WORK_DIR/source/$must_include" ]; then
+      mkdir -p "$WORK_DIR/$(dirname "source/$must_include")"
+      cp -p "$must_include" "$WORK_DIR/source/$must_include"
+      SOURCE_COPY_COUNT=$((SOURCE_COPY_COUNT + 1))
+    fi
+  done
+
+  echo "-- changed source files copied under source/ ($SOURCE_COPY_COUNT files)"
 fi
 
 # ---------------------------------------------------------------------------
@@ -483,6 +634,30 @@ for report in docs/DATUM_QA.md docs/QA_CHECKLIST.md docs/IMPECCABLE_REVIEW_LOG.m
   fi
 done
 echo "-- test reports copied (whichever of DATUM_QA/QA_CHECKLIST/IMPECCABLE_REVIEW_LOG/CONTRAST_AUDIT exist)"
+
+# ---------------------------------------------------------------------------
+# 8. Bundle summary — a one-page human index of what's actually in here
+# ---------------------------------------------------------------------------
+
+{
+  echo "Review bundle: $BUNDLE_NAME"
+  echo "Mode: $MODE"
+  echo "Project root: $PROJECT_ROOT"
+  echo "Git path prefix stripped from all paths: ${GIT_PATH_PREFIX:-(none — project root is repo root)}"
+  echo "Head: $(cat "$WORK_DIR/metadata/head.txt" 2>/dev/null || echo '?')"
+  echo "Base: $(cat "$WORK_DIR/metadata/base.txt" 2>/dev/null || echo '?')"
+  echo
+  if [ "$MODE" = "incremental" ]; then
+    echo "Commits in range: $(wc -l < "$WORK_DIR/metadata/commits.txt" 2>/dev/null | tr -d ' ')"
+    echo "Changed files (in scope): $(wc -l < "$WORK_DIR/metadata/changed-files.txt" 2>/dev/null | tr -d ' ')"
+    echo "Excluded files (by policy): $(wc -l < "$WORK_DIR/metadata/excluded-files.txt" 2>/dev/null | tr -d ' ')"
+    echo "Source files copied under source/: ${SOURCE_COPY_COUNT:-0}"
+  fi
+  echo "Screenshots included: ${#SCREENSHOT_MATCHES[@]}"
+  echo "Handoff: ${SELECTED_HANDOFF:-none found}"
+} > "$WORK_DIR/metadata/bundle-summary.txt"
+
+echo "-- bundle summary written"
 
 # ---------------------------------------------------------------------------
 # Full-mode addition: git archive of tracked source
