@@ -30,11 +30,49 @@ const dict = getDictionary(locale);
 </section>
 
 <style>
+  /*
+   * .cta-banner (the rounded dark card) applies its OWN margin-inline to
+   * inset the card from the page edge, while .cta-banner__inner (the
+   * `.container` class) separately applies padding-inline to keep the
+   * card's own text/buttons off the card's edges — two different,
+   * both-intentional insets. Both previously used the same
+   * `--container-padding` token (= --page-gutter-desktop, a
+   * clamp(32px,4vw,64px) that never scales down below 32px). At any
+   * viewport that token is fine alone, but stacked twice it consumes
+   * 2 x 32px = 64px per side — 128px of a 360px viewport — which is what
+   * actually produced the real, measured 17px horizontal overflow on
+   * /en/ (the "Request Technical Advice" secondary-invert button, whose
+   * English label is long enough that it no longer fits the remaining
+   * ~232px, unlike the shorter Chinese label). This is a genuine
+   * responsive-gutter bug in this component, not a Hero issue — CTABanner
+   * is the only component in the codebase that layers a second
+   * margin-inline outside a `.container`'s own padding-inline (verified:
+   * no other component does this). Fix: give the OUTER card margin a
+   * viewport-scaled step (mobile/tablet/desktop), matching the same
+   * --page-gutter-{mobile,tablet,desktop} progression `.container-reading`
+   * already uses elsewhere in utilities.css, instead of pinning it to the
+   * flat desktop-sized token at every breakpoint. The inner .container's
+   * own padding-inline is unchanged — it already scales correctly via its
+   * own responsive component (spec's existing --container-padding compat
+   * alias resolves to --page-gutter-desktop only where .container is used
+   * WITHOUT a second outer margin, which is every other section on the
+   * site).
+   */
   .cta-banner {
     background: var(--color-ink);
     color: var(--color-invert-text);
     border-radius: var(--radius-lg);
-    margin-inline: var(--container-padding);
+    margin-inline: var(--page-gutter-mobile);
+  }
+  @media (min-width: 768px) {
+    .cta-banner {
+      margin-inline: var(--page-gutter-tablet);
+    }
+  }
+  @media (min-width: 1024px) {
+    .cta-banner {
+      margin-inline: var(--page-gutter-desktop);
+    }
   }
   .cta-banner__inner {
     max-width: var(--container-max);
@@ -57,6 +95,26 @@ const dict = getDictionary(locale);
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-sm);
+  }
+  /*
+   * The gutter fix above (responsive margin-inline on .cta-banner) closed
+   * most of the real 17px /en/ 360px overflow, but not all of it: Button's
+   * own `white-space: nowrap` (Button.astro, sitewide, unrelated to this
+   * component — not modified here) means a long English CTA label like
+   * "Request Technical Advice" keeps its full intrinsic (single-line)
+   * width as a flex item even after .cta-banner__actions has already
+   * wrapped the two buttons onto separate rows; at very narrow viewports
+   * that intrinsic width can still exceed the space actually available
+   * inside the card. Scoped to exactly this component's own two CTA
+   * buttons (not a global Button.astro change, which would alter button
+   * wrapping behavior sitewide including places that never had this
+   * problem) — cap each button at the actions row's own width and allow
+   * its label to wrap onto a second line rather than overflow the card.
+   */
+  .cta-banner__actions :global(.btn) {
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
   }
 
   @media (min-width: 860px) {
