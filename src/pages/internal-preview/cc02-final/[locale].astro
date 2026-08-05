@@ -1,0 +1,67 @@
+---
+/**
+ * CC-02F final editorial hero — real per-locale static routes (ticket
+ * CC-02F-02, spec §10). Replaces CC-02's single-page "both locales in the
+ * DOM, client JS toggles visibility" pattern with `getStaticPaths()`
+ * emitting exactly two real, separate pages:
+ *
+ *   /internal-preview/cc02-final/zh-tw/
+ *   /internal-preview/cc02-final/en/
+ *
+ * Each build renders ONLY its own locale server-side — no hidden duplicate
+ * DOM block for the other language exists anywhere in this page's output.
+ * Correct <html lang>, exactly one real <h1> (inside FinalEditorialHero),
+ * the language switch is a genuine route <a href> (built into
+ * FinalPrototypeHeader, not a client-side toggle here).
+ *
+ * NOT a production page: no BaseLayout/SEOHead/AnalyticsBridge, not in
+ * nav, not in sitemap.xml (sitemap.xml.ts only enumerates real content-
+ * collection routes — this src/pages tree is never scanned), noindex/
+ * nofollow below.
+ *
+ * The historical src/pages/internal-preview/cc02-hero/{variant-a,b,c}.astro
+ * files are NOT touched by this round — they remain as-is, a separate,
+ * earlier design-spike artifact.
+ */
+import '../../../styles/global.css';
+import '../../../styles/utilities.css';
+import FinalPrototypeHeader from '../../../components/prototypes/cc02-final/FinalPrototypeHeader.astro';
+import FinalEditorialHero from '../../../components/prototypes/cc02-final/FinalEditorialHero.astro';
+import type { FinalHeroLocale } from '../../../data/cc02-final-hero';
+
+export function getStaticPaths() {
+  return [
+    { params: { locale: 'zh-tw' } },
+    { params: { locale: 'en' } },
+  ];
+}
+
+const { locale } = Astro.params as { locale: FinalHeroLocale };
+const htmlLang = locale === 'zh-tw' ? 'zh-Hant-TW' : 'en';
+const pageTitle =
+  locale === 'zh-tw'
+    ? 'CC-02F — 最終版編輯式 Hero（Engineering Editorial Sheet C+）'
+    : 'CC-02F — Final Editorial Hero (Engineering Editorial Sheet C+)';
+---
+
+<!doctype html>
+<html lang={htmlLang} data-locale={locale}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{pageTitle}</title>
+  </head>
+  <body class="feh-body">
+    <FinalPrototypeHeader locale={locale} />
+    <FinalEditorialHero locale={locale} />
+  </body>
+</html>
+
+<style>
+  .feh-body {
+    margin: 0;
+    background: var(--color-paper-50);
+    color: var(--color-ink-950);
+  }
+</style>

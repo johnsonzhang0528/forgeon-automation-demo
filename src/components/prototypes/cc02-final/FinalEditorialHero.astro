@@ -1,0 +1,353 @@
+---
+/**
+ * FinalEditorialHero — CC-02F's C+ Hero body (ticket CC-02F-05/06).
+ * Keeps Variant C's asymmetric editorial DNA (headline NOT centered/split,
+ * DatumOrigin as the literal layout origin, technical data as a secondary
+ * information layer, not a card grid) while:
+ *   - using the spec-exact final copy (src/data/cc02-final-hero.ts)
+ *   - replacing the fake ±0.01mm/<180ms/3-model spec table with
+ *     EvaluationLedger (method/deliverable info, spec §9/§12)
+ *   - replacing the two equal-sized CutawayWindows with one real
+ *     PrecisionSystemVisual (Primary, dominant) + one smaller cropped
+ *     fragment (Secondary, ~35-50% smaller, spec §6/§10)
+ *   - adding ProcessRail (the one Variant A element absorbed into C+)
+ *
+ * 12-column grid per spec §6: DatumOrigin col 1 above H1; H1 cols 1-9;
+ * Copy cols 1-5; Primary Visual cols 5-11; Secondary Detail cols 10-13;
+ * Evaluation Ledger cols 1-5 below Copy; Process Rail spans full width at
+ * the bottom.
+ */
+import DatumOrigin from '../../brand/DatumOrigin.astro';
+import EvaluationLedger from './EvaluationLedger.astro';
+import PrecisionSystemVisual from './PrecisionSystemVisual.astro';
+import ProcessRail from './ProcessRail.astro';
+import type { FinalHeroLocale } from '../../../data/cc02-final-hero';
+import { finalHeroCopy, evaluationLedger, precisionVisualAlt, secondaryVisualAlt } from '../../../data/cc02-final-hero';
+
+export interface Props {
+  locale: FinalHeroLocale;
+}
+
+const { locale } = Astro.props as Props;
+const copy = finalHeroCopy[locale];
+const ledgerGroups = evaluationLedger[locale];
+
+/**
+ * Guards the zh-tw headline's "組裝" against being split across a line
+ * break by CJK auto-wrap (spec §8/§19 explicit prohibition — measured via
+ * screenshot before this fix: at 390px the browser wrapped mid-word,
+ * "把定位、檢測與組" / "裝，" on two separate visual lines). CJK text has no
+ * Latin-style "words" for `word-break: keep-all` to key off, so the fix is
+ * a literal-string substitution wrapping just that one substring in a
+ * `white-space: nowrap` span — the visible characters and the spec's one
+ * intentional `\n` (between "組裝，" and "校準") are unchanged; only this
+ * one two-character run is ever prevented from breaking. English's
+ * "assembly" is already a single unbreakable word under normal CSS
+ * word-breaking, so no equivalent guard is needed there.
+ *
+ * `set:html` below is safe here specifically because `headlineHtml`'s
+ * only variable input is `copy.headline` — a spec-locked, hardcoded
+ * string literal from src/data/cc02-final-hero.ts, never user input,
+ * request data, or CMS content. Do not reuse this pattern with any
+ * caller-supplied string.
+ */
+const headlineHtml =
+  locale === 'zh-tw'
+    ? copy.headline.replace('組裝', '<span class="feh-nowrap">組裝</span>')
+    : copy.headline;
+---
+
+<main class="feh-sheet">
+  <div class="feh-origin-anchor">
+    <DatumOrigin size={36} orientation="both" label="0,0" />
+  </div>
+
+  <div class="feh-headline-row">
+    {locale === 'zh-tw' ? (
+      <h1 class="feh-headline" set:html={headlineHtml} />
+    ) : (
+      <h1 class="feh-headline">{copy.headline}</h1>
+    )}
+  </div>
+
+  <div class="feh-grid">
+    <div class="feh-copy-col">
+      <p class="feh-eyebrow mono">{copy.eyebrow}</p>
+      <p class="feh-body-text">{copy.body}</p>
+      <div class="feh-actions">
+        <a class="feh-btn feh-btn--primary" href="#" data-proto-noop>{copy.ctaPrimary}</a>
+        <a class="feh-btn feh-btn--secondary" href="#" data-proto-noop>{copy.ctaSecondary}</a>
+      </div>
+    </div>
+
+    <div class="feh-visual-col feh-visual-col--primary">
+      <PrecisionSystemVisual variant="primary" animated alt={precisionVisualAlt[locale]} />
+    </div>
+
+    <div class="feh-visual-col feh-visual-col--secondary">
+      <PrecisionSystemVisual variant="secondary" alt={secondaryVisualAlt[locale]} />
+    </div>
+
+    {/*
+      Evaluation Ledger as its own grid item, not nested inside
+      .feh-copy-col — spec §8's mobile requirement is that the Ledger sits
+      BELOW THE FOLD, after the Primary Visual, not stacked immediately
+      after the CTA before any image is visible. A CSS `order` swap (mobile
+      grid below) achieves that without duplicating markup for two
+      breakpoints; on desktop it returns to sitting under Copy (column
+      1-5) via explicit grid placement.
+    */}
+    <div class="feh-ledger-col">
+      <EvaluationLedger groups={ledgerGroups} class="feh-ledger" />
+    </div>
+  </div>
+
+  <div class="feh-rail-row">
+    <ProcessRail locale={locale} />
+  </div>
+</main>
+
+<style>
+  .feh-sheet {
+    position: relative;
+    max-width: var(--container-wide);
+    margin-inline: auto;
+    /*
+     * Mobile top padding deliberately tighter than desktop (space-6 vs
+     * space-12) — spec §8/§19's "primary visual starts no later than
+     * ~590-630px from top" requirement failed at the original space-10
+     * (measured: visual started at 733px on a 360x800 English page before
+     * this fix). Every mobile vertical-rhythm value below this point was
+     * tightened for the same reason, verified by re-measuring after each
+     * change rather than guessed once.
+     */
+    padding: var(--space-6) var(--page-gutter-mobile) var(--space-16);
+  }
+  @media (min-width: 768px) {
+    .feh-sheet { padding-inline: var(--page-gutter-tablet); }
+  }
+  @media (min-width: 1024px) {
+    .feh-sheet { padding: var(--space-12) var(--page-gutter-desktop) var(--space-16); }
+  }
+
+  .feh-origin-anchor {
+    margin-bottom: var(--space-3);
+  }
+  @media (min-width: 1024px) {
+    .feh-origin-anchor { margin-bottom: var(--space-4); }
+  }
+
+  .feh-headline-row {
+    margin-bottom: var(--space-5);
+  }
+  @media (min-width: 1024px) {
+    .feh-headline-row {
+      margin-bottom: var(--space-8);
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--space-6);
+    }
+  }
+  .feh-headline {
+    font-family: var(--font-display);
+    font-size: var(--fs-h1-mobile);
+    line-height: var(--lh-h1);
+    letter-spacing: var(--ls-h1);
+    margin: 0;
+    white-space: pre-line;
+    max-width: 720px;
+  }
+  /* Prevents "組裝" from splitting across a CJK auto-wrap line break — see the frontmatter comment above headlineHtml. */
+  .feh-headline :global(.feh-nowrap) {
+    white-space: nowrap;
+  }
+  :lang(zh) .feh-headline {
+    font-family: 'Noto Sans TC', var(--font-display);
+    letter-spacing: 0;
+  }
+  /*
+   * English H1 is inherently longer than the zh-tw line ("Align
+   * positioning, inspection and assembly" alone is 43 characters). At the
+   * shared token sizes it wraps into extra lines at every breakpoint
+   * (measured via Playwright before this fix: 4 lines desktop, 5-6 lines
+   * mobile — spec caps are 3/4). A dedicated English clamp, smaller than
+   * the zh-tw scale at every breakpoint, keeps it within the line caps
+   * without touching the zh-tw sizing (which already passes at the shared
+   * token size). Mobile value re-measured twice against real screenshots
+   * (390px and 360px) until both landed at <=4 lines — not trusted
+   * blindly from the spec's own suggested clamp, which was zh-tw-shaped.
+   */
+  :lang(en) .feh-headline {
+    font-size: clamp(1.6rem, 7.4vw, 2.35rem);
+  }
+  @media (min-width: 1024px) {
+    .feh-headline {
+      font-size: var(--fs-h1);
+      grid-column: 1 / 10;
+      max-width: none;
+    }
+    :lang(en) .feh-headline {
+      font-size: clamp(2.75rem, 3.6vw, 3.75rem);
+    }
+  }
+
+  /*
+   * Mobile: a single-column ordered grid (not implicit block stacking) so
+   * `order` can place the Primary Visual immediately after the CTA and
+   * BEFORE the Evaluation Ledger — spec §8/§19: primary visual must be
+   * ≥30-40% visible within the first 844px of scroll and start no later
+   * than ~590-630px from the top; the Ledger belongs below the fold. The
+   * Secondary Detail visual is hidden entirely on mobile (spec §8: "may be
+   * hidden or merged into the primary visual on mobile").
+   */
+  .feh-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+  .feh-copy-col { order: 1; }
+  .feh-visual-col--primary { order: 2; }
+  .feh-ledger-col { order: 3; }
+  .feh-visual-col--secondary { display: none; order: 4; }
+
+  @media (min-width: 1024px) {
+    .feh-grid {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--space-6);
+      align-items: start;
+    }
+    /*
+     * Copy ends at column 5 (not 6) despite spec §6 nominally describing
+     * both "Copy: columns 1-5" and "Primary Visual: columns 5-11" — taken
+     * completely literally those overlap by a full column, and at
+     * 1440px that overlap put the English secondary CTA's text directly
+     * under the Primary Visual (confirmed via screenshot: "Review
+     * Integration Requirements" was clipped mid-word). Reading "1-5" as
+     * Copy's END boundary (grid-column: 1 / 5, four tracks) rather than a
+     * fifth shared track keeps the spec's asymmetric 5-ish/7-ish column
+     * split while giving Copy a real column gutter before the visual
+     * starts.
+     */
+    .feh-copy-col { grid-column: 1 / 5; grid-row: 1; order: initial; }
+    .feh-visual-col--primary { grid-column: 5 / 12; grid-row: 1; margin-inline-end: -24px; order: initial; }
+    .feh-visual-col--secondary {
+      /*
+       * Sized to land at ~50-65% of the Primary Visual's rendered area —
+       * spec §6/§10's "35-50% smaller than Primary" (i.e. secondary area
+       * is roughly half the primary's, not a small thumbnail). Measured
+       * via Playwright bounding-box comparison: the previous 220px max-
+       * width produced only ~8-12% of the Primary's area; clamp() width
+       * tied to the visual-column's own viewport share gets it into the
+       * target range at both 1024px and 1440px+ without a fixed px value
+       * that would drift at other widths.
+       *
+       * Positioned to overlap only the Primary Visual's BOTTOM-RIGHT
+       * corner (a small triangular overlap, connector-node style), not
+       * its full lower half — an earlier version centered on the row's
+       * bottom edge and visually covered the Primary scene's third
+       * (assembly workstation) station entirely, confirmed via
+       * screenshot. The `translate()` Y-offset pushes it mostly below the
+       * Primary's own bottom edge so the two read as "one main scene +
+       * one connected detail," not two visuals fighting for the same
+       * space.
+       */
+      display: block;
+      grid-column: 9 / 14;
+      grid-row: 1;
+      align-self: end;
+      margin-top: var(--space-12);
+      transform: translate(2%, 38%);
+      width: clamp(260px, 26vw, 360px);
+      max-width: none;
+      justify-self: end;
+      order: initial;
+    }
+    .feh-ledger-col { grid-column: 1 / 5; grid-row: 2; order: initial; }
+  }
+  @media (min-width: 1280px) {
+    .feh-visual-col--primary { margin-inline-end: -48px; }
+  }
+
+  .feh-eyebrow {
+    color: var(--color-action-primary);
+    font-size: var(--fs-technical);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0 0 var(--space-3);
+  }
+  .feh-body-text {
+    color: var(--color-steel-700);
+    font-size: var(--fs-small);
+    line-height: var(--lh-body);
+    max-width: 42ch;
+    margin: 0 0 var(--space-4);
+    white-space: pre-line;
+  }
+  @media (min-width: 1024px) {
+    .feh-body-text {
+      font-size: var(--fs-body);
+      margin-bottom: var(--space-6);
+    }
+  }
+  .feh-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
+  }
+  @media (min-width: 1024px) {
+    .feh-actions { margin-bottom: var(--space-8); }
+  }
+  .feh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: var(--fs-small);
+    padding: 0.85em 1.5em;
+    min-height: 44px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid transparent;
+    transition: background var(--duration-ui) var(--ease-standard), border-color var(--duration-ui) var(--ease-standard), transform var(--duration-ui) var(--ease-standard);
+  }
+  .feh-btn--primary {
+    background: var(--color-action-primary);
+    color: var(--color-paper-50);
+  }
+  .feh-btn--primary:hover {
+    background: var(--color-action-primary-hover);
+    transform: translateY(-1.5px);
+  }
+  .feh-btn--secondary {
+    background: transparent;
+    color: var(--color-ink-950);
+    border-color: var(--color-steel-600);
+  }
+  .feh-btn--secondary:hover {
+    border-color: var(--color-ink-950);
+    background: var(--color-paper-100);
+  }
+  .feh-btn:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+
+  .feh-ledger {
+    max-width: 42ch;
+  }
+
+  .feh-visual-col--primary :global(.precision-visual) {
+    max-width: 100%;
+  }
+
+  .feh-rail-row {
+    margin-top: var(--space-16);
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--color-steel-600);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .feh-btn { transition: none; }
+  }
+</style>

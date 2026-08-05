@@ -1,0 +1,59 @@
+---
+/**
+ * EvaluationLedger — CC-02F's replacement for CC-02 variant-c's fake-data
+ * spec table. Three text groups (heading + detail), no cards, no fake
+ * engineering numbers — method/deliverable information only (spec §9/§12,
+ * ticket CC-02F-04's sibling content ticket CC-02F-01).
+ *
+ * Deliberately not a card grid or a bordered box per group — a compact
+ * key/value ledger with hairline row rules, the same "second information
+ * layer, not a dashboard" idea CC-02's variant-c already established for
+ * its (now-removed) spec table, kept for continuity of the Engineering
+ * Editorial Sheet's visual grammar.
+ */
+export interface Props {
+  groups: Array<{ heading: string; detail: string }>;
+  class?: string;
+}
+
+const { groups, class: className = '' } = Astro.props;
+---
+
+<dl class:list={['eval-ledger', className]}>
+  {groups.map((group) => (
+    <div class="eval-ledger__row">
+      <dt class="eval-ledger__heading mono">{group.heading}</dt>
+      <dd class="eval-ledger__detail">{group.detail}</dd>
+    </div>
+  ))}
+</dl>
+
+<style>
+  .eval-ledger {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .eval-ledger__row {
+    padding-block: var(--space-4);
+    border-top: 1px solid var(--color-steel-600);
+  }
+  .eval-ledger__row:last-child {
+    border-bottom: 1px solid var(--color-steel-600);
+  }
+  .eval-ledger__heading {
+    display: block;
+    margin: 0 0 var(--space-1);
+    font-size: var(--fs-technical);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-copper-700);
+  }
+  .eval-ledger__detail {
+    display: block;
+    margin: 0;
+    font-size: var(--fs-small);
+    line-height: var(--lh-body);
+    color: var(--color-steel-700);
+  }
+</style>

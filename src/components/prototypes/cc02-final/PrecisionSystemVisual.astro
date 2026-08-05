@@ -1,0 +1,293 @@
+---
+/**
+ * PrecisionSystemVisual — CC-02F's real, original Primary/Secondary system
+ * asset (spec §9/§13, ticket CC-02F-04). Not a Higgsfield asset (none used
+ * this round — see docs/DATUM_ASSET_PLAN_CC02F.md for the optional future
+ * plan) and NOT a reuse of CutawayWindow's no-`src` placeholder path
+ * (which renders literal "CUTAWAY · NO MEDIA" text — explicitly banned).
+ *
+ * Depicts three physical stations along one Assembly Spine axis, left to
+ * right (input -> output direction, spec §9's explicit requirement):
+ *   1. Precision motion module (linear stage, ballscrew hatching)
+ *   2. Vision positioning head (camera housing + Vision Lock corner marks)
+ *   3. Assembly workstation (fixture + part outline)
+ * connected by the spine's axis line and Copper alignment nodes at each
+ * station. Background carries engineering hatching, a tolerance-band
+ * strip, and faded coordinate axes (spec's explicit background layer).
+ *
+ * `variant="primary"` renders the full three-station scene (Primary
+ * Visual, spec §6). `variant="secondary"` renders a cropped/zoomed
+ * fragment — just the vision head + one alignment node (Secondary Visual,
+ * spec §10: "a fragment, not a second full scene").
+ *
+ * Materials used: linear/radial gradient, clip-path, a subtle repeating
+ * hatching pattern — no glow/neon/glassmorphism/3D spheres/particles (spec
+ * §13's explicit ban list). SVG-first, no Canvas/WebGL. Animation (when
+ * `animated`) is transform/opacity/stroke only and settles fully under
+ * `prefers-reduced-motion: reduce` (component-local @media block, same
+ * pattern as every Brand Primitive in src/components/brand/).
+ */
+export interface Props {
+  variant?: 'primary' | 'secondary';
+  /** Plays the CC-02F-08 motion sequence once on mount (module align -> vision lock). Falls back to the fully-settled state with no JS / reduced motion. */
+  animated?: boolean;
+  /** Accessible text alternative — this SVG is always aria-hidden (pure decoration layered under real text content elsewhere in the Hero), so the caller supplies a real describing string for a sibling visually-hidden element. */
+  alt: string;
+  class?: string;
+}
+
+const { variant = 'primary', animated = false, alt, class: className = '' } = Astro.props;
+const isPrimary = variant === 'primary';
+const uid = `psv-${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<figure class:list={['precision-visual', `precision-visual--${variant}`, className]}>
+  <svg
+    class:list={['precision-visual__svg', { 'precision-visual__svg--animated': animated }]}
+    viewBox={isPrimary ? '0 0 640 480' : '0 0 320 320'}
+    preserveAspectRatio="xMidYMid meet"
+    aria-hidden="true"
+    data-precision-visual={animated ? uid : undefined}
+  >
+    <defs>
+      <linearGradient id={`${uid}-metal`} x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="var(--color-steel-200)" stop-opacity="0.9" />
+        <stop offset="55%" stop-color="var(--color-steel-600)" stop-opacity="0.55" />
+        <stop offset="100%" stop-color="var(--color-ink-800)" stop-opacity="0.85" />
+      </linearGradient>
+      <linearGradient id={`${uid}-bg`} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--color-paper-100)" />
+        <stop offset="100%" stop-color="var(--color-paper-50)" />
+      </linearGradient>
+      <radialGradient id={`${uid}-node`} cx="50%" cy="35%" r="65%">
+        <stop offset="0%" stop-color="var(--color-copper-500)" />
+        <stop offset="100%" stop-color="var(--color-copper-700)" />
+      </radialGradient>
+      <pattern id={`${uid}-hatch`} width="9" height="9" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+        <line x1="0" y1="0" x2="0" y2="9" stroke="var(--color-steel-600)" stroke-width="1" opacity="0.16" />
+      </pattern>
+      <clipPath id={`${uid}-frame`}>
+        <path d={isPrimary
+          ? 'M20 8 H600 L632 40 V440 L600 472 H40 L8 440 V40 Z'
+          : 'M12 4 H300 L316 20 V300 L300 316 H20 L4 300 V20 Z'} />
+      </clipPath>
+    </defs>
+
+    <g clip-path={`url(#${uid}-frame)`}>
+      {/* ---- Background layer: hatching, tolerance band, faded axes ---- */}
+      <rect x="0" y="0" width={isPrimary ? 640 : 320} height={isPrimary ? 480 : 320} fill={`url(#${uid}-bg)`} />
+      <rect x="0" y="0" width={isPrimary ? 640 : 320} height={isPrimary ? 480 : 320} fill={`url(#${uid}-hatch)`} />
+
+      {isPrimary && (
+        <Fragment>
+          {/* Faded coordinate axes, off-center — echoes DatumOrigin's asymmetric-arm convention without duplicating the component itself */}
+          <line x1="48" y1="440" x2="48" y2="60" stroke="var(--color-steel-600)" stroke-width="1" opacity="0.35" />
+          <line x1="48" y1="440" x2="600" y2="440" stroke="var(--color-steel-600)" stroke-width="1" opacity="0.35" />
+          {/* Tolerance band strip along the base — two boundary lines + translucent zone, same visual grammar as ToleranceBand.astro without importing it (this is a background decoration, not a labeled data component) */}
+          <rect x="48" y="418" width="552" height="22" fill="var(--color-copper-500)" opacity="0.06" />
+          <line x1="48" y1="418" x2="600" y2="418" stroke="var(--color-copper-500)" stroke-width="1" opacity="0.3" stroke-dasharray="3 3" />
+          <line x1="48" y1="440" x2="600" y2="440" stroke="var(--color-copper-500)" stroke-width="1" opacity="0.3" stroke-dasharray="3 3" />
+        </Fragment>
+      )}
+
+      {isPrimary ? (
+        <Fragment>
+          {/* ---- Midground: Assembly Spine axis + module connectors ---- */}
+          <line
+            class="precision-visual__spine"
+            x1="96" y1="260" x2="544" y2="260"
+            stroke="var(--color-steel-600)" stroke-width="2.5"
+          />
+          <line x1="96" y1="260" x2="544" y2="260" stroke="var(--color-copper-600)" stroke-width="2.5" stroke-dasharray="8 420" class="precision-visual__spine-flow" />
+
+          {/* Station 1 — Precision motion module (linear stage) */}
+          <g class="precision-visual__module" data-station="1">
+            <rect x="70" y="200" width="120" height="60" rx="4" fill={`url(#${uid}-metal)`} stroke="var(--color-ink-800)" stroke-width="1.5" />
+            {/* ballscrew hatching */}
+            {Array.from({ length: 8 }).map((_, i) => (
+              <line x1={82 + i * 13} y1="210" x2={92 + i * 13} y2="250" stroke="var(--color-ink-800)" stroke-width="1" opacity="0.4" />
+            ))}
+            <rect x="76" y="192" width="30" height="16" rx="2" fill="var(--color-ink-800)" />
+          </g>
+
+          {/* Station 2 — Vision positioning head */}
+          <g class="precision-visual__module" data-station="2">
+            <rect x="260" y="150" width="18" height="70" fill="var(--color-steel-600)" />
+            <rect x="230" y="120" width="80" height="56" rx="6" fill={`url(#${uid}-metal)`} stroke="var(--color-ink-800)" stroke-width="1.5" />
+            <circle cx="270" cy="148" r="16" fill="var(--color-ink-950)" stroke="var(--color-copper-500)" stroke-width="2" />
+            <circle cx="270" cy="148" r="7" fill="var(--color-copper-500)" opacity="0.85" />
+            {/* Vision Lock corner marks over the camera lens — same L-shaped convention as VisionLockFrame.astro, hand-drawn here at small scale rather than nesting that component inside an SVG */}
+            <path d="M248 128 v-8 h8 M292 128 v-8 h-8 M248 168 v8 h8 M292 168 v8 h-8" fill="none" stroke="var(--color-copper-600)" stroke-width="1.6" class="precision-visual__vision-corners" />
+          </g>
+
+          {/* Station 3 — Assembly workstation (fixture + part outline) */}
+          <g class="precision-visual__module" data-station="3">
+            <rect x="420" y="205" width="110" height="50" rx="4" fill={`url(#${uid}-metal)`} stroke="var(--color-ink-800)" stroke-width="1.5" />
+            <rect x="440" y="185" width="46" height="30" rx="3" fill="none" stroke="var(--color-copper-600)" stroke-width="1.5" stroke-dasharray="5 3" />
+            <line x1="450" y1="185" x2="450" y2="205" stroke="var(--color-steel-600)" stroke-width="1" />
+            <line x1="476" y1="185" x2="476" y2="205" stroke="var(--color-steel-600)" stroke-width="1" />
+          </g>
+
+          {/* Copper alignment nodes at each station on the spine (foreground) */}
+          <circle class="precision-visual__node" data-node="1" cx="130" cy="260" r="7" fill={`url(#${uid}-node)`} />
+          <circle class="precision-visual__node" data-node="2" cx="270" cy="260" r="7" fill={`url(#${uid}-node)`} />
+          <circle class="precision-visual__node" data-node="3" cx="475" cy="260" r="7" fill={`url(#${uid}-node)`} />
+          <circle cx="130" cy="260" r="12" fill="none" stroke="var(--color-copper-500)" stroke-width="1" opacity="0.4" />
+          <circle cx="270" cy="260" r="12" fill="none" stroke="var(--color-copper-500)" stroke-width="1" opacity="0.4" />
+          <circle cx="475" cy="260" r="12" fill="none" stroke="var(--color-copper-500)" stroke-width="1" opacity="0.4" />
+
+          {/* Datum Origin — literal layout origin point for this scene, bottom-left, asymmetric arms matching DatumOrigin.astro's own convention */}
+          <g class="precision-visual__datum">
+            <line x1="48" y1="440" x2="48" y2="392" stroke="var(--color-steel-600)" stroke-width="1" />
+            <line x1="48" y1="440" x2="130" y2="440" stroke="var(--color-steel-600)" stroke-width="1" />
+            <circle cx="48" cy="440" r="3.5" fill="var(--color-copper-600)" />
+            <circle cx="48" cy="440" r="6.5" fill="none" stroke="var(--color-copper-500)" stroke-width="1" opacity="0.5" />
+          </g>
+
+          {/* Input -> output direction marker (explicit arrow along the spine, spec's "input-to-output direction" requirement) */}
+          <path d="M544 260 l-14 -7 v14 z" fill="var(--color-copper-600)" />
+        </Fragment>
+      ) : (
+        <Fragment>
+          {/* ---- Secondary Visual: vision head + one alignment node, cropped/zoomed fragment, not a second full scene ---- */}
+          <line x1="20" y1="230" x2="300" y2="230" stroke="var(--color-steel-600)" stroke-width="2" opacity="0.5" />
+          <rect x="130" y="70" width="18" height="90" fill="var(--color-steel-600)" />
+          <rect x="90" y="30" width="100" height="70" rx="8" fill={`url(#${uid}-metal)`} stroke="var(--color-ink-800)" stroke-width="1.5" />
+          <circle cx="140" cy="65" r="22" fill="var(--color-ink-950)" stroke="var(--color-copper-500)" stroke-width="2.5" />
+          <circle cx="140" cy="65" r="10" fill="var(--color-copper-500)" opacity="0.85" />
+          <path d="M108 38 v-10 h10 M172 38 v-10 h-10 M108 92 v10 h10 M172 92 v10 h-10" fill="none" stroke="var(--color-copper-600)" stroke-width="2" class="precision-visual__vision-corners" />
+          <circle class="precision-visual__node" data-node="secondary" cx="140" cy="230" r="9" fill={`url(#${uid}-node)`} />
+          <circle cx="140" cy="230" r="15" fill="none" stroke="var(--color-copper-500)" stroke-width="1.2" opacity="0.45" />
+        </Fragment>
+      )}
+    </g>
+
+    {/* Frame outline echoing the clip path — a hairline edge, not a plain rectangular card border */}
+    <path
+      d={isPrimary ? 'M20 8 H600 L632 40 V440 L600 472 H40 L8 440 V40 Z' : 'M12 4 H300 L316 20 V300 L300 316 H20 L4 300 V20 Z'}
+      fill="none"
+      stroke="var(--color-copper-500)"
+      stroke-width="1"
+      opacity="0.55"
+    />
+  </svg>
+
+  <span class="sr-only">{alt}</span>
+</figure>
+
+{animated && isPrimary && (
+  <script define:vars={{ uid }}>
+    (function () {
+      const root = document.querySelector(`[data-precision-visual="${uid}"]`);
+      if (!root) return;
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReduced || !('IntersectionObserver' in window)) {
+        root.classList.add('is-settled');
+        return;
+      }
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              root.classList.add('is-aligning');
+              window.setTimeout(() => root.classList.add('is-settled'), 620);
+              io.unobserve(root);
+            }
+          }
+        },
+        { threshold: 0.35 }
+      );
+      io.observe(root);
+    })();
+  </script>
+)}
+
+<style>
+  .precision-visual {
+    margin: 0;
+    display: block;
+    position: relative;
+  }
+  .precision-visual__svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .precision-visual__spine-flow {
+    opacity: 0;
+  }
+
+  /* ---- Motion (CC-02F-08): modules align along the spine, then the
+     vision corners lock — transform/opacity/stroke only, one-shot. ---- */
+  .precision-visual__svg--animated .precision-visual__module {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity var(--duration-section) var(--ease-standard),
+      transform var(--duration-section) var(--ease-standard);
+  }
+  .precision-visual__svg--animated .precision-visual__module[data-station='1'] { transition-delay: 0ms; }
+  .precision-visual__svg--animated .precision-visual__module[data-station='2'] { transition-delay: 90ms; }
+  .precision-visual__svg--animated .precision-visual__module[data-station='3'] { transition-delay: 180ms; }
+  .precision-visual__svg--animated.is-aligning .precision-visual__module {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .precision-visual__svg--animated .precision-visual__node {
+    opacity: 0;
+    transform-origin: center;
+    transform-box: fill-box;
+    transform: scale(0.4);
+    transition: opacity var(--duration-ui) var(--ease-standard),
+      transform var(--duration-ui) var(--ease-standard);
+  }
+  .precision-visual__svg--animated.is-aligning .precision-visual__node {
+    opacity: 1;
+    transform: scale(1);
+    transition-delay: 260ms;
+  }
+
+  .precision-visual__svg--animated .precision-visual__vision-corners {
+    stroke-dasharray: 20;
+    stroke-dashoffset: 20;
+    opacity: 0.4;
+    transition: stroke-dashoffset var(--duration-section) var(--ease-standard),
+      opacity var(--duration-section) var(--ease-standard);
+    transition-delay: 340ms;
+  }
+  .precision-visual__svg--animated.is-aligning .precision-visual__vision-corners {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+
+  .precision-visual__svg--animated .precision-visual__spine-flow {
+    transition: opacity var(--duration-ui) var(--ease-standard);
+    transition-delay: 460ms;
+  }
+  .precision-visual__svg--animated.is-settled .precision-visual__spine-flow {
+    opacity: 0.9;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .precision-visual__svg--animated .precision-visual__module,
+    .precision-visual__svg--animated .precision-visual__node,
+    .precision-visual__svg--animated .precision-visual__vision-corners {
+      transition: none;
+      opacity: 1;
+      transform: none;
+      stroke-dashoffset: 0;
+    }
+  }
+</style>

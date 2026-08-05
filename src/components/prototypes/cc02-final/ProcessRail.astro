@@ -1,0 +1,66 @@
+---
+/**
+ * ProcessRail — the one Variant A element absorbed into C+ (spec §1/§11,
+ * ticket CC-02F-07): INPUT -> EVALUATE -> CONFIGURE -> VERIFY / 需求輸入 ->
+ * 方案評估 -> 模組配置 -> 驗證條件, rendered as an Assembly-Spine/Datum-Axis
+ * visual treatment (NOT four cards).
+ *
+ * Built on top of the existing AssemblySpine.astro Brand Primitive rather
+ * than a bespoke rail component — reuses its horizontal-axis layout, its
+ * existing sub-640px mobile-simplification breakpoint (spec's "may scroll
+ * horizontally" requirement is instead satisfied by AssemblySpine's own
+ * stacked-vertical mobile mode, which needs no scroll container at all —
+ * see the file-header note on why that's an equally valid reading of the
+ * spec's "may" wording), its `stateLabels` locale API (CC-02-02), and its
+ * reduced-motion handling — none of that is re-derived here.
+ *
+ * First step ("需求輸入"/INPUT) renders `connected` (Copper) to read as
+ * "the current/starting step"; the remaining three render `unconnected`
+ * (Steel) — not all four in identical style, per spec §6's "current step
+ * may use Copper, other steps use Steel."
+ */
+import AssemblySpine from '../../brand/AssemblySpine.astro';
+import type { FinalHeroLocale } from '../../../data/cc02-final-hero';
+import { processRailSteps, processRailStateLabels } from '../../../data/cc02-final-hero';
+
+export interface Props {
+  locale: FinalHeroLocale;
+  class?: string;
+}
+
+const { locale, class: className = '' } = Astro.props as Props;
+
+const steps = processRailSteps[locale];
+const railLabel = locale === 'zh-tw' ? '流程階段導覽' : 'Process stages';
+
+const nodes = steps.map((label, i) => ({
+  label,
+  state: (i === 0 ? 'connected' : 'unconnected') as 'connected' | 'unconnected',
+}));
+---
+
+<div class:list={['process-rail', className]} role="group" aria-label={railLabel} tabindex="0">
+  <AssemblySpine orientation="horizontal" nodes={nodes} stateLabels={processRailStateLabels[locale]} />
+</div>
+
+<style>
+  /*
+   * Per spec §8/§11: "may scroll horizontally" on mobile. AssemblySpine's
+   * own <640px breakpoint switches to a stacked-vertical layout instead of
+   * introducing horizontal scroll — a real, keyboard-accessible mobile
+   * mode with no scroll container needed. tabindex="0" + role="group" +
+   * aria-label are kept on the wrapper regardless of breakpoint (desktop
+   * horizontal rail is not natively focusable/labeled without them; the
+   * mobile stacked layout benefits from the same landmark for consistency)
+   * — this satisfies the spec's keyboard-operability requirement at every
+   * viewport, not just literally when a scrollbar exists.
+   */
+  .process-rail {
+    width: 100%;
+  }
+  .process-rail:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 4px;
+    border-radius: var(--radius-xs);
+  }
+</style>

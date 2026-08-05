@@ -1,0 +1,407 @@
+---
+/**
+ * FinalPrototypeHeader — CC-02F's locale-routed Header, isolated from both
+ * CC-02's PrototypeHeader.astro (client-JS locale toggle, no real routing)
+ * and the real production Header.astro (spec §11: full prototype isolation
+ * — no import of src/config/nav.ts, no production route links, no
+ * AnalyticsBridge).
+ *
+ * Differs from PrototypeHeader.astro in two required ways (ticket
+ * CC-02F-03):
+ *   1. Locale comes from a real prop (the page's own getStaticPaths
+ *      `locale`), and the "language switch" is a genuine <a href> to the
+ *      sibling locale ROUTE (/internal-preview/cc02-final/en/ <->
+ *      .../zh-tw/) — not a client-side visibility toggle. No inline
+ *      locale-toggle script exists in this component at all.
+ *   2. The language control's visual weight is deliberately reduced:
+ *      PrototypeHeader's `.proto-header__lang` uses a full 1px bordered
+ *      box at the same visual weight as the logo. Here `.final-header__
+ *      lang` uses a thin bottom-rule-only treatment (no box border) while
+ *      keeping the same >=44x44px tap area via padding, so the brand
+ *      wordmark stays the dominant Header element (spec §5/§16).
+ */
+import DatumOrigin from '../../brand/DatumOrigin.astro';
+import type { FinalHeroLocale } from '../../../data/cc02-final-hero';
+import { finalNavCopy, finalHeroCopy } from '../../../data/cc02-final-hero';
+
+export interface Props {
+  locale: FinalHeroLocale;
+}
+
+const { locale } = Astro.props as Props;
+const otherLocale: FinalHeroLocale = locale === 'zh-tw' ? 'en' : 'zh-tw';
+const nav = finalNavCopy[locale];
+const otherNav = finalNavCopy[otherLocale];
+const cta = finalHeroCopy[locale].ctaPrimary;
+
+const navKeys = ['solutions', 'products', 'industries', 'engineeringMethod', 'resources'] as const;
+
+// Route target for the sibling-locale link — real path, not a query string
+// or client-side toggle (spec §10 route-architecture requirement).
+const otherLocaleHref = `/internal-preview/cc02-final/${otherLocale}/`;
+---
+
+<header class="final-header" data-final-header>
+  <div class="final-header__row">
+    <a href="#" class="final-header__logo" data-proto-noop aria-label={nav.logo}>
+      <DatumOrigin size={28} decorative={true} />
+      <span class="final-header__logo-text">{nav.logo}</span>
+    </a>
+
+    <nav class="final-header__nav" aria-label={locale === 'zh-tw' ? '主要導覽（原型）' : 'Main navigation (prototype)'}>
+      <ul>
+        {navKeys.map((key) => (
+          <li>
+            <a href="#" class="final-header__link" data-proto-noop>{nav[key]}</a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="final-header__actions">
+      <a
+        href={otherLocaleHref}
+        class="final-header__lang"
+        aria-label={`${nav.languageSwitchLabel}: ${otherNav.logo}`}
+        hreflang={otherLocale === 'zh-tw' ? 'zh-Hant-TW' : 'en'}
+      >
+        {nav.languageSwitchTo}
+      </a>
+      <a href="#" class="final-header__cta" data-proto-noop>{cta}</a>
+      <button
+        type="button"
+        class="final-header__menu-toggle"
+        data-proto-menu-toggle
+        aria-expanded="false"
+        aria-controls="final-mobile-nav"
+        aria-label={nav.menuOpen}
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div id="final-mobile-nav" class="final-mobile-nav" data-proto-mobile-nav hidden>
+  <div class="final-mobile-nav__panel">
+    <div class="final-mobile-nav__top">
+      <span class="final-header__logo-text">{nav.logo}</span>
+      <button type="button" class="final-header__menu-toggle" data-proto-menu-close aria-label={nav.menuClose}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    <ul class="final-mobile-nav__list">
+      {navKeys.map((key) => (
+        <li>
+          <a href="#" class="final-mobile-nav__link" data-proto-noop>{nav[key]}</a>
+        </li>
+      ))}
+    </ul>
+    <div class="final-mobile-nav__footer">
+      <a
+        href={otherLocaleHref}
+        class="final-header__lang final-header__lang--mobile"
+        aria-label={`${nav.languageSwitchLabel}: ${otherNav.logo}`}
+        hreflang={otherLocale === 'zh-tw' ? 'zh-Hant-TW' : 'en'}
+      >
+        {nav.languageSwitchTo}
+      </a>
+      <a href="#" class="final-header__cta final-header__cta--mobile" data-proto-noop>{cta}</a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .final-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    width: 100%;
+    min-width: 0;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    background: color-mix(in srgb, var(--color-paper-50) 94%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--color-steel-600);
+  }
+  @media (min-width: 960px) {
+    .final-header { height: 80px; }
+  }
+
+  .final-header__row {
+    width: 100%;
+    max-width: var(--container-content);
+    margin-inline: auto;
+    padding-inline: var(--page-gutter-mobile);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+  @media (min-width: 768px) {
+    .final-header__row { padding-inline: var(--page-gutter-tablet); }
+  }
+  @media (min-width: 1024px) {
+    .final-header__row { padding-inline: var(--page-gutter-desktop); }
+  }
+
+  .final-header__logo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    text-decoration: none;
+    color: var(--color-ink-950);
+    flex-shrink: 0;
+  }
+  .final-header__logo-text {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-small);
+    white-space: nowrap;
+  }
+  :lang(zh) .final-header__logo-text {
+    font-family: 'Noto Sans TC', var(--font-display);
+  }
+
+  .final-header__nav { display: none; }
+  .final-header__nav ul {
+    display: flex;
+    gap: var(--space-6);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .final-header__link {
+    position: relative;
+    color: var(--color-ink-950);
+    text-decoration: none;
+    font-size: var(--fs-small);
+    font-weight: 500;
+    padding-block: var(--space-2);
+    opacity: 0.85;
+  }
+  .final-header__link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 16px;
+    height: 2px;
+    background: var(--color-action-primary);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--duration-ui) var(--ease-standard);
+  }
+  .final-header__link:hover { opacity: 1; }
+  .final-header__link:hover::after { transform: scaleX(1); }
+
+  .final-header__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  /*
+   * Reduced-weight language control (ticket CC-02F-03 requirement): no box
+   * border (unlike PrototypeHeader's 1px bordered .proto-header__lang) —
+   * just mono-styled text with a thin bottom rule, real 44x44px tap area
+   * via padding (not visual size), so it never competes with the logo
+   * wordmark for visual dominance.
+   */
+  .final-header__lang {
+    all: unset;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: var(--fs-technical);
+    letter-spacing: 0.04em;
+    color: var(--color-steel-700);
+    padding: var(--space-2) var(--space-1);
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid transparent;
+  }
+  .final-header__lang:hover,
+  .final-header__lang:focus-visible {
+    color: var(--color-action-primary);
+    border-bottom-color: var(--color-action-primary);
+  }
+  .final-header__lang:focus-visible,
+  .final-header__link:focus-visible,
+  .final-header__logo:focus-visible,
+  .final-header__cta:focus-visible,
+  .final-header__menu-toggle:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  .final-header__cta {
+    display: none;
+    text-decoration: none;
+    background: var(--color-action-primary);
+    color: var(--color-paper-50);
+    font-size: var(--fs-technical);
+    font-weight: 600;
+    padding: 0.65em 1.1em;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    transition: background var(--duration-ui) var(--ease-standard);
+  }
+  .final-header__cta:hover { background: var(--color-action-primary-hover); }
+
+  .final-header__menu-toggle {
+    all: unset;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    color: var(--color-ink-950);
+  }
+
+  @media (min-width: 960px) {
+    .final-header__nav { display: block; }
+    .final-header__cta { display: inline-flex; }
+    .final-header__menu-toggle { display: none; }
+  }
+
+  /* ---- Mobile drawer (same contract as PrototypeHeader / real Header.astro) ---- */
+  .final-mobile-nav {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(11, 18, 24, 0.45);
+  }
+  .final-mobile-nav[hidden] { display: none; }
+  .final-mobile-nav__panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: min(88vw, 360px);
+    background: var(--color-paper-50);
+    color: var(--color-ink-950);
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-4);
+    box-shadow: var(--shadow-lg);
+  }
+  .final-mobile-nav__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-6);
+  }
+  .final-mobile-nav__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .final-mobile-nav__link {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: var(--space-2);
+    font-size: var(--fs-body-lg);
+    font-weight: 600;
+    color: var(--color-ink-950);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-steel-600);
+  }
+  .final-mobile-nav__footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding-top: var(--space-6);
+  }
+  .final-header__lang--mobile {
+    width: 100%;
+    color: var(--color-ink-950);
+    border-bottom-color: var(--color-steel-600);
+  }
+  .final-header__cta--mobile {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .final-header__link::after,
+    .final-header__lang,
+    .final-header__cta {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  // Mobile drawer only — no locale-toggle script here (locale switching is
+  // a real <a href> route link, handled by normal browser navigation, not
+  // client JS). Same open/close/focus-trap contract as PrototypeHeader.
+  function initFinalHeader(root: Document) {
+    const toggle = root.querySelector('[data-proto-menu-toggle]');
+    const closeBtn = root.querySelector('[data-proto-menu-close]');
+    const panel = root.querySelector('[data-proto-mobile-nav]') as HTMLElement | null;
+    if (!toggle || !panel) return;
+
+    let lastFocused: HTMLElement | null = null;
+
+    function open() {
+      lastFocused = document.activeElement as HTMLElement;
+      panel!.hidden = false;
+      toggle!.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+      const firstLink = panel!.querySelector('a, button') as HTMLElement | null;
+      firstLink?.focus();
+    }
+    function close() {
+      panel!.hidden = true;
+      toggle!.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+      lastFocused?.focus();
+    }
+
+    toggle.addEventListener('click', open);
+    closeBtn?.addEventListener('click', close);
+    panel.addEventListener('click', (e) => {
+      if (e.target === panel) close();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !panel!.hidden) close();
+    });
+    panel.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab') return;
+      const focusables = panel!.querySelectorAll<HTMLElement>('a, button');
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (!first || !last) return;
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
+
+    root.querySelectorAll('[data-proto-noop]').forEach((el) => {
+      el.addEventListener('click', (e) => e.preventDefault());
+    });
+  }
+
+  initFinalHeader(document);
+</script>
