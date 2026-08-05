@@ -665,8 +665,21 @@ echo "-- test reports copied (whichever of DATUM_QA/QA_CHECKLIST/IMPECCABLE_REVI
 {
   echo "Review bundle: $BUNDLE_NAME"
   echo "Mode: $MODE"
-  echo "Project root: $PROJECT_ROOT"
-  echo "Git path prefix stripped from all paths: ${GIT_PATH_PREFIX:-(none — project root is repo root)}"
+  # Never print the real absolute PROJECT_ROOT or the literal GIT_PATH_PREFIX
+  # string here — both can contain private path segments (username, host
+  # workspace layout, parent-repo directory names) that have no business
+  # leaving this machine inside a bundle a reviewer downloads. "Project
+  # root: ." plus a yes/no nestedness flag conveys everything a reviewer
+  # needs (all paths in this bundle are already project-relative) without
+  # leaking anything. See docs/engineering/specs/CC-02F-final-editorial-hero.md
+  # §CC-02F-00 / spec §五 for the exact required wording.
+  echo "Project root: ."
+  if [ -n "$GIT_PATH_PREFIX" ]; then
+    echo "Nested repository: yes"
+  else
+    echo "Nested repository: no"
+  fi
+  echo "Project prefix redacted: yes"
   echo "Head: $(cat "$WORK_DIR/metadata/head.txt" 2>/dev/null || echo '?')"
   echo "Base: $(cat "$WORK_DIR/metadata/base.txt" 2>/dev/null || echo '?')"
   echo

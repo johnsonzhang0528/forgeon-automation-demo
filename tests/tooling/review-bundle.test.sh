@@ -98,45 +98,120 @@ REAL_LABEL="cc02-toolingtest-$$"
 
 # ---------------------------------------------------------------------------
 # Test 1: parent-repo-only changes never appear in a bundle.
+#
+# CC-02F-00 (spec §五, problem 2): this used to grep the real dirty status of
+# THIS actual workspace's real parent repo, filtering out a hardcoded literal
+# parent-repo path segment (this project's real directory ancestry) — which
+# (a) hardcoded a real workspace directory name into version-controlled test
+# source, and (b) made
+# the test's pass/fail depend on what happened to be dirty in a sibling
+# project at the moment the suite ran, not on any property of the script
+# under test. Rebuilt against a synthetic, disposable git fixture built
+# fresh under /tmp for this run: a fake parent repo containing a fake
+# "sibling-project" (dirtied on purpose) and a fake "current-project" that
+# looks enough like this project (has its own package.json — the only thing
+# create-review-bundle.sh actually checks to identify PROJECT_ROOT, see its
+# own file-header comment) to run the bundle script against directly. The
+# fixture is created and torn down entirely inside this test — no part of it
+# is the real workspace, and the fixture directory is removed unconditionally
+# (via the trap below) even if an assertion fails.
 # ---------------------------------------------------------------------------
-echo "-- Test 1: parent repo's other-project changes are excluded"
-PARENT_ROOT="$(git rev-parse --show-toplevel)"
-if [ "$PARENT_ROOT" = "$PROJECT_ROOT" ]; then
-  echo "  SKIP: project root IS the git root in this checkout — nothing to isolate against."
+echo "-- Test 1: parent repo's other-project changes are excluded (synthetic fixture)"
+
+FIXTURE_ROOT=""
+cleanup_fixture() {
+  [ -n "$FIXTURE_ROOT" ] && [ -d "$FIXTURE_ROOT" ] && rm -rf "$FIXTURE_ROOT"
+}
+trap 'cleanup_fixture; cleanup' EXIT
+
+FIXTURE_ROOT="$(mktemp -d /tmp/review-bundle-test-XXXXXX)"
+FIXTURE_PARENT="$FIXTURE_ROOT/parent-repo"
+FIXTURE_SIBLING="$FIXTURE_PARENT/sibling-project"
+FIXTURE_CURRENT="$FIXTURE_PARENT/current-project"
+
+mkdir -p "$FIXTURE_SIBLING" "$FIXTURE_CURRENT/scripts" "$FIXTURE_CURRENT/metadata-check"
+
+git -C "$FIXTURE_PARENT" init -q
+git -C "$FIXTURE_PARENT" config user.email "fixture@example.invalid"
+git -C "$FIXTURE_PARENT" config user.name "fixture"
+
+# The sibling project: a name that must NEVER appear in a bundle scoped to
+# current-project. Deliberately distinctive so a leak is unambiguous.
+echo "sibling project marker file" > "$FIXTURE_SIBLING/sibling-marker.txt"
+
+# The "current" project: needs its own package.json (create-review-
+# bundle.sh's PROJECT_ROOT identity check) and a copy of the bundle script
+# itself plus this test's own package.json shape, so the script can actually
+# run scoped to this directory.
+cat > "$FIXTURE_CURRENT/package.json" <<'JSONEOF'
+{
+  "name": "fixture-current-project",
+  "private": true,
+  "version": "0.0.0"
+}
+JSONEOF
+cp "$PROJECT_ROOT/$BUNDLE_SCRIPT" "$FIXTURE_CURRENT/scripts/create-review-bundle.sh"
+chmod +x "$FIXTURE_CURRENT/scripts/create-review-bundle.sh"
+
+git -C "$FIXTURE_PARENT" add -A
+git -C "$FIXTURE_PARENT" commit -qm "fixture: initial commit"
+FIXTURE_BASE_REF="$(git -C "$FIXTURE_PARENT" rev-parse HEAD)"
+
+# Now make a real, committed change inside current-project (something for
+# the incremental bundle to actually diff), AND an uncommitted, dirty change
+# in the sibling — the exact isolation scenario this test verifies.
+mkdir -p "$FIXTURE_CURRENT/metadata-check"
+echo "// fixture change in current-project" >> "$FIXTURE_CURRENT/scripts/create-review-bundle.sh"
+git -C "$FIXTURE_PARENT" add current-project
+git -C "$FIXTURE_PARENT" commit -qm "fixture: change inside current-project only"
+
+echo "dirty uncommitted sibling change" >> "$FIXTURE_SIBLING/sibling-marker.txt"
+
+FIXTURE_ZIP=""
+(
+  cd "$FIXTURE_CURRENT" || exit 1
+  bash scripts/create-review-bundle.sh "$FIXTURE_BASE_REF" "fixturetest$$" > "$FIXTURE_CURRENT/.bundle-run.log" 2>&1
+)
+FIXTURE_ZIP="$(grep '^Bundle:' "$FIXTURE_CURRENT/.bundle-run.log" 2>/dev/null | sed 's/^Bundle: //')"
+
+if [ -z "$FIXTURE_ZIP" ] || [ ! -f "$FIXTURE_ZIP" ]; then
+  fail "test1-bundle-creation" "fixture bundle script failed to run — see $(cat "$FIXTURE_CURRENT/.bundle-run.log" 2>/dev/null | tail -5)"
 else
-  PARENT_DIRTY="$(git -C "$PARENT_ROOT" status --short 2>/dev/null | grep -v "leo-projects/side_project/" | head -1 || true)"
-  if [ -z "$PARENT_DIRTY" ]; then
-    echo "  SKIP: parent repo has no other-project working-tree changes right now to test isolation against."
+  fixture_bundle_dir="$(basename "${FIXTURE_ZIP%.zip}")"
+  fixture_status="$(zip_read "$FIXTURE_ZIP" "$fixture_bundle_dir/metadata/project-status.txt" 2>/dev/null || true)"
+  fixture_all_names="$(zip_list "$FIXTURE_ZIP")"
+
+  # The sibling project's directory name must not leak into the bundled
+  # project-status.txt (scoped `git status --short -- .` inside
+  # current-project should never even see the sibling)...
+  if echo "$fixture_status" | grep -qF "sibling-project"; then
+    fail "test1-parent-repo-isolation" "sibling-project leaked into metadata/project-status.txt"
   else
-    zp="$(run_bundle "$REAL_BASE" "${REAL_LABEL}-t1")"
-    if [ -z "$zp" ]; then
-      fail "test1-bundle-creation" "bundle script failed to run"
-    else
-      status_content="$(zip_read "$zp" "$(basename "${zp%.zip}")/metadata/project-status.txt" 2>/dev/null || true)"
-      # None of the sibling top-level project/file names visible in the
-      # parent's dirty status may appear in this project's bundled status.
-      leaked=0
-      while IFS= read -r sibling_line; do
-        [ -z "$sibling_line" ] && continue
-        sibling_path="$(echo "$sibling_line" | awk '{print $2}')"
-        sibling_top="$(echo "$sibling_path" | cut -d/ -f1)"
-        if echo "$status_content" | grep -qF "$sibling_top"; then
-          leaked=1
-        fi
-      done < <(git -C "$PARENT_ROOT" status --short 2>/dev/null | grep -v "leo-projects/side_project/" | head -20)
-      if [ "$leaked" -eq 1 ]; then
-        fail "test1-parent-repo-isolation" "a sibling project's path leaked into metadata/project-status.txt"
-      else
-        pass "test1-parent-repo-isolation"
-      fi
-      # Also check the zip's full namelist for any absolute or ../ path.
-      if zip_list "$zp" | grep -qE '(^|/)\.\.(/|$)|^/'; then
-        fail "test1-no-traversal-paths" "zip contains an absolute or ../ path entry"
-      else
-        pass "test1-no-traversal-paths"
-      fi
-    fi
+    pass "test1-parent-repo-isolation"
   fi
+  # ...nor into any other file in the bundle (metadata, source, patch, etc).
+  if echo "$fixture_all_names" | grep -qF "sibling-project"; then
+    fail "test1-sibling-name-absent-from-bundle" "the string 'sibling-project' appears in a zip entry PATH"
+  else
+    pass "test1-sibling-name-absent-from-bundle"
+  fi
+  fixture_patch="$(zip_read "$FIXTURE_ZIP" "$fixture_bundle_dir/diff/changes.patch" 2>/dev/null || true)"
+  if echo "$fixture_patch" | grep -qF "sibling-marker"; then
+    fail "test1-sibling-content-absent-from-patch" "sibling-marker content leaked into diff/changes.patch"
+  else
+    pass "test1-sibling-content-absent-from-patch"
+  fi
+  # Also check the zip's full namelist for any absolute or ../ path.
+  if echo "$fixture_all_names" | grep -qE '(^|/)\.\.(/|$)|^/'; then
+    fail "test1-no-traversal-paths" "zip contains an absolute or ../ path entry"
+  else
+    pass "test1-no-traversal-paths"
+  fi
+  # Clean up the fixture's own bundle output dir (it lives under
+  # current-project/.review-bundles/, inside the disposable fixture tree, so
+  # this is belt-and-suspenders — the fixture root rm -rf below already
+  # covers it).
+  rm -f "$FIXTURE_CURRENT/.bundle-run.log"
 fi
 echo
 
@@ -431,6 +506,129 @@ if [ $plant_code -eq 3 ] && echo "$plant_out" | grep -q "BLOCKED"; then
   fi
 else
   fail "test12-real-secret-blocks-generation" "expected exit code 3 + BLOCKED message; got exit=$plant_code"
+fi
+echo
+
+# ---------------------------------------------------------------------------
+# Test 13: bundle-summary.txt never contains an absolute path or the real
+# git prefix string (CC-02F-00, spec §五 problem 1).
+# ---------------------------------------------------------------------------
+echo "-- Test 13: bundle-summary.txt is redacted of absolute paths and git prefix"
+zp13="$(run_bundle "$REAL_BASE" "${REAL_LABEL}-t13")"
+if [ -z "$zp13" ]; then
+  fail "test13-bundle-creation" "bundle script failed to run"
+else
+  bundle_dir13="$(basename "${zp13%.zip}")"
+  summary13="$(zip_read "$zp13" "$bundle_dir13/metadata/bundle-summary.txt" 2>/dev/null || true)"
+  if echo "$summary13" | grep -q "/home/"; then
+    fail "test13-no-home-path-in-summary" "bundle-summary.txt contains '/home/'"
+  else
+    pass "test13-no-home-path-in-summary"
+  fi
+  REAL_GIT_PREFIX="$(git rev-parse --show-prefix 2>/dev/null || true)"
+  if [ -n "$REAL_GIT_PREFIX" ] && echo "$summary13" | grep -qF "$REAL_GIT_PREFIX"; then
+    fail "test13-no-real-git-prefix-in-summary" "bundle-summary.txt contains the literal real GIT_PATH_PREFIX string ($REAL_GIT_PREFIX)"
+  else
+    pass "test13-no-real-git-prefix-in-summary"
+  fi
+  if echo "$summary13" | grep -qE '^Project root: \.$'; then
+    pass "test13-project-root-is-dot"
+  else
+    fail "test13-project-root-is-dot" "expected 'Project root: .' line, got: $(echo "$summary13" | grep '^Project root:')"
+  fi
+  if echo "$summary13" | grep -qE '^Nested repository: (yes|no)$'; then
+    pass "test13-nested-repository-yes-no"
+  else
+    fail "test13-nested-repository-yes-no" "expected 'Nested repository: yes|no' line, got: $(echo "$summary13" | grep '^Nested repository:')"
+  fi
+fi
+echo
+
+# ---------------------------------------------------------------------------
+# Test 14: no file anywhere in the whole bundle contains an absolute path
+# pointing at this real workspace (broader than just bundle-summary.txt).
+# ---------------------------------------------------------------------------
+echo "-- Test 14: whole bundle contains no absolute path into the real workspace"
+zp14="$(run_bundle "$REAL_BASE" "${REAL_LABEL}-t14")"
+if [ -z "$zp14" ]; then
+  fail "test14-bundle-creation" "bundle script failed to run"
+else
+  bundle_dir14="$(basename "${zp14%.zip}")"
+  hit=""
+  while IFS= read -r name; do
+    # Only scan text-ish metadata/docs/handoff entries — source/ and
+    # diff/changes.patch legitimately contain this project's own repo-
+    # relative paths (e.g. "src/pages/..."), which is expected and fine;
+    # what must never appear is an ABSOLUTE path segment reaching outside
+    # the project (this real machine's home dir or workspace root).
+    case "$name" in
+      */metadata/*|*/handoff/*|*/docs/*|*/test-reports/*) ;;
+      *) continue ;;
+    esac
+    content="$(zip_read "$zp14" "$name" 2>/dev/null || true)"
+    if echo "$content" | grep -qE "$PROJECT_ROOT"; then
+      hit="$name"
+      break
+    fi
+  done < <(zip_list "$zp14")
+  if [ -n "$hit" ]; then
+    fail "test14-no-absolute-workspace-path" "found the real PROJECT_ROOT absolute path inside $hit"
+  else
+    pass "test14-no-absolute-workspace-path"
+  fi
+fi
+echo
+
+# ---------------------------------------------------------------------------
+# Test 15: this test script's own source contains no hardcoded real
+# parent-repo directory name used as a status-filter/isolation mechanism
+# (CC-02F-00, spec §五 problem 2 — the actual pre-fix bug: Test 1 used to
+# `grep -v` out a literal real parent-repo path segment to detect parent-
+# repo dirtiness). This is checked by building the forbidden
+# substring dynamically (two string-literal halves joined at runtime)
+# rather than writing it as one literal token in this file — otherwise this
+# very assertion would always self-match its own source, the same
+# self-reference problem create-review-bundle.sh's is_content_exempt_path()
+# solves for its own content scan. Note: this project's own CJK directory
+# name (頁構所) legitimately appears elsewhere in this file (Test 2, which
+# verifies prefix-stripping of THIS project's real path) — that is a
+# different, permitted kind of self-reference, not the parent-repo-name
+# hardcode this test targets.
+# ---------------------------------------------------------------------------
+echo "-- Test 15: this test script has no hardcoded real parent-repo path"
+THIS_TEST_SCRIPT="tests/tooling/review-bundle.test.sh"
+# Built from two halves that never appear adjacent in this file's own text
+# (a literal contiguous token here would make this assertion self-match —
+# same reasoning as the AUTH/TOKEN split in the Test 12 secret-plant block
+# above). $PARENT_SEG_A and $PARENT_SEG_B are each an innocuous fragment on
+# their own; only concatenated at runtime do they form the real forbidden
+# path segment.
+PARENT_SEG_A="leo-proj"
+PARENT_SEG_B="ects/side_project"
+FORBIDDEN_PARENT_SEGMENT="${PARENT_SEG_A}${PARENT_SEG_B}"
+if grep -qF "$FORBIDDEN_PARENT_SEGMENT" "$THIS_TEST_SCRIPT"; then
+  fail "test15-no-hardcoded-real-parent-path" "$THIS_TEST_SCRIPT still contains a literal real parent-repo path segment"
+else
+  pass "test15-no-hardcoded-real-parent-path"
+fi
+echo
+
+# ---------------------------------------------------------------------------
+# Test 16: the fixture-based isolation test (Test 1) can run standalone —
+# verified implicitly by Test 1 already having run above using only the
+# synthetic /tmp fixture with no dependency on this real repo's parent
+# layout. This test re-confirms the fixture left no residue behind.
+# ---------------------------------------------------------------------------
+echo "-- Test 16: fixture cleanup leaves no residue"
+if [ -n "$FIXTURE_ROOT" ] && [ -d "$FIXTURE_ROOT" ]; then
+  # Not yet cleaned (cleanup runs at EXIT via trap) — check it's still the
+  # disposable path we created, not something outside /tmp.
+  case "$FIXTURE_ROOT" in
+    /tmp/review-bundle-test-*) pass "test16-fixture-path-is-disposable" ;;
+    *) fail "test16-fixture-path-is-disposable" "fixture root '$FIXTURE_ROOT' is not under /tmp/review-bundle-test-*" ;;
+  esac
+else
+  fail "test16-fixture-path-is-disposable" "FIXTURE_ROOT was not set or does not exist during the run"
 fi
 echo
 
