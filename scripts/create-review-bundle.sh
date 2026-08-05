@@ -612,8 +612,31 @@ if [ -d "docs/screenshots" ]; then
   done
 fi
 
+# A stage that ships more than 3 screenshots (e.g. multiple design-spike
+# variants x multiple viewports, as CC-02's Hero prototypes do) organizes
+# them under docs/screenshots/<stage-prefix>/ instead of the flat
+# <label>-{desktop,tablet,mobile}.png convention the 3-file case above
+# covers. Fall back to copying that whole directory — by stage prefix
+# (e.g. "cc02" from label "cc02-hero-spike") first, then by exact label —
+# when the flat 3-file match finds nothing, rather than leaving a bundle
+# that's supposed to carry 11 required screenshots with zero.
+if [ "${#SCREENSHOT_MATCHES[@]}" -eq 0 ] && [ -d "docs/screenshots" ]; then
+  SCREENSHOT_DIR=""
+  if [ -n "$STAGE_PREFIX" ] && [ -d "docs/screenshots/${STAGE_PREFIX}" ]; then
+    SCREENSHOT_DIR="docs/screenshots/${STAGE_PREFIX}"
+  elif [ -d "docs/screenshots/${LABEL}" ]; then
+    SCREENSHOT_DIR="docs/screenshots/${LABEL}"
+  fi
+  if [ -n "$SCREENSHOT_DIR" ]; then
+    while IFS= read -r -d '' f; do
+      cp -p "$f" "$WORK_DIR/screenshots/"
+      SCREENSHOT_MATCHES+=("$f")
+    done < <(find "$SCREENSHOT_DIR" -maxdepth 1 -type f -name '*.png' -print0)
+  fi
+fi
+
 if [ "${#SCREENSHOT_MATCHES[@]}" -eq 0 ]; then
-  echo "No screenshots named '${LABEL}-{desktop,tablet,mobile}.png' found." > "$WORK_DIR/screenshots/NO_EXACT_MATCH.txt"
+  echo "No screenshots named '${LABEL}-{desktop,tablet,mobile}.png' found, and no docs/screenshots/<stage-prefix>/ or docs/screenshots/<label>/ directory found." > "$WORK_DIR/screenshots/NO_EXACT_MATCH.txt"
   echo "Available screenshots in docs/screenshots/:" >> "$WORK_DIR/screenshots/NO_EXACT_MATCH.txt"
   if [ -d "docs/screenshots" ]; then
     ls docs/screenshots/ >> "$WORK_DIR/screenshots/NO_EXACT_MATCH.txt" 2>/dev/null || true
