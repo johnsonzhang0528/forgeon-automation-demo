@@ -34,3 +34,16 @@ completed with exit code 0 and was captured as structured workflow evidence.
   performed.
 - `CC-02I` remained unchanged with `claimable: false`, `spec: null`, and no
   tickets.
+
+## Two-axis review
+
+Standards and Spec reviews initially found command-wrapper, read-only Git,
+runtime-value, authorization-metadata, and fixture-ownership weaknesses. The
+High findings were remediated and the 29-test adversarial suite passed again.
+
+One Medium finding remains for external review: maintenance registration uses
+durable temp files, directory `fsync`, atomic replacement, a mutex, and tested
+exception rollback, but Registry, authorization consumption, and audit are
+separate files. A process or power loss between filesystem operations cannot be
+made a true single-file atomic transaction; Claude should exercise interruption
+recovery and confirm the chosen fail-closed behavior before integration.
