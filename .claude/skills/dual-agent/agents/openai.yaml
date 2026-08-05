@@ -1,0 +1,5 @@
+interface:
+  display_name: "Dual Agent"
+  short_description: "Coordinate single-writer failover with Claude Code"
+policy:
+  allow_implicit_invocation: false
