@@ -73,3 +73,12 @@ outputs, and files outside ticket scope are never staged.
 CC-02I remains unclaimable until ChatGPT supplies a formal spec and tickets,
 the registry is updated, and `claimable` becomes true. Completing a full stage
 requires an integration review bundle and ChatGPT approval before advancing.
+
+## Maintenance registration
+
+`register-maintenance` accepts any Maintenance Stage that passes the single-use
+human-authorization and schema checks. The command contains no Stage- or
+Ticket-specific allowlist: Stage metadata, Tickets, and permitted paths come
+from the authorization. An agent cannot create that authorization, overwrite an
+existing Stage or Ticket, or use maintenance registration to unlock a blocked
+Product Stage. The ChatGPT/user Stage Gate remains authoritative.

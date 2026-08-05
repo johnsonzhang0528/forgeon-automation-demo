@@ -234,19 +234,70 @@ def runtime_value_findings() -> list[tuple[str, str]]:
     return findings
 
 
-def maintenance_ticket(ticket: dict) -> dict:
-    scopes = {
-        "WF-SEC-04-01": ["scripts/agent_guard.py", ".claude/hooks/**", ".claude/settings.json",
-                          "tests/tooling/**", "docs/agents/TASK_REGISTRY.json"],
-        "WF-SEC-04-02": ["scripts/agent_workflow.py", "tests/tooling/**", "docs/agents/**",
-                          "AGENTS.md", "CLAUDE.md"],
-        "WF-SEC-04-03": ["docs/agents/**"],
+def validate_authorized_paths(allowed, forbidden) -> tuple[list[str], list[str]]:
+    if not isinstance(allowed, list) or not allowed:
+        raise WorkflowError("authorization allowed paths must be a non-empty array")
+    if not isinstance(forbidden, list):
+        raise WorkflowError("authorization forbidden paths must be an array")
+    dangerous = re.compile(r"(?:^|/)(?:\.git|agent-state|\.env(?:\..*)?)(?:/|$)")
+    for label, paths in (("allowed", allowed), ("forbidden", forbidden)):
+        for pattern in paths:
+            if (not isinstance(pattern, str) or not pattern or pattern == "**" or
+                    Path(pattern).is_absolute() or "\\" in pattern or
+                    any(part == ".." for part in pattern.split("/"))):
+                raise WorkflowError(f"authorization {label} path is unsafe")
+            if label == "allowed" and dangerous.search(pattern):
+                raise WorkflowError("authorization allowed path targets protected state")
+            literal_prefix = pattern.split("*", 1)[0].rstrip("/")
+            candidate = ROOT / literal_prefix if literal_prefix else ROOT
+            if candidate.exists() and candidate.resolve() != ROOT and not candidate.resolve().is_relative_to(ROOT):
+                raise WorkflowError("authorization path escapes repository through a symlink")
+    return list(allowed), list(forbidden)
+
+
+def validate_maintenance_stage(stage, tickets, allowed_files, registry) -> tuple[dict, list[dict]]:
+    if not isinstance(stage, dict):
+        raise WorkflowError("authorization stage must be an object")
+    stage_id = stage.get("id")
+    if not isinstance(stage_id, str) or not re.fullmatch(r"WF-[A-Z0-9]+(?:-[A-Z0-9]+)*", stage_id):
+        raise WorkflowError("authorization stage ID is invalid")
+    if not isinstance(stage.get("title"), str) or not stage["title"].strip():
+        raise WorkflowError("authorization stage title is invalid")
+    if not isinstance(stage.get("external_reviewer"), str) or not stage["external_reviewer"].strip():
+        raise WorkflowError("authorization external reviewer is invalid")
+    if stage.get("claimable") is not True:
+        raise WorkflowError("authorized maintenance stage must be explicitly claimable")
+    stages = registry.get("stages")
+    if not isinstance(stages, dict):
+        raise WorkflowError("registry stages are invalid")
+    existing_tickets = {
+        ticket.get("id") for existing in stages.values() if isinstance(existing, dict)
+        for ticket in existing.get("tickets", []) if isinstance(ticket, dict)
     }
-    ticket_id = ticket.get("id")
-    if ticket_id not in scopes or not isinstance(ticket.get("title"), str):
-        raise WorkflowError("authorization contains an unsupported maintenance ticket")
-    return {"id": ticket_id, "title": ticket["title"], "status": "ready",
-            "allowed_files": scopes[ticket_id], "required_tests": []}
+    if stage_id in stages or stage_id in existing_tickets:
+        raise WorkflowError("maintenance stage already exists or conflicts with a ticket")
+    if not isinstance(tickets, list) or not tickets:
+        raise WorkflowError("authorization tickets must be a non-empty array")
+    ticket_ids, normalized = set(), []
+    for ticket in tickets:
+        if not isinstance(ticket, dict):
+            raise WorkflowError("authorization ticket must be an object")
+        ticket_id = ticket.get("id")
+        if (not isinstance(ticket_id, str) or
+                not re.fullmatch(re.escape(stage_id) + r"-[A-Z0-9]+(?:-[A-Z0-9]+)*", ticket_id)):
+            raise WorkflowError("authorization ticket ID is outside the stage namespace")
+        if ticket_id in ticket_ids:
+            raise WorkflowError("authorization contains duplicate ticket IDs")
+        if ticket_id in stages or ticket_id in existing_tickets:
+            raise WorkflowError("maintenance ticket already exists or conflicts with a stage")
+        if not isinstance(ticket.get("title"), str) or not ticket["title"].strip():
+            raise WorkflowError("authorization ticket title is invalid")
+        ticket_ids.add(ticket_id)
+        normalized.append({"id": ticket_id, "title": ticket["title"], "status": "ready",
+                           "allowed_files": list(allowed_files), "required_tests": []})
+    normalized_stage = {"title": stage["title"], "type": "maintenance", "claimable": True,
+                        "external_reviewer": stage["external_reviewer"], "tickets": normalized}
+    return normalized_stage, normalized
 
 
 def cmd_register_maintenance(args):
@@ -292,8 +343,7 @@ def cmd_register_maintenance(args):
     if run(["git", "merge-base", "--is-ancestor", base, head()], check=False).returncode:
         raise WorkflowError("authorization base HEAD is not an ancestor")
     changed = git("diff", "--name-only", base, head(), "--", ".").splitlines()
-    allowed = auth["bootstrap_allowed_paths"]
-    forbidden = auth["forbidden_paths"]
+    allowed, forbidden = validate_authorized_paths(auth["bootstrap_allowed_paths"], auth["forbidden_paths"])
     if any(not any(fnmatch.fnmatch(p, pattern) for pattern in allowed) for p in changed):
         raise WorkflowError("bootstrap commit contains a path outside the authorization")
     if any(any(fnmatch.fnmatch(p, pattern) for pattern in forbidden) for p in changed):
@@ -302,32 +352,14 @@ def cmd_register_maintenance(args):
     if get_lock() or task.get("active_agent") is not None:
         raise WorkflowError("runtime must be fully released before registration")
     stage_auth = auth["stage"]
-    if stage_auth != {"id": "WF-SEC-04", "title": "Verification Capability Hardening",
-                      "external_reviewer": "ChatGPT", "claimable": True}:
-        raise WorkflowError("authorization stage mismatch")
-    expected_ids = ["WF-SEC-04-01", "WF-SEC-04-02", "WF-SEC-04-03"]
-    if [x.get("id") for x in auth["tickets"]] != expected_ids:
-        raise WorkflowError("authorization ticket mismatch")
-    if [x.get("title") for x in auth["tickets"]] != [
-        "Allow safe project tests and temporary fixtures",
-        "Add recovery documentation and runtime secret doctor checks",
-        "Execute live workflow and website verification",
-    ]:
-        raise WorkflowError("authorization ticket metadata mismatch")
 
     with critical():
         registry_bytes = REGISTRY.read_bytes()
         registry = read_json(REGISTRY)
         before_cc = canonical_json(registry.get("stages", {}).get("CC-02I"))
         stages = registry.setdefault("stages", {})
-        existing_ids = {t.get("id") for s in stages.values() for t in s.get("tickets", [])}
-        if stage_auth["id"] in stages or any(x in existing_ids for x in expected_ids):
-            raise WorkflowError("maintenance stage or ticket already exists")
-        stages[stage_auth["id"]] = {
-            "title": stage_auth["title"], "type": "maintenance", "claimable": True,
-            "external_reviewer": stage_auth["external_reviewer"],
-            "tickets": [maintenance_ticket(x) for x in auth["tickets"]],
-        }
+        normalized_stage, _ = validate_maintenance_stage(stage_auth, auth["tickets"], allowed, registry)
+        stages[stage_auth["id"]] = normalized_stage
         if canonical_json(stages.get("CC-02I")) != before_cc:
             raise WorkflowError("CC-02I changed during registration")
         consumed = dict(auth)

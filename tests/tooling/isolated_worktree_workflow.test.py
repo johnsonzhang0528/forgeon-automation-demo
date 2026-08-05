@@ -68,26 +68,32 @@ class Fixture:
         raw = Path(proc(["git","rev-parse","--git-common-dir"], worktree).stdout.strip())
         return raw if raw.is_absolute() else (worktree / raw).resolve()
 
-    def maintenance_auth(self, *, overrides=None):
+    def maintenance_auth(self, *, overrides=None, stage_id="WF-SEC-04", ticket_count=3):
         base = proc(["git", "rev-parse", "HEAD"], self.codex).stdout.strip()
+        titles = {
+            "WF-SEC-04": ["Allow safe project tests and temporary fixtures",
+                           "Add recovery documentation and runtime secret doctor checks",
+                           "Execute live workflow and website verification"],
+            "WF-COMM-01": ["建立繁體中文共用溝通規則", "驗證 Claude 與 Codex 指令入口"],
+        }
+        stage_titles = {"WF-SEC-04": "Verification Capability Hardening",
+                        "WF-COMM-01": "Traditional Chinese Communication Policy"}
+        ticket_titles = titles.get(stage_id, [f"Fixture ticket {i}" for i in range(1, ticket_count + 1)])
         value = {
-            "schema_version": 1, "authorization_id": "auth-test", "authorization_type": "maintenance-bootstrap",
+            "schema_version": 1, "authorization_id": "auth-" + stage_id.lower(), "authorization_type": "maintenance-bootstrap",
             "issued_by": "human-user", "issued_at": "2026-01-01T00:00:00+00:00",
             "expires_at": "2099-01-01T00:00:00+00:00", "single_use": True, "consumed": False,
             "project_id": "fixture", "authorized_agent": "codex", "authorized_branch": "agent/codex",
             "authorized_base_head": base,
             "bootstrap_allowed_paths": ["scripts/agent_workflow.py", "tests/tooling/**"],
             "forbidden_paths": ["src/**", "public/**"],
-            "stage": {"id":"WF-SEC-04", "title":"Verification Capability Hardening",
+            "stage": {"id":stage_id, "title": stage_titles.get(stage_id, f"{stage_id} Maintenance"),
                       "external_reviewer":"ChatGPT", "claimable":True},
-            "tickets": [
-                {"id":"WF-SEC-04-01", "title":"Allow safe project tests and temporary fixtures"},
-                {"id":"WF-SEC-04-02", "title":"Add recovery documentation and runtime secret doctor checks"},
-                {"id":"WF-SEC-04-03", "title":"Execute live workflow and website verification"},
-            ], "constraints": [],
+            "tickets": [{"id":f"{stage_id}-{i:02d}", "title": title}
+                        for i, title in enumerate(ticket_titles, 1)], "constraints": [],
         }
         value.update(overrides or {})
-        path = self.common(self.codex) / "agent-state/human-authorizations/WF-SEC-04.json"
+        path = self.common(self.codex) / f"agent-state/human-authorizations/{stage_id}.json"
         path.parent.mkdir(parents=True, exist_ok=True); path.write_text(json.dumps(value)); path.chmod(0o600)
         return path, value
 
@@ -307,6 +313,20 @@ class IsolatedWorkflowTests(unittest.TestCase):
         self.assertTrue(json.loads(consumed.read_text())["consumed"])
         self.assertNotEqual(self.f.run(self.f.codex, "register-maintenance", "--authorization-file", str(path)).returncode, 0)
 
+    def test_register_maintenance_accepts_communication_and_arbitrary_stages(self):
+        for stage_id, count in (("WF-COMM-01", 2), ("WF-TEST-99", 1)):
+            with self.subTest(stage_id=stage_id):
+                self.f.close(); self.f = Fixture()
+                blocked_before = json.loads((self.f.codex/"docs/agents/TASK_REGISTRY.json").read_text())["stages"]["BLOCKED"]
+                path, auth = self.f.maintenance_auth(stage_id=stage_id, ticket_count=count)
+                self.f.run(self.f.codex, "register-maintenance", "--authorization-file", str(path), ok=True)
+                registry = json.loads((self.f.codex/"docs/agents/TASK_REGISTRY.json").read_text())
+                stage = registry["stages"][stage_id]
+                self.assertEqual([x["id"] for x in stage["tickets"]], [x["id"] for x in auth["tickets"]])
+                self.assertEqual([x["allowed_files"] for x in stage["tickets"]],
+                                 [auth["bootstrap_allowed_paths"]] * count)
+                self.assertEqual(registry["stages"]["BLOCKED"], blocked_before)
+
     def test_register_maintenance_rejects_invalid_authorizations(self):
         cases = [
             {"expires_at":"2000-01-01T00:00:00+00:00"}, {"authorized_agent":"claude"},
@@ -314,7 +334,7 @@ class IsolatedWorkflowTests(unittest.TestCase):
             {"authorized_base_head":"0"*40}, {"consumed":True},
             {"constraints":["api_" + "key=" + "abcdefghijklmnop"]},
             {"authorization_id":"../escape"},
-            {"stage":{"id":"WF-SEC-04","title":"Wrong","external_reviewer":"ChatGPT","claimable":True}},
+            {"stage":{"id":"WF-SEC-04","title":"Wrong","external_reviewer":"ChatGPT","claimable":False}},
         ]
         for override in cases:
             with self.subTest(override=override):
@@ -322,6 +342,34 @@ class IsolatedWorkflowTests(unittest.TestCase):
                 self.assertNotEqual(self.f.run(self.f.codex,"register-maintenance","--authorization-file",str(path)).returncode,0)
                 path.unlink(missing_ok=True)
         path, _ = self.f.maintenance_auth(); path.chmod(0o644)
+        self.assertNotEqual(self.f.run(self.f.codex,"register-maintenance","--authorization-file",str(path)).returncode,0)
+
+    def test_register_maintenance_rejects_invalid_stage_and_ticket_schemas(self):
+        cases = (
+            {"stage":{"id":"", "title":"Title", "external_reviewer":"ChatGPT", "claimable":True}},
+            {"stage":{"id":"WF-bad", "title":"Title", "external_reviewer":"ChatGPT", "claimable":True}},
+            {"stage":{"id":"WF-TEST-01", "title":" ", "external_reviewer":"ChatGPT", "claimable":True}},
+            {"stage":{"id":"WF-TEST-01", "title":"Title", "external_reviewer":"", "claimable":True}},
+            {"tickets":[]},
+            {"tickets":[{"id":"WF-SEC-04-01","title":"One"},{"id":"WF-SEC-04-01","title":"Two"}]},
+            {"tickets":[{"id":"WF-OTHER-01","title":"Wrong namespace"}]},
+            {"tickets":[{"id":"WF-SEC-04-01","title":" "}]},
+        )
+        for override in cases:
+            with self.subTest(override=override):
+                path, _ = self.f.maintenance_auth(overrides=override)
+                self.assertNotEqual(self.f.run(self.f.codex,"register-maintenance","--authorization-file",str(path)).returncode,0)
+                path.unlink(missing_ok=True)
+
+    def test_register_maintenance_rejects_unsafe_authorized_paths(self):
+        for allowed in ([], [""], ["**"], ["/tmp/outside"], ["../outside"], [".git/**"],
+                        ["agent-state/**"], [".env"], [".env.*"]):
+            with self.subTest(allowed=allowed):
+                path, _ = self.f.maintenance_auth(overrides={"bootstrap_allowed_paths":allowed})
+                self.assertNotEqual(self.f.run(self.f.codex,"register-maintenance","--authorization-file",str(path)).returncode,0)
+                path.unlink(missing_ok=True)
+        (self.f.codex/"escape").symlink_to(self.f.tmp)
+        path, _ = self.f.maintenance_auth(overrides={"bootstrap_allowed_paths":["escape/**"]})
         self.assertNotEqual(self.f.run(self.f.codex,"register-maintenance","--authorization-file",str(path)).returncode,0)
 
     def test_register_maintenance_rejects_integration_symlink_lock_and_active_state(self):
