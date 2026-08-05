@@ -1,0 +1,463 @@
+---
+/**
+ * CC-02 prototype-local Header — used by all three Hero variants.
+ *
+ * Deliberately NOT the real src/components/layout/Header.astro: this is an
+ * isolated design-spike prototype (spec §十一 "Prototype CSS 隔離" /
+ * "不修改正式首頁 Hero"), so it does not import src/config/nav.ts, does not
+ * link into real /zh-tw//en/ production routes (every link here is
+ * `href="#"` or a no-op — this is a visual/interaction spike, not a
+ * navigable site section), and does not pull in AnalyticsBridge or any
+ * production tracking. Visual language (Datum Origin mark, nav link hover
+ * treatment, mobile drawer contract) intentionally echoes the real
+ * Header.astro's spec so the comparison is fair, without being the same
+ * file or sharing its routing.
+ *
+ * Header functional contract (spec §十六), identical across all three
+ * variants: Logo/Datum Mark, Solutions/Products/Industries/Engineering
+ * Method/Resources nav, Language switch, Primary CTA, Mobile menu drawer
+ * with 44x44 tap targets, Escape-to-close, focus trap, focus return.
+ *
+ * Locale handling: this is a static build (no `output: 'server'` in
+ * astro.config.mjs), so a `?lang=` query string can't drive server-side
+ * branching. Both locales' nav/CTA text render into the DOM up front as
+ * paired `data-locale-text="zh-tw"` / `data-locale-text="en"` spans, and
+ * this component's own inline script (loaded once regardless of how many
+ * times a page imports it, since Astro dedupes identical inline
+ * `<script>` blocks per page) toggles which is visible + drives the
+ * page's `data-locale-block` sections in lockstep, so the Header's own
+ * "Language" control is a real, working feature, not a no-op — the one
+ * caller-visible effect a variant page needs from this is exactly the
+ * `data-locale-block` toggle already wired into each variant's own Hero
+ * markup.
+ */
+import DatumOrigin from '../../../../components/brand/DatumOrigin.astro';
+import { navCopy, heroCopy, type HeroLocale } from './copy';
+
+export interface Props {
+  /** Header treatment — 'solid' (default, opaque background) or 'overlay' (Variant B: sits on top of the Hero image, needs its own contrast-stable backing). */
+  variant?: 'solid' | 'overlay';
+}
+
+const { variant = 'solid' } = Astro.props;
+
+const locales: HeroLocale[] = ['zh-tw', 'en'];
+const navKeys = ['solutions', 'products', 'industries', 'engineeringMethod', 'resources'] as const;
+---
+
+<header class:list={['proto-header', `proto-header--${variant}`]} data-proto-header>
+  <div class="proto-header__row">
+    <a href="#" class="proto-header__logo" data-proto-noop aria-label={navCopy['zh-tw'].logo}>
+      <DatumOrigin size={28} decorative={true} />
+      <span class="proto-header__logo-text">
+        {locales.map((l) => <span data-locale-text={l} hidden={l !== 'zh-tw'}>{navCopy[l].logo}</span>)}
+      </span>
+    </a>
+
+    <nav class="proto-header__nav" aria-label="Main navigation (prototype)">
+      <ul>
+        {navKeys.map((key) => (
+          <li>
+            <a href="#" class="proto-header__link" data-proto-noop>
+              {locales.map((l) => <span data-locale-text={l} hidden={l !== 'zh-tw'}>{navCopy[l][key]}</span>)}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="proto-header__actions">
+      <button type="button" class="proto-header__lang" data-proto-lang-toggle aria-label="Switch language / 切換語言">
+        {locales.map((l) => <span data-locale-text={l} hidden={l !== 'zh-tw'}>{navCopy[l].language}</span>)}
+      </button>
+      <a href="#" class="proto-header__cta" data-proto-noop>
+        {locales.map((l) => <span data-locale-text={l} hidden={l !== 'zh-tw'}>{heroCopy[l].ctaPrimary}</span>)}
+      </a>
+      <button
+        type="button"
+        class="proto-header__menu-toggle"
+        data-proto-menu-toggle
+        aria-expanded="false"
+        aria-controls="proto-mobile-nav"
+        aria-label={navCopy['zh-tw'].menuOpen}
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div id="proto-mobile-nav" class="proto-mobile-nav" data-proto-mobile-nav hidden>
+  <div class="proto-mobile-nav__panel">
+    <div class="proto-mobile-nav__top">
+      <span class="proto-header__logo-text">
+        {locales.map((l) => <span data-locale-text={l} hidden={l !== 'zh-tw'}>{navCopy[l].logo}</span>)}
+      </span>
+      <button type="button" class="proto-header__menu-toggle" data-proto-menu-close aria-label={navCopy['zh-tw'].menuClose}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    <ul class="proto-mobile-nav__list">
+      {navKeys.map((key) => (
+        <li>
+          <a href="#" class="proto-mobile-nav__link" data-proto-noop>
+            {locales.map((l) => <span data-locale-text={l} hidden={l !== 'zh-tw'}>{navCopy[l][key]}</span>)}
+          </a>
+        </li>
+      ))}
+    </ul>
+    <div class="proto-mobile-nav__footer">
+      <button type="button" class="proto-header__lang proto-header__lang--mobile" data-proto-lang-toggle>
+        {locales.map((l) => <span data-locale-text={l} hidden={l !== 'zh-tw'}>{navCopy[l].language}</span>)}
+      </button>
+      <a href="#" class="proto-header__cta proto-header__cta--mobile" data-proto-noop>
+        {locales.map((l) => <span data-locale-text={l} hidden={l !== 'zh-tw'}>{heroCopy[l].ctaPrimary}</span>)}
+      </a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .proto-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    width: 100%;
+    min-width: 0;
+    height: 64px;
+    display: flex;
+    align-items: center;
+  }
+  .proto-header--solid {
+    background: color-mix(in srgb, var(--color-paper-50) 94%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--color-steel-600);
+  }
+  /* Variant B overlay: sits on the Hero image with its own translucent-ink
+     backing so text stays contrast-stable regardless of what's underneath
+     (spec §十六: "Header 可疊在 Hero 上，但對比必須穩定"). */
+  .proto-header--overlay {
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--color-ink-950) 55%, transparent), transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-steel-200) 30%, transparent);
+    color: var(--color-paper-50);
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+  }
+  @media (min-width: 960px) {
+    .proto-header {
+      height: 80px;
+    }
+  }
+
+  .proto-header__row {
+    width: 100%;
+    max-width: var(--container-content);
+    margin-inline: auto;
+    padding-inline: var(--page-gutter-mobile);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+  @media (min-width: 768px) {
+    .proto-header__row { padding-inline: var(--page-gutter-tablet); }
+  }
+  @media (min-width: 1024px) {
+    .proto-header__row { padding-inline: var(--page-gutter-desktop); }
+  }
+
+  .proto-header__logo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    text-decoration: none;
+    color: inherit;
+    flex-shrink: 0;
+  }
+  .proto-header__logo-text {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-small);
+    white-space: nowrap;
+  }
+
+  .proto-header__nav {
+    display: none;
+  }
+  .proto-header__nav ul {
+    display: flex;
+    gap: var(--space-6);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .proto-header__link {
+    position: relative;
+    color: inherit;
+    text-decoration: none;
+    font-size: var(--fs-small);
+    font-weight: 500;
+    padding-block: var(--space-2);
+    opacity: 0.85;
+  }
+  /* Hover = short Datum Line, not an underline/highlight box (spec §十六:
+     "Hover 為短 Datum Line；不使用大型膠囊導覽"). */
+  .proto-header__link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 16px;
+    height: 2px;
+    background: var(--color-action-primary);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--duration-ui) var(--ease-standard);
+  }
+  .proto-header__link:hover {
+    opacity: 1;
+  }
+  .proto-header__link:hover::after {
+    transform: scaleX(1);
+  }
+
+  .proto-header__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .proto-header__lang {
+    all: unset;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: var(--fs-technical);
+    letter-spacing: 0.04em;
+    padding: var(--space-2);
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-steel-600);
+    border-radius: var(--radius-xs);
+    color: inherit;
+  }
+  .proto-header__lang:hover {
+    border-color: var(--color-action-primary);
+  }
+  .proto-header__lang:focus-visible,
+  .proto-header__link:focus-visible,
+  .proto-header__logo:focus-visible,
+  .proto-header__cta:focus-visible,
+  .proto-header__menu-toggle:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  .proto-header__cta {
+    display: none;
+    text-decoration: none;
+    background: var(--color-action-primary);
+    color: var(--color-paper-50);
+    font-size: var(--fs-technical);
+    font-weight: 600;
+    padding: 0.65em 1.1em;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    transition: background var(--duration-ui) var(--ease-standard);
+  }
+  .proto-header__cta:hover {
+    background: var(--color-action-primary-hover);
+  }
+
+  .proto-header__menu-toggle {
+    all: unset;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    color: inherit;
+  }
+
+  @media (min-width: 960px) {
+    .proto-header__nav { display: block; }
+    .proto-header__cta { display: inline-flex; }
+    .proto-header__menu-toggle { display: none; }
+  }
+
+  /* ---- Mobile drawer ---- */
+  .proto-mobile-nav {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(11, 18, 24, 0.45);
+  }
+  .proto-mobile-nav[hidden] { display: none; }
+  .proto-mobile-nav__panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: min(88vw, 360px);
+    background: var(--color-paper-50);
+    color: var(--color-ink-950);
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-4);
+    box-shadow: var(--shadow-lg);
+  }
+  .proto-mobile-nav__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-6);
+  }
+  .proto-mobile-nav__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .proto-mobile-nav__link {
+    display: block;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    padding: var(--space-2);
+    font-size: var(--fs-body-lg);
+    font-weight: 600;
+    color: var(--color-ink-950);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-steel-600);
+  }
+  .proto-mobile-nav__footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding-top: var(--space-6);
+  }
+  .proto-header__lang--mobile {
+    width: 100%;
+    color: var(--color-ink-950);
+  }
+  .proto-header__cta--mobile {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+</style>
+
+<script>
+  // Prototype-local mobile nav + locale toggle. Reimplemented locally
+  // (rather than importing the real Header's script) since this file has
+  // no shared script-module build step, and duplicating ~30 lines of
+  // vanilla JS is simpler than inventing one for a throwaway prototype
+  // route (spec's own "no new runtime dependency" constraint).
+  function initProtoHeader(root: Document | HTMLElement) {
+    const toggle = root.querySelector('[data-proto-menu-toggle]');
+    const closeBtn = root.querySelector('[data-proto-menu-close]');
+    const panel = root.querySelector('[data-proto-mobile-nav]') as HTMLElement | null;
+
+    if (toggle && panel) {
+      let lastFocused: HTMLElement | null = null;
+
+      function open() {
+        lastFocused = document.activeElement as HTMLElement;
+        panel!.hidden = false;
+        toggle!.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+        const firstLink = panel!.querySelector('a, button') as HTMLElement | null;
+        firstLink?.focus();
+      }
+      function close() {
+        panel!.hidden = true;
+        toggle!.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+        lastFocused?.focus();
+      }
+
+      toggle.addEventListener('click', open);
+      closeBtn?.addEventListener('click', close);
+      panel.addEventListener('click', (e) => {
+        if (e.target === panel) close();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !panel!.hidden) close();
+      });
+      panel.addEventListener('keydown', (e) => {
+        if (e.key !== 'Tab') return;
+        const focusables = panel!.querySelectorAll<HTMLElement>('a, button');
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (!first || !last) return;
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      });
+    }
+
+    // Prototype-only: every nav/CTA link is a no-op (`data-proto-noop`,
+    // href="#") since this is an isolated spike, not a navigable route.
+    root.querySelectorAll('[data-proto-noop]').forEach((el) => {
+      el.addEventListener('click', (e) => e.preventDefault());
+    });
+
+    // ---- Locale toggle ----
+    // Swaps every paired data-locale-text span (Header nav/CTA/logo text)
+    // AND every page-level data-locale-block section (each variant's own
+    // Hero content) in lockstep, so the Header's Language control drives
+    // the whole page, not just itself. Choice persists in sessionStorage
+    // so moving between the three variant pages in one review session
+    // keeps the same locale selected.
+    function applyLocale(locale: 'zh-tw' | 'en') {
+      document.documentElement.setAttribute('data-locale', locale);
+      document.documentElement.setAttribute('lang', locale === 'zh-tw' ? 'zh-Hant-TW' : 'en');
+      document.querySelectorAll<HTMLElement>('[data-locale-text]').forEach((el) => {
+        el.hidden = el.getAttribute('data-locale-text') !== locale;
+      });
+      document.querySelectorAll<HTMLElement>('[data-locale-block]').forEach((el) => {
+        el.hidden = el.getAttribute('data-locale-block') !== locale;
+      });
+      try {
+        sessionStorage.setItem('cc02-hero-locale', locale);
+      } catch {
+        /* sessionStorage unavailable — locale still applies for this view */
+      }
+    }
+
+    root.querySelectorAll<HTMLElement>('[data-proto-lang-toggle]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-locale') === 'en' ? 'en' : 'zh-tw';
+        applyLocale(current === 'en' ? 'zh-tw' : 'en');
+      });
+    });
+
+    const stored = (() => {
+      try {
+        return sessionStorage.getItem('cc02-hero-locale');
+      } catch {
+        return null;
+      }
+    })();
+    if (stored === 'en' || stored === 'zh-tw') {
+      applyLocale(stored);
+    }
+  }
+
+  initProtoHeader(document);
+</script>

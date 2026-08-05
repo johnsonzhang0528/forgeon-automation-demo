@@ -1,0 +1,259 @@
+---
+/**
+ * CC-02 Hero/Header design spike — Variant B: Full-width Precision Stage.
+ * Route: /internal-preview/cc02-hero/variant-b/
+ *
+ * Core idea (spec §十四): treat the module/process as the stage's main
+ * character. Near-full-width visual, copy in a lower-left/lower-center
+ * safe zone, deep-ink/warm-paper material layering, Datum Axis spans the
+ * full Hero, Header overlays the Hero with a contrast-stable treatment.
+ *
+ * No CGI/photography exists yet (Higgsfield is banned this round) — the
+ * "stage" is built from tokens + Brand Primitives + CSS gradients/SVG, and
+ * docs/DATUM_ASSET_PLAN_CC02.md documents what a production version would
+ * need. NOT a production page: no BaseLayout/SEOHead/AnalyticsBridge, not
+ * in nav/sitemap, noindex/nofollow below. Copy imported verbatim.
+ */
+import '../../../styles/global.css';
+import '../../../styles/utilities.css';
+import DatumOrigin from '../../../components/brand/DatumOrigin.astro';
+import { heroCopy, type HeroLocale } from './_shared/copy';
+import PrototypeHeader from './_shared/PrototypeHeader.astro';
+
+/**
+ * Locale toggle: see ./_shared/PrototypeHeader.astro's file-header comment
+ * for why this is a client-side data-locale-block swap (both locales'
+ * markup rendered up front, toggled by the Header's Language button) and
+ * not a `?lang=` query string — this is a fully static build.
+ */
+const locales: HeroLocale[] = ['zh-tw', 'en'];
+---
+<!doctype html>
+<html lang="zh-Hant-TW" data-locale="zh-tw">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>CC-02 Variant B — Full-width Precision Stage</title>
+  </head>
+  <body class="vb-body">
+    <section class="vb-hero">
+      <PrototypeHeader variant="overlay" />
+
+      <div class="vb-stage" aria-hidden="true">
+        <div class="vb-stage__gradient"></div>
+        <div class="vb-stage__axis"></div>
+        <div class="vb-stage__origin">
+          <DatumOrigin size={44} orientation="both" label="X,Y" />
+        </div>
+        <svg class="vb-stage__module" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet">
+          <rect x="60" y="60" width="280" height="180" rx="6" fill="none" stroke="var(--color-steel-500)" stroke-width="1" stroke-dasharray="6 5" />
+          <rect x="110" y="100" width="180" height="100" rx="4" fill="color-mix(in srgb, var(--color-copper-600) 12%, transparent)" stroke="var(--color-copper-500)" stroke-width="1.25" />
+          <circle cx="200" cy="150" r="34" fill="none" stroke="var(--color-copper-600)" stroke-width="1.5" />
+          <circle cx="200" cy="150" r="3" fill="var(--color-copper-600)" />
+          <line x1="200" y1="60" x2="200" y2="240" stroke="var(--color-steel-600)" stroke-width="0.75" />
+          <line x1="60" y1="150" x2="340" y2="150" stroke="var(--color-steel-600)" stroke-width="0.75" />
+        </svg>
+      </div>
+
+      {locales.map((locale) => (
+        <div class="vb-hero__copy" data-locale-block={locale} hidden={locale !== 'zh-tw'}>
+          <p class="vb-hero__eyebrow mono">{heroCopy[locale].eyebrow}</p>
+          {/* Only the default-visible zh-tw block gets a real <h1> — see
+              variant-a.astro's identical comment for why (check:h1 greps
+              raw HTML, not the a11y tree, so a hidden second <h1> would
+              still trip it). */}
+          {locale === 'zh-tw' ? (
+            <h1 class="vb-hero__headline">{heroCopy[locale].headline}</h1>
+          ) : (
+            <p class="vb-hero__headline">{heroCopy[locale].headline}</p>
+          )}
+          <p class="vb-hero__body">{heroCopy[locale].body}</p>
+          <div class="vb-hero__actions">
+            <a class="vb-btn vb-btn--primary" href="#" data-proto-noop>{heroCopy[locale].ctaPrimary}</a>
+            <a class="vb-btn vb-btn--secondary" href="#" data-proto-noop>{heroCopy[locale].ctaSecondary}</a>
+          </div>
+        </div>
+      ))}
+    </section>
+  </body>
+</html>
+
+<style>
+  .vb-body {
+    margin: 0;
+    background: var(--color-ink-950);
+    color: var(--color-paper-50);
+  }
+
+  .vb-hero {
+    position: relative;
+    min-height: 640px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  @media (min-width: 1024px) {
+    .vb-hero {
+      min-height: 820px;
+    }
+  }
+
+  /* ---- Stage visual: near-full-width, material layering via gradient ---- */
+  .vb-stage {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+  .vb-stage__gradient {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 70% 60% at 70% 35%, color-mix(in srgb, var(--color-copper-700) 22%, transparent), transparent 70%),
+      linear-gradient(160deg, var(--color-ink-950) 0%, var(--color-ink-800) 55%, var(--color-ink-950) 100%);
+  }
+  /* Datum Axis spans the full Hero width (spec §十四: "Datum Axis 橫跨 Hero"). */
+  .vb-stage__axis {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 42%;
+    height: 1px;
+    background: color-mix(in srgb, var(--color-steel-500) 60%, transparent);
+  }
+  .vb-stage__origin {
+    position: absolute;
+    left: 6%;
+    top: 38%;
+  }
+  .vb-stage__module {
+    position: absolute;
+    right: 4%;
+    top: 50%;
+    transform: translateY(-50%);
+    width: min(52vw, 620px);
+    height: auto;
+    opacity: 0.92;
+  }
+
+  /* ---- Copy safe zone: lower-left ---- */
+  .vb-hero__copy {
+    position: relative;
+    z-index: 2;
+    margin-top: auto;
+    padding: var(--space-8) var(--page-gutter-mobile) var(--space-10);
+    /* 680px, not the earlier 640px draft — spec's own headline cap
+       ("主標最大寬 680px") wasn't actually being reached at 640px once
+       desktop padding was subtracted, which is what caused a mid-word
+       CJK wrap ("生/產流程") in an earlier screenshot review. */
+    max-width: 680px;
+    background: linear-gradient(to top, color-mix(in srgb, var(--color-ink-950) 82%, transparent) 40%, transparent);
+  }
+  @media (min-width: 768px) {
+    .vb-hero__copy { padding-inline: var(--page-gutter-tablet); }
+  }
+  @media (min-width: 1024px) {
+    .vb-hero__copy {
+      padding: var(--space-16) var(--page-gutter-desktop) var(--space-16);
+    }
+  }
+
+  .vb-hero__eyebrow {
+    color: var(--color-copper-500);
+    font-size: var(--fs-technical);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0 0 var(--space-3);
+  }
+  .vb-hero__headline {
+    font-family: var(--font-display);
+    font-size: var(--fs-h1-mobile);
+    line-height: var(--lh-h1);
+    letter-spacing: var(--ls-h1);
+    color: var(--color-paper-50);
+    margin: 0 0 var(--space-5);
+    white-space: pre-line;
+  }
+  :lang(zh) .vb-hero__headline {
+    font-family: 'Noto Sans TC', var(--font-display);
+    letter-spacing: 0;
+  }
+  @media (min-width: 1024px) {
+    /* Same tighter clamp as Variant A and the same reason: the copy safe
+       zone here is capped at max-width: 640px (see .vb-hero__copy), which
+       is narrower than what --fs-h1's own clamp assumes elsewhere on the
+       site — verified live before choosing this value. */
+    .vb-hero__headline { font-size: clamp(2.25rem, 3.4vw, 3.25rem); }
+  }
+  .vb-hero__body {
+    color: var(--color-steel-200);
+    font-size: var(--fs-body-lg);
+    line-height: var(--lh-body-lg);
+    max-width: 52ch;
+    margin: 0 0 var(--space-6);
+    white-space: pre-line;
+  }
+  .vb-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .vb-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: var(--fs-small);
+    padding: 0.85em 1.5em;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid transparent;
+    transition: background var(--duration-ui) var(--ease-standard), border-color var(--duration-ui) var(--ease-standard), transform var(--duration-ui) var(--ease-standard);
+  }
+  .vb-btn--primary {
+    background: var(--color-action-primary);
+    color: var(--color-paper-50);
+  }
+  .vb-btn--primary:hover {
+    background: var(--color-action-primary-hover);
+    transform: translateY(-1.5px);
+  }
+  .vb-btn--secondary {
+    background: transparent;
+    color: var(--color-paper-50);
+    border-color: var(--color-steel-500);
+  }
+  .vb-btn--secondary:hover {
+    border-color: var(--color-paper-50);
+    background: color-mix(in srgb, var(--color-paper-50) 10%, transparent);
+  }
+  .vb-btn:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+
+  /* ---- Mobile: crop to a module detail, copy on its own solid block, image never crowds CTAs (spec §十四). ---- */
+  @media (max-width: 767px) {
+    .vb-hero {
+      min-height: 0;
+    }
+    .vb-stage {
+      position: relative;
+      height: 260px;
+    }
+    .vb-stage__module {
+      width: 78vw;
+      right: -6%;
+    }
+    .vb-hero__copy {
+      margin-top: 0;
+      background: var(--color-ink-950);
+      padding-top: var(--space-8);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vb-btn { transition: none; }
+  }
+</style>

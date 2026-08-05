@@ -1,0 +1,295 @@
+---
+/**
+ * CC-02 Hero/Header design spike — Variant C: Engineering Editorial Sheet.
+ * Route: /internal-preview/cc02-hero/variant-c/
+ *
+ * Core idea (spec §十五): combine engineering-drawing convention with
+ * international-brand editorial layout. Not a standard left/right split —
+ * headline spans columns 1-8, two irregular Cutaway Windows, DatumOrigin
+ * as the literal layout origin point, technical data as a distinct second
+ * information layer (not a card grid — explicitly not SaaS-dashboard-like).
+ *
+ * NOT a production page: no BaseLayout/SEOHead/AnalyticsBridge, not in
+ * nav/sitemap, noindex/nofollow below. Copy imported verbatim.
+ */
+import '../../../styles/global.css';
+import '../../../styles/utilities.css';
+import DatumOrigin from '../../../components/brand/DatumOrigin.astro';
+import CutawayWindow from '../../../components/brand/CutawayWindow.astro';
+import { heroCopy, type HeroLocale } from './_shared/copy';
+import PrototypeHeader from './_shared/PrototypeHeader.astro';
+
+/**
+ * Locale toggle: see ./_shared/PrototypeHeader.astro's file-header comment
+ * — both locales' markup rendered up front, toggled by the Header's
+ * Language button via data-locale-block, since this is a static build
+ * with no server-side `?lang=` branching available.
+ */
+const locales: HeroLocale[] = ['zh-tw', 'en'];
+
+const specRowsByLocale: Record<HeroLocale, Array<{ k: string; v: string }>> = {
+  'zh-tw': [
+    { k: '定位重複精度', v: '±0.01 mm' },
+    { k: '視覺辨識週期', v: '< 180 ms' },
+    { k: '模組化工作站', v: '3 型號可組合' },
+  ],
+  en: [
+    { k: 'Positioning Repeatability', v: '±0.01 mm' },
+    { k: 'Vision Cycle Time', v: '< 180 ms' },
+    { k: 'Modular Workstations', v: '3 configurable models' },
+  ],
+};
+
+const cutawayCaptionsByLocale: Record<HeroLocale, { c1: string; c2: string }> = {
+  'zh-tw': { c1: '定位模組剖面 · AXM-400', c2: '組裝工作站剖面 · FLEXCELL-M' },
+  en: { c1: 'Positioning module cutaway · AXM-400', c2: 'Assembly workstation cutaway · FLEXCELL-M' },
+};
+---
+<!doctype html>
+<html lang="zh-Hant-TW" data-locale="zh-tw">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>CC-02 Variant C — Engineering Editorial Sheet</title>
+  </head>
+  <body class="vc-body">
+    <PrototypeHeader />
+
+    {locales.map((locale) => (
+      <main class="vc-sheet" data-locale-block={locale} hidden={locale !== 'zh-tw'}>
+        <div class="vc-origin-anchor">
+          <DatumOrigin size={36} orientation="both" label="0,0" />
+        </div>
+
+        <div class="vc-headline-row">
+          {/* Only the default-visible zh-tw block gets a real <h1> — see
+              variant-a.astro's identical comment for why (check:h1 greps
+              raw HTML, not the a11y tree, so a hidden second <h1> would
+              still trip it). */}
+          {locale === 'zh-tw' ? (
+            <h1 class="vc-headline">{heroCopy[locale].headline}</h1>
+          ) : (
+            <p class="vc-headline">{heroCopy[locale].headline}</p>
+          )}
+        </div>
+
+        <div class="vc-grid">
+          <div class="vc-copy-col">
+            <p class="vc-eyebrow mono">{heroCopy[locale].eyebrow}</p>
+            <p class="vc-body-text">{heroCopy[locale].body}</p>
+            <div class="vc-actions">
+              <a class="vc-btn vc-btn--primary" href="#" data-proto-noop>{heroCopy[locale].ctaPrimary}</a>
+              <a class="vc-btn vc-btn--secondary" href="#" data-proto-noop>{heroCopy[locale].ctaSecondary}</a>
+            </div>
+          </div>
+
+          <div class="vc-cutaway-col vc-cutaway-col--1">
+            <CutawayWindow caption={cutawayCaptionsByLocale[locale].c1} />
+          </div>
+
+          <div class="vc-cutaway-col vc-cutaway-col--2">
+            <CutawayWindow caption={cutawayCaptionsByLocale[locale].c2} />
+          </div>
+
+          <div class="vc-spec-col">
+            <table class="vc-spec-table">
+              <tbody>
+                {specRowsByLocale[locale].map((row) => (
+                  <tr>
+                    <th scope="row" class="mono">{row.k}</th>
+                    <td class="mono">{row.v}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    ))}
+  </body>
+</html>
+
+<style>
+  .vc-body {
+    margin: 0;
+    background: var(--color-paper-50);
+    color: var(--color-ink-950);
+  }
+
+  .vc-sheet {
+    position: relative;
+    max-width: var(--container-wide);
+    margin-inline: auto;
+    padding: var(--space-10) var(--page-gutter-mobile) var(--space-16);
+  }
+  @media (min-width: 768px) {
+    .vc-sheet { padding-inline: var(--page-gutter-tablet); }
+  }
+  @media (min-width: 1024px) {
+    .vc-sheet { padding: var(--space-16) var(--page-gutter-desktop) var(--space-20); }
+  }
+
+  .vc-origin-anchor {
+    margin-bottom: var(--space-4);
+  }
+
+  /* Headline row: its own 12-col grid context (spec §十五's "主標跨 1-8
+     欄" requires an actual grid ancestor — a bare grid-column declaration
+     on an element with no grid parent does nothing, which is what the
+     first draft of this page got wrong; verified via a live 1440px
+     screenshot showing the headline NOT actually constrained to 8
+     columns, then fixed by giving it this dedicated grid wrapper). */
+  .vc-headline-row {
+    margin-bottom: var(--space-10);
+  }
+  @media (min-width: 1024px) {
+    .vc-headline-row {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--space-6);
+    }
+  }
+  .vc-headline {
+    font-family: var(--font-display);
+    font-size: var(--fs-h1-mobile);
+    line-height: var(--lh-h1);
+    letter-spacing: var(--ls-h1);
+    margin: 0;
+    white-space: pre-line;
+    max-width: 720px;
+  }
+  :lang(zh) .vc-headline {
+    font-family: 'Noto Sans TC', var(--font-display);
+    letter-spacing: 0;
+  }
+  @media (min-width: 1024px) {
+    .vc-headline {
+      /* Desktop H1 scale (not --fs-display — that's reserved for the
+         site's largest display moments; this Hero's headline uses the
+         same H1 step Variant A/B use, for a fair three-way comparison). */
+      font-size: var(--fs-h1);
+      grid-column: 1 / 9;
+      max-width: none;
+    }
+  }
+
+  .vc-grid {
+    display: grid;
+    gap: var(--space-8);
+  }
+  @media (min-width: 1024px) {
+    .vc-grid {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--space-6);
+      align-items: start;
+    }
+    .vc-copy-col { grid-column: 1 / 5; }
+    .vc-cutaway-col--1 { grid-column: 5 / 9; }
+    .vc-cutaway-col--2 { grid-column: 9 / 13; margin-top: var(--space-12); }
+    .vc-spec-col { grid-column: 1 / 5; }
+  }
+
+  .vc-eyebrow {
+    color: var(--color-action-primary);
+    font-size: var(--fs-technical);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0 0 var(--space-3);
+  }
+  .vc-body-text {
+    color: var(--color-steel-700);
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+    max-width: 42ch;
+    margin: 0 0 var(--space-6);
+    white-space: pre-line;
+  }
+  .vc-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-bottom: var(--space-8);
+  }
+  .vc-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: var(--fs-small);
+    padding: 0.85em 1.5em;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid transparent;
+    transition: background var(--duration-ui) var(--ease-standard), border-color var(--duration-ui) var(--ease-standard), transform var(--duration-ui) var(--ease-standard);
+  }
+  .vc-btn--primary {
+    background: var(--color-action-primary);
+    color: var(--color-paper-50);
+  }
+  .vc-btn--primary:hover {
+    background: var(--color-action-primary-hover);
+    transform: translateY(-1.5px);
+  }
+  .vc-btn--secondary {
+    background: transparent;
+    color: var(--color-ink-950);
+    border-color: var(--color-steel-600);
+  }
+  .vc-btn--secondary:hover {
+    border-color: var(--color-ink-950);
+    background: var(--color-paper-100);
+  }
+  .vc-btn:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+
+  /* Technical data as a second information layer — a compact key/value
+     table with hairline rules, not a card grid (spec §十五 explicit ban on
+     "大量卡片" / SaaS-dashboard resemblance). */
+  .vc-spec-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--fs-small);
+  }
+  .vc-spec-table tr {
+    border-top: 1px solid var(--color-steel-600);
+  }
+  .vc-spec-table tr:last-child {
+    border-bottom: 1px solid var(--color-steel-600);
+  }
+  .vc-spec-table th,
+  .vc-spec-table td {
+    padding: var(--space-3) 0;
+    text-align: left;
+    font-weight: 400;
+  }
+  .vc-spec-table th {
+    color: var(--color-steel-700);
+    letter-spacing: 0.04em;
+    width: 60%;
+  }
+  .vc-spec-table td {
+    color: var(--color-copper-700);
+    font-weight: 600;
+    text-align: right;
+  }
+
+  /* ---- Mobile: one primary Cutaway only, spec compressed to one row (spec §十五). ---- */
+  @media (max-width: 1023px) {
+    .vc-cutaway-col--2 {
+      display: none;
+    }
+    .vc-spec-table {
+      font-size: var(--fs-technical);
+    }
+    .vc-spec-table th {
+      width: 55%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vc-btn { transition: none; }
+  }
+</style>

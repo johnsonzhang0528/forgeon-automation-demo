@@ -1,0 +1,75 @@
+---
+/**
+ * CC-02 Hero/Header design-spike index — Route:
+ * /internal-preview/cc02-hero/
+ *
+ * NOT a production page — same contract as internal-preview/design-system:
+ * not in src/config/nav.ts, not in sitemap.xml.ts (hand-built staticSegments
+ * array, no filesystem walk — see that file's own comment), noindex/nofollow
+ * below, no BaseLayout/SEOHead (both are locale-aware in a way this
+ * internal tooling index isn't), no AnalyticsBridge.
+ *
+ * Just links to the three variants — not itself a fourth design direction.
+ */
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>CC-02 Hero/Header Design Spike — Internal Preview</title>
+    <style>
+      body {
+        font-family: -apple-system, 'Segoe UI', 'Noto Sans TC', sans-serif;
+        background: #f7f4ed;
+        color: #0b1218;
+        margin: 0;
+        padding: 4rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+      }
+      h1 { font-size: 1.75rem; margin: 0; }
+      p { max-width: 60ch; text-align: center; color: #5c6870; }
+      .links {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        width: min(420px, 100%);
+      }
+      a.variant-link {
+        display: block;
+        padding: 1rem 1.25rem;
+        border: 1.5px solid #78838b;
+        border-radius: 6px;
+        text-decoration: none;
+        color: #0b1218;
+        font-weight: 600;
+      }
+      a.variant-link:hover {
+        border-color: #9c4014;
+        background: #eee9df;
+      }
+      .note {
+        font-size: 0.8rem;
+        color: #78838b;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>CC-02 Header/Hero Design Spike</h1>
+    <p>
+      Three fully isolated prototype variants, sharing byte-identical
+      bilingual copy. Internal review only — not indexed, not linked from
+      the real site, not integrated into the production homepage.
+    </p>
+    <div class="links">
+      <a class="variant-link" href="/internal-preview/cc02-hero/variant-a/">Variant A — Datum Calibration Split</a>
+      <a class="variant-link" href="/internal-preview/cc02-hero/variant-b/">Variant B — Full-width Precision Stage</a>
+      <a class="variant-link" href="/internal-preview/cc02-hero/variant-c/">Variant C — Engineering Editorial Sheet</a>
+    </div>
+    <p class="note">Add <code>?lang=zh-tw</code> or <code>?lang=en</code> to any variant URL to switch locale (defaults to zh-tw).</p>
+  </body>
+</html>

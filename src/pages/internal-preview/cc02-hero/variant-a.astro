@@ -1,0 +1,425 @@
+---
+/**
+ * CC-02 Hero/Header design spike — Variant A: Datum Calibration Split.
+ * Route: /internal-preview/cc02-hero/variant-a/
+ *
+ * Core idea (spec §十三): make "calibration" the first-glance legible
+ * action. Text-left / visual-right split, visual crosses the container
+ * edge, DatumOrigin + module axis + VisionLockFrame + AssemblySpine
+ * compose the visual, a 4-step process strip (INPUT/ALIGN/INSPECT/
+ * ASSEMBLE) sits below.
+ *
+ * NOT a production page: no BaseLayout/SEOHead, no AnalyticsBridge, not in
+ * src/config/nav.ts, not in sitemap.xml.ts, noindex/nofollow below. Copy is
+ * imported verbatim from ./_shared/copy.ts — never inlined/edited here.
+ */
+import '../../../styles/global.css';
+import '../../../styles/utilities.css';
+import DatumOrigin from '../../../components/brand/DatumOrigin.astro';
+import VisionLockFrame from '../../../components/brand/VisionLockFrame.astro';
+import AssemblySpine from '../../../components/brand/AssemblySpine.astro';
+import PrototypeHeader from './_shared/PrototypeHeader.astro';
+import { heroCopy, processSteps, type HeroLocale } from './_shared/copy';
+
+/**
+ * Locale switching in this prototype (spec §十六 requires a working
+ * Language item in the Header): this is a fully static build
+ * (astro.config.mjs has no `output: 'server'`), so a `?lang=` query
+ * string can't drive server-side branching the way it could on a real
+ * SSR/hybrid route — Astro.request.url has no meaningful query string at
+ * static build time. Both locales' full markup are rendered into the DOM
+ * up front (one `<div data-locale-block="zh-tw">`, one
+ * `data-locale-block="en"`), and a small inline script toggles which one
+ * is visible based on the Header's language button — CSS hides the
+ * inactive block with `[hidden]`, defaulting to zh-tw (this site's own
+ * `defaultLocale`). This keeps the exact required filename
+ * (`variant-a.astro`, spec §十一) as a single static file while still
+ * giving the Header's Language control something real to do.
+ */
+const locales: HeroLocale[] = ['zh-tw', 'en'];
+
+const spineNodesByLocale: Record<HeroLocale, Array<{ label: string; state: 'connected' | 'aligned' | 'unconnected'; caption: string }>> = {
+  'zh-tw': [
+    { label: '定位模組', state: 'connected', caption: 'AXM-400' },
+    { label: '視覺定位', state: 'connected', caption: 'VISION-X2' },
+    { label: '組裝工作站', state: 'aligned', caption: 'FLEXCELL-M' },
+  ],
+  en: [
+    // Shorter than a literal "Positioning Module"/"Assembly Workstation"
+    // translation — verified via screenshot that the longer English
+    // phrasing wrapped awkwardly inside AssemblySpine's fixed-width node
+    // column at this Hero's scale. Node labels are not part of spec §十二's
+    // verbatim-copy contract (only headline/body/CTA are), so shortening
+    // them here is a legibility fix, not a copy deviation.
+    { label: 'Positioning', state: 'connected', caption: 'AXM-400' },
+    { label: 'Vision', state: 'connected', caption: 'VISION-X2' },
+    { label: 'Assembly', state: 'aligned', caption: 'FLEXCELL-M' },
+  ],
+};
+
+const stateLabelsByLocale: Record<HeroLocale, { unconnected: string; aligned: string; connected: string }> = {
+  'zh-tw': { unconnected: '未連接', aligned: '已對齊', connected: '已連接' },
+  en: { unconnected: 'Unconnected', aligned: 'Aligned', connected: 'Connected' },
+};
+
+const statusLabelsByLocale: Record<HeroLocale, { locking: string; locked: string }> = {
+  'zh-tw': { locking: '定位中', locked: '已定位' },
+  en: { locking: 'LOCKING', locked: 'LOCKED' },
+};
+---
+<!doctype html>
+<html lang="zh-Hant-TW" data-locale="zh-tw">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>CC-02 Variant A — Datum Calibration Split</title>
+  </head>
+  <body class="va-body">
+    <PrototypeHeader />
+    {locales.map((locale) => (
+      <div data-locale-block={locale} hidden={locale !== 'zh-tw'}>
+        <main>
+          <section class="va-hero">
+            <div class="va-hero__inner">
+              <div class="va-hero__copy">
+                <p class="va-hero__eyebrow mono">{heroCopy[locale].eyebrow}</p>
+                {locale === 'zh-tw' ? (
+                  <h1 class="va-hero__headline">{heroCopy[locale].headline}</h1>
+                ) : (
+                  /*
+                   * Not a second <h1> — this project's own check:h1 script
+                   * (scripts/check-h1.mjs) enforces exactly one real <h1>
+                   * per built HTML file, and since both locale blocks
+                   * render into the SAME static file (see this file's
+                   * locale-toggle comment above), a second literal <h1>
+                   * tag here would trip that check even though it's
+                   * `[hidden]` by default — `hidden` removes an element
+                   * from the accessibility tree, but check:h1 greps raw
+                   * HTML text, not the a11y tree. The zh-tw block (the
+                   * default-visible one) keeps the real <h1>; this
+                   * English block reuses the identical `.va-hero__headline`
+                   * class (so it's visually and typographically identical
+                   * once toggled visible) on a <p>, which is the same
+                   * pattern used for every other duplicated-per-locale
+                   * text node on this page — only the page's single true
+                   * H1 needs to stay unique, not every other element.
+                   */
+                  <p class="va-hero__headline">{heroCopy[locale].headline}</p>
+                )}
+                <p class="va-hero__body">{heroCopy[locale].body}</p>
+                <div class="va-hero__actions">
+                  <a class="va-btn va-btn--primary" href="#" data-proto-noop>{heroCopy[locale].ctaPrimary}</a>
+                  <a class="va-btn va-btn--secondary" href="#" data-proto-noop>{heroCopy[locale].ctaSecondary}</a>
+                </div>
+              </div>
+
+              <div class="va-hero__visual" aria-hidden="true">
+                <div class="va-visual__origin">
+                  <DatumOrigin size={40} orientation="both" label="0,0" />
+                </div>
+                <div class="va-visual__axis"></div>
+                <div class="va-visual__frame">
+                  <VisionLockFrame featurePoints={3} animated={true} statusLabels={statusLabelsByLocale[locale]}>
+                    <div class="va-visual__placeholder">
+                      <svg viewBox="0 0 200 150" aria-hidden="true">
+                        <rect x="20" y="20" width="160" height="110" rx="4" fill="none" stroke="var(--color-steel-600)" stroke-width="1" stroke-dasharray="5 4" />
+                        <circle cx="100" cy="75" r="26" fill="none" stroke="var(--color-copper-500)" stroke-width="1.5" />
+                        <line x1="100" y1="20" x2="100" y2="130" stroke="var(--color-steel-600)" stroke-width="0.75" />
+                        <line x1="20" y1="75" x2="180" y2="75" stroke="var(--color-steel-600)" stroke-width="0.75" />
+                      </svg>
+                    </div>
+                  </VisionLockFrame>
+                </div>
+                <div class="va-visual__spine">
+                  <AssemblySpine orientation="horizontal" nodes={spineNodesByLocale[locale]} stateLabels={stateLabelsByLocale[locale]} />
+                </div>
+              </div>
+            </div>
+
+            <div class="va-process">
+              <ol
+                class="va-process__list"
+                tabindex="0"
+                aria-label={locale === 'zh-tw' ? '製程步驟，可橫向捲動' : 'Process steps, horizontally scrollable'}
+              >
+                {processSteps.map((step, i) => (
+                  <li class="va-process__item">
+                    <span class="va-process__index mono">{String(i + 1).padStart(2, '0')}</span>
+                    <span class="va-process__label mono">{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </section>
+        </main>
+      </div>
+    ))}
+  </body>
+</html>
+
+<!--
+  Locale toggle logic (data-locale-block show/hide, sessionStorage
+  persistence, <html lang>/data-locale sync) lives in
+  ./_shared/PrototypeHeader.astro's own inline script — not duplicated
+  here. That script also drives every data-locale-text span inside the
+  Header itself, so one script instance covers both the Header and this
+  page's Hero content in lockstep.
+-->
+
+<style>
+  .va-body {
+    margin: 0;
+    background: var(--color-paper-50);
+    color: var(--color-ink-950);
+  }
+
+  .va-hero {
+    padding-block: var(--space-8) var(--space-16);
+  }
+  .va-hero__inner {
+    display: grid;
+    gap: var(--space-10);
+    padding-inline: var(--page-gutter-mobile);
+    max-width: var(--container-content);
+    margin-inline: auto;
+  }
+  @media (min-width: 768px) {
+    .va-hero__inner { padding-inline: var(--page-gutter-tablet); }
+  }
+  @media (min-width: 1024px) {
+    .va-hero__inner { padding-inline: var(--page-gutter-desktop); }
+  }
+
+  /* Desktop: 12-column split, copy 1-6, visual 6-13 (crosses the
+     container's own right edge by design — spec §十三 "視覺跨出
+     Container"). */
+  @media (min-width: 1024px) {
+    .va-hero__inner {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      align-items: center;
+      max-width: none;
+      padding-inline-start: max(var(--page-gutter-desktop), calc((100vw - var(--container-content)) / 2 + var(--page-gutter-desktop)));
+      padding-inline-end: 0;
+    }
+    .va-hero__copy {
+      grid-column: 1 / 7;
+      padding-right: var(--space-8);
+    }
+    .va-hero__visual {
+      grid-column: 7 / 14; /* crosses past column 12 = crosses the container edge */
+    }
+  }
+
+  .va-hero__eyebrow {
+    color: var(--color-action-primary);
+    font-size: var(--fs-technical);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0 0 var(--space-3);
+  }
+  .va-hero__headline {
+    font-family: var(--font-display);
+    font-size: var(--fs-h1-mobile);
+    line-height: var(--lh-h1);
+    letter-spacing: var(--ls-h1);
+    max-width: 680px;
+    margin: 0 0 var(--space-5);
+    white-space: pre-line;
+  }
+  :lang(zh) .va-hero__headline {
+    font-family: 'Noto Sans TC', var(--font-display);
+    letter-spacing: 0;
+  }
+  @media (min-width: 1024px) {
+    .va-hero__headline {
+      /*
+       * Not the sitewide --fs-h1 clamp here — verified via a live 1440px
+       * screenshot that at --fs-h1's actual computed size (~69px), the
+       * zh-tw headline ("把定位、檢測與組裝，") wraps mid-clause onto an
+       * orphaned "裝" character, because this column (grid columns 1-6 of
+       * 12, roughly 610-660px depending on viewport width) is narrower
+       * than the full-width H1 context --fs-h1 is tuned for elsewhere on
+       * the site. A tighter clamp keeps the headline legible and
+       * confidently large while actually fitting each Chinese clause
+       * (逗號前/後) on its own line as intended, matching the "主標最大寬
+       * 680px" spec constraint without overflowing this narrower column.
+       */
+      font-size: clamp(2.25rem, 3.4vw, 3.25rem);
+    }
+  }
+  .va-hero__body {
+    color: var(--color-steel-700);
+    font-size: var(--fs-body-lg);
+    line-height: var(--lh-body-lg);
+    max-width: 52ch;
+    margin: 0 0 var(--space-6);
+    white-space: pre-line;
+  }
+  .va-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .va-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: var(--fs-small);
+    padding: 0.85em 1.5em;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid transparent;
+    transition: background var(--duration-ui) var(--ease-standard), border-color var(--duration-ui) var(--ease-standard), transform var(--duration-ui) var(--ease-standard);
+  }
+  .va-btn--primary {
+    background: var(--color-action-primary);
+    color: var(--color-paper-50);
+  }
+  .va-btn--primary:hover {
+    background: var(--color-action-primary-hover);
+    transform: translateY(-1.5px);
+  }
+  .va-btn--secondary {
+    background: transparent;
+    color: var(--color-ink-950);
+    border-color: var(--color-steel-600);
+  }
+  .va-btn--secondary:hover {
+    border-color: var(--color-ink-950);
+    background: var(--color-paper-100);
+  }
+  .va-btn:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+
+  /* ---- Visual composition ---- */
+  .va-hero__visual {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    aspect-ratio: 4 / 5;
+    max-width: 480px;
+    margin-inline: auto;
+  }
+  @media (min-width: 1024px) {
+    .va-hero__visual {
+      aspect-ratio: auto;
+      max-width: none;
+      height: clamp(560px, 62vw, 760px);
+    }
+  }
+  .va-visual__origin {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+  }
+  .va-visual__axis {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 12%;
+    height: 1px;
+    background: var(--color-steel-600);
+    z-index: 1;
+  }
+  .va-visual__frame {
+    flex: 1;
+    border-radius: var(--radius-xs);
+    overflow: hidden;
+    background: var(--color-ink-950);
+  }
+  .va-visual__frame :global(.vision-lock) {
+    height: 100%;
+  }
+  .va-visual__placeholder {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: repeating-linear-gradient(135deg, var(--color-ink-950), var(--color-ink-950) 10px, var(--color-ink-800) 10px, var(--color-ink-800) 11px);
+  }
+  .va-visual__placeholder svg {
+    width: 70%;
+    height: auto;
+  }
+  .va-visual__spine {
+    background: var(--color-paper-100);
+    border-radius: var(--radius-xs);
+    padding: var(--space-4) var(--space-3);
+  }
+  /*
+   * Mobile: the Assembly Spine module-list is dropped from inside the
+   * visual — verified via a real 390px screenshot that stacking it inside
+   * a fixed 4:5-ratio box alongside VisionLockFrame squeezed the frame
+   * down to an illegible sliver. The four-step process strip below
+   * (spec's own required INPUT/ALIGN/INSPECT/ASSEMBLE element) already
+   * covers "the sequence" at mobile width, so this isn't a loss of
+   * information — spec §十三 explicitly says mobile must NOT be the
+   * desktop image just shrunk; it doesn't require every desktop element
+   * present in the same arrangement.
+   */
+  @media (max-width: 1023px) {
+    .va-visual__spine {
+      display: none;
+    }
+  }
+
+  /* ---- Process strip ---- */
+  .va-process {
+    margin-top: var(--space-10);
+    max-width: var(--container-content);
+    margin-inline: auto;
+    padding-inline: var(--page-gutter-mobile);
+  }
+  @media (min-width: 768px) {
+    .va-process { padding-inline: var(--page-gutter-tablet); }
+  }
+  @media (min-width: 1024px) {
+    .va-process { padding-inline: var(--page-gutter-desktop); }
+  }
+  .va-process__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: var(--space-6);
+    border-top: 1px solid var(--color-steel-600);
+    padding-top: var(--space-4);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .va-process__item {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+  .va-process__index {
+    color: var(--color-action-primary);
+    font-size: var(--fs-small);
+    font-weight: 700;
+  }
+  .va-process__label {
+    font-size: var(--fs-technical);
+    letter-spacing: 0.08em;
+    color: var(--color-steel-700);
+  }
+  @media (min-width: 640px) {
+    .va-process__list {
+      overflow-x: visible;
+      justify-content: space-between;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .va-btn { transition: none; }
+  }
+</style>
