@@ -6,6 +6,49 @@
       "claimable": false,
       "spec": null,
       "tickets": []
+    },
+    "WF-SEC-04": {
+      "title": "Verification Capability Hardening",
+      "type": "maintenance",
+      "claimable": true,
+      "external_reviewer": "ChatGPT",
+      "tickets": [
+        {
+          "id": "WF-SEC-04-01",
+          "title": "Allow safe project tests and temporary fixtures",
+          "status": "ready",
+          "allowed_files": [
+            "scripts/agent_guard.py",
+            ".claude/hooks/**",
+            ".claude/settings.json",
+            "tests/tooling/**",
+            "docs/agents/TASK_REGISTRY.json"
+          ],
+          "required_tests": []
+        },
+        {
+          "id": "WF-SEC-04-02",
+          "title": "Add recovery documentation and runtime secret doctor checks",
+          "status": "ready",
+          "allowed_files": [
+            "scripts/agent_workflow.py",
+            "tests/tooling/**",
+            "docs/agents/**",
+            "AGENTS.md",
+            "CLAUDE.md"
+          ],
+          "required_tests": []
+        },
+        {
+          "id": "WF-SEC-04-03",
+          "title": "Execute live workflow and website verification",
+          "status": "ready",
+          "allowed_files": [
+            "docs/agents/**"
+          ],
+          "required_tests": []
+        }
+      ]
     }
   }
 }

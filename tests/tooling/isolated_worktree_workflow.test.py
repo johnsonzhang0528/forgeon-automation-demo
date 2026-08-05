@@ -31,6 +31,9 @@ class Fixture:
         for rel in ("scripts/agent_workflow.py", "scripts/agent_watcher.py", "scripts/agent_guard.py"):
             dest = self.repo / rel; dest.parent.mkdir(parents=True, exist_ok=True); shutil.copy2(SOURCE / rel, dest)
         (self.repo / "docs/agents").mkdir(parents=True)
+        (self.repo / "tests/tooling").mkdir(parents=True)
+        (self.repo / "tests/tooling/agent_workflow.test.py").write_text("# fixture entry\n")
+        (self.repo / "tests/tooling/review-bundle.test.sh").write_text("#!/bin/bash\n")
         shutil.copy2(SOURCE / "docs/agents/DUAL_AGENT_PROTOCOL.md", self.repo / "docs/agents/DUAL_AGENT_PROTOCOL.md")
         (self.repo / ".agent-project.json").write_text(json.dumps({"schema_version":2,"project_id":"fixture","package_name":"fixture","repository_layout":"standalone-worktrees","integration_branch":"main","agent_branches":{"claude":"agent/claude","codex":"agent/codex"}}))
         (self.repo / "package.json").write_text(json.dumps({"name":"fixture"}))
@@ -42,7 +45,7 @@ class Fixture:
         module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
         (self.repo / "docs/agents/CURRENT_TASK.md").write_text(module.render_versioned(state))
         (self.repo / "work.txt").write_text("base\n")
-        proc(["git", "add", "--", ".agent-project.json", "package.json", "docs", "scripts", "work.txt"], self.repo)
+        proc(["git", "add", "--", ".agent-project.json", "package.json", "docs", "scripts", "tests", "work.txt"], self.repo)
         proc(["git", "commit", "-qm", "fixture"], self.repo)
         self.claude = self.tmp / "claude"; self.codex = self.tmp / "codex"
         proc(["git", "worktree", "add", "-q", "-b", "agent/claude", str(self.claude), "main"], self.repo)
@@ -168,10 +171,31 @@ class IsolatedWorkflowTests(unittest.TestCase):
 
     def test_guard_blocks_dangerous_and_allows_read_only(self):
         guard=self.f.repo/"scripts/agent_guard.py"
-        denied=("git add -A","git add .","git commit -am x","git commit --amend","git rebase main","git checkout -- .","git restore --worktree .","git push","git branch -d old","git clean -fd","git reset --hard")
+        denied=("git add -A","git add .","git commit -am x","git commit --amend","git rebase main","git checkout -- .","git restore --worktree .","git push","git branch -d old","git clean -fd","git reset --hard", "/usr/bin/git push", "env git push", "command git push", "git 'push' origin main", "git    push", "sh -c 'git push'", "bash -c 'git push'", "git remote add origin x", "git remote remove origin", "git remote rename a b", "git remote set-url origin x", "git remote prune origin", "git remote update", "git clone https://example.invalid/x /tmp/forgeon-agent-test-x", "git clone git@example.invalid:x /tmp/forgeon-agent-test-x", "python3 -c 'print(1)'", "python3 /tmp/arbitrary.py", "bash /tmp/arbitrary.sh", "python3 tests/tooling/agent_workflow.test.py && git push")
         for command in denied:
             r=subprocess.run([sys.executable,str(guard)],input=json.dumps({"tool_input":{"command":command}}),text=True,capture_output=True); self.assertEqual(r.returncode,2,command)
-        r=subprocess.run([sys.executable,str(guard)],input=json.dumps({"tool_input":{"command":"git status --short"}}),text=True,capture_output=True); self.assertEqual(r.returncode,0)
+        allowed=("git status --short", "/usr/bin/git status", "env git status", "git remote", "git remote -v", "git remote get-url origin", "git branch --show-current", "git worktree list --porcelain", "python3 tests/tooling/agent_workflow.test.py", "python3 tests/tooling/agent_workflow.test.py -v", "bash tests/tooling/review-bundle.test.sh", "git status && git remote -v")
+        for command in allowed:
+            r=subprocess.run([sys.executable,str(guard)],input=json.dumps({"tool_input":{"command":command}}),text=True,capture_output=True,cwd=self.f.repo,env={**os.environ,"CLAUDE_PROJECT_DIR":str(self.f.repo)}); self.assertEqual(r.returncode,0,(command,r.stderr))
+
+    def test_guard_tmp_fixture_boundary_and_symlink_escape(self):
+        guard=self.f.repo/"scripts/agent_guard.py"
+        def check(command):
+            return subprocess.run([sys.executable,str(guard)],input=json.dumps({"tool_input":{"command":command}}),text=True,capture_output=True,cwd=self.f.repo,env={**os.environ,"CLAUDE_PROJECT_DIR":str(self.f.repo)}).returncode
+        target=Path("/tmp/forgeon-agent-test-guard")
+        shutil.rmtree(target,ignore_errors=True)
+        try:
+            self.assertEqual(check(f"git init {target}"),0)
+            self.assertEqual(check(f"git clone --no-hardlinks {self.f.repo} {target}"),0)
+            target.mkdir(); (target/".forgeon-fixture-owner").write_text("fixture")
+            self.assertEqual(check(f"git -C {target} status"),0)
+            self.assertEqual(check(f"git -C {target} push"),2)
+            self.assertEqual(check("git init /tmp/unapproved-fixture"),2)
+            self.assertEqual(check(f"git init {self.f.repo}"),2)
+            link=Path("/tmp/forgeon-review-test-link"); link.unlink(missing_ok=True); link.symlink_to(self.f.repo)
+            self.assertEqual(check(f"git -C {link} status"),2); link.unlink()
+        finally:
+            shutil.rmtree(target,ignore_errors=True)
 
     def test_symlink_escape_and_runtime_path_leak_detected(self):
         (self.f.repo/"escape").symlink_to("/tmp")
