@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "project_id": "forgeon-automation-demo",
+  "last_completed_stage": "CC-02F",
+  "current_stage": "setup",
+  "current_stage_title": "Production Header and Hero Integration",
+  "status": "in_progress",
+  "active_agent": "claude",
+  "preferred_agent": "claude",
+  "fallback_agent": "codex",
+  "external_reviewer": "ChatGPT",
+  "branch": "master",
+  "base_commit": "2a0cb4a53c8725fc5083132ece1e1de53c177aa1",
+  "head_commit": "2a0cb4a53c8725fc5083132ece1e1de53c177aa1",
+  "last_verified_commit": "2a0cb4a53c8725fc5083132ece1e1de53c177aa1",
+  "current_ticket": "dual-agent-workflow-bootstrap",
+  "current_step": null,
+  "step_status": "complete",
+  "completed": [
+    "CC-02F Variant C+ prototype completed",
+    "ChatGPT approved the C+ direction",
+    "Fix ownership hook bootstrap deadlock, finish tests, wire hooks, validate, commit — changed: .claude/hooks/require-agent-ownership.sh",
+    "testing hook v2 — changed: (none listed)",
+    "Add protocol note about hook lockout incident, run validation, commit — changed: .claude/hooks/require-agent-ownership.sh, .claude/settings.json, docs/agents/DUAL_AGENT_PROTOCOL.md",
+    "Run full validation pass — changed: scripts/agent_workflow.py"
+  ],
+  "next_actions": [
+    "create atomic commits"
+  ],
+  "blocked_by": [],
+  "do_not_change": [
+    "Do not start CC-02I during workflow setup",
+    "Do not modify the production Header or Hero",
+    "Do not start CC-03",
+    "Do not use Higgsfield",
+    "Do not push"
+  ],
+  "last_tests": [
+    "all 8 checks pass"
+  ],
+  "last_checkpoint": "docs/agents/checkpoints/setup/20260805T172615Z-claude.md",
+  "last_handoff": null,
+  "last_recovery": null,
+  "updated_at": "2026-08-05T17:29:43Z"
+}
