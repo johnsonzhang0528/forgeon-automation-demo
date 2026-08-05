@@ -10,17 +10,33 @@
  * Used as: Logo mark companion, Hero anchor point, Section heading marker,
  * Focus/Active indicator, chart/diagram origin. This component renders the
  * mark only — it does not lay out surrounding content.
+ *
+ * Locale/semantics API (CC-02-02): added the minimum API actually needed to
+ * use this component in a real Header/Hero — not a full i18n dictionary
+ * import. `label` is the VISIBLE coordinate text (e.g. "0,0" or "X,Y"),
+ * purely typographic/decorative-adjacent, independent of accessibility.
+ * `ariaLabel` is the ACCESSIBLE NAME, supplied entirely by the caller (a
+ * locale-aware page/layout) — this component never hardcodes a Chinese or
+ * English string for it, per CONTEXT.md's "Locale Message" glossary entry
+ * ("None of the six Brand Primitives currently accept a locale/messages
+ * prop... they hardcode Traditional Chinese strings directly" — the fix for
+ * DatumOrigin specifically is `ariaLabel`, not a full dictionary import,
+ * since a whole-site-dictionary import inside a low-level SVG primitive
+ * would be the "過度工程化" the CC-01 post-hoc review already flagged as a
+ * risk to avoid).
  */
 export interface Props {
   /** Overall square footprint in px. Axis length and origin dot scale off this. */
   size?: number;
   orientation?: 'horizontal' | 'vertical' | 'both';
-  /** Visible coordinate label. Omit for no label. */
+  /** Visible coordinate label (typographic content, e.g. "0,0"/"X,Y") — independent of accessibility. Omit for no visible label. */
   label?: '0,0' | 'X,Y' | string;
   /** Reveal axes + origin on mount (respects prefers-reduced-motion). */
   animated?: boolean;
-  /** Pure decoration (true, default) vs. a meaningful graphic that needs a name (false + label required for a11y). */
+  /** Pure decoration (true, default) vs. a meaningful graphic that needs an accessible name (false). When false, pass `ariaLabel` — this component does not invent or translate one itself. */
   decorative?: boolean;
+  /** Accessible name when `decorative` is false. Required in that case — supplied by the locale-aware caller (page/layout), never hardcoded here. Ignored when `decorative` is true (or left at its default). */
+  ariaLabel?: string;
   class?: string;
 }
 
@@ -30,8 +46,15 @@ const {
   label,
   animated = false,
   decorative = true,
+  ariaLabel,
   class: className = '',
 } = Astro.props;
+
+if (import.meta.env.DEV && !decorative && !ariaLabel) {
+  console.warn(
+    '[DatumOrigin] decorative={false} requires an `ariaLabel` prop for a real accessible name — none was provided, so this instance will render with no name for assistive tech. Pass `ariaLabel` from the locale-aware caller (see CC-02 spec §6).'
+  );
+}
 
 // Asymmetric axis arms: the short arm is 38% of size, the long arm is the
 // remainder — this is what keeps the mark from reading as a centered
@@ -51,7 +74,7 @@ const dotR = Math.max(2, Math.min(4, size * 0.045));
   fill="none"
   role={decorative ? undefined : 'img'}
   aria-hidden={decorative ? 'true' : undefined}
-  aria-label={!decorative ? (label ? `基準原點 ${label}` : '基準原點') : undefined}
+  aria-label={!decorative ? ariaLabel : undefined}
 >
   {(orientation === 'horizontal' || orientation === 'both') && (
     <line

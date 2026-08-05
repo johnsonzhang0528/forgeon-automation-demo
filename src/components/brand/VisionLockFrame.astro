@@ -19,10 +19,33 @@ export interface Props {
   animated?: boolean;
   /** Accessible label for the framed content when it conveys meaning beyond decoration (e.g. "半導體無塵室組裝站定位特寫"). Omit for purely decorative framing over an already-labeled image. */
   label?: string;
+  /**
+   * Locale-aware text for the visible LOCKING/LOCKED HUD-style overlay
+   * status span (CC-02-02). That span is `aria-hidden="true"` already — it
+   * is purely a decorative technical-HUD flourish, not information
+   * assistive tech needs — so per CC-02 spec §6 this prop only exists to
+   * let a real bilingual page swap the displayed text away from the
+   * English-only literal default; it is not an accessibility requirement.
+   * Omit to keep the component's original hardcoded "LOCKING"/"LOCKED"
+   * (unchanged default, so every existing call site keeps working as-is).
+   */
+  statusLabels?: {
+    locking: string;
+    locked: string;
+  };
   class?: string;
 }
 
-const { featurePoints = 2, animated = false, label, class: className = '' } = Astro.props;
+const {
+  featurePoints = 2,
+  animated = false,
+  label,
+  statusLabels,
+  class: className = '',
+} = Astro.props;
+
+const lockingText = statusLabels?.locking ?? 'LOCKING';
+const lockedText = statusLabels?.locked ?? 'LOCKED';
 
 // Fixed, deliberate feature-point positions (not random) — spec explicitly
 // bans "大量隨機點". These sit at plausible "point of interest" locations
@@ -67,12 +90,12 @@ const uid = `vlf-${Math.random().toString(36).slice(2, 9)}`;
   )}
 
   {animated && (
-    <span class="vision-lock__status mono" data-vision-lock-status={uid} aria-hidden="true">LOCKING</span>
+    <span class="vision-lock__status mono" data-vision-lock-status={uid} aria-hidden="true">{lockingText}</span>
   )}
 </div>
 
 {animated && (
-  <script define:vars={{ uid }}>
+  <script define:vars={{ uid, lockedText }}>
     (function () {
       const root = document.querySelector(`[data-vision-lock="${uid}"]`);
       const status = document.querySelector(`[data-vision-lock-status="${uid}"]`);
@@ -81,13 +104,13 @@ const uid = `vlf-${Math.random().toString(36).slice(2, 9)}`;
       const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (prefersReduced) {
         root.classList.add('is-locked');
-        if (status) status.textContent = 'LOCKED';
+        if (status) status.textContent = lockedText;
         return;
       }
 
       if (!('IntersectionObserver' in window)) {
         root.classList.add('is-locked');
-        if (status) status.textContent = 'LOCKED';
+        if (status) status.textContent = lockedText;
         return;
       }
 
@@ -101,7 +124,7 @@ const uid = `vlf-${Math.random().toString(36).slice(2, 9)}`;
               // fires exactly once per page view.
               window.setTimeout(() => {
                 root.classList.add('is-locked');
-                if (status) status.textContent = 'LOCKED';
+                if (status) status.textContent = lockedText;
               }, 620);
               io.unobserve(root);
             }

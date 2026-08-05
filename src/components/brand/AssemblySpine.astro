@@ -14,20 +14,45 @@
  * requirement, handled by a single CSS breakpoint, not a second markup
  * tree.
  */
+type SpineState = 'unconnected' | 'aligned' | 'connected';
+
 export interface Props {
   orientation?: 'horizontal' | 'vertical';
   nodes: Array<{
     label: string;
-    state?: 'unconnected' | 'aligned' | 'connected';
+    state?: SpineState;
     /** Optional short technical caption under the label, e.g. a model code. */
     caption?: string;
   }>;
   /** Clicking a node cycles/sets its visual state locally — for the design-system preview only; real pages should pass fixed `state` per node. */
   interactive?: boolean;
+  /**
+   * State-tag text per state (CC-02-02). Defaults to the component's
+   * original hardcoded Traditional Chinese labels so every existing
+   * zh-tw-only call site (the design-system preview page) keeps working
+   * unchanged. A caller on an English page (or the CC-02 Hero prototypes)
+   * MUST pass English values here — this component does not translate or
+   * guess a locale itself (CONTEXT.md's "Locale Message" rule: locale text
+   * comes from the locale-aware caller, not hardcoded in a shared
+   * component).
+   */
+  stateLabels?: Record<SpineState, string>;
   class?: string;
 }
 
-const { orientation = 'horizontal', nodes, interactive = false, class: className = '' } = Astro.props;
+const DEFAULT_STATE_LABELS: Record<SpineState, string> = {
+  unconnected: '未連接',
+  aligned: '已對齊',
+  connected: '已連接',
+};
+
+const {
+  orientation = 'horizontal',
+  nodes,
+  interactive = false,
+  stateLabels,
+  class: className = '',
+} = Astro.props;
 
 // Spec §10.4: "支援 3-6 個節點" — clamp defensively rather than silently
 // rendering an unbounded spine if a caller passes more/fewer.
@@ -37,11 +62,7 @@ if (clamped.length < 3) {
 }
 
 const uid = `spine-${Math.random().toString(36).slice(2, 9)}`;
-const stateLabel: Record<string, string> = {
-  unconnected: '未連接',
-  aligned: '已對齊',
-  connected: '已連接',
-};
+const stateLabel: Record<SpineState, string> = stateLabels ?? DEFAULT_STATE_LABELS;
 ---
 
 <div
@@ -59,6 +80,10 @@ const stateLabel: Record<string, string> = {
           data-node-state={state}
         >
           {interactive ? (
+            /* Interactive mode: a real <button> keeps its own full ARIA
+               label — state updates on click, and JS keeps this label in
+               sync (see the inline script below), per spec §6's explicit
+               "互動模式：Button 保留完整 ARIA Label；狀態更新必須同步". */
             <button
               type="button"
               class="assembly-spine__marker"
@@ -67,7 +92,22 @@ const stateLabel: Record<string, string> = {
               <span class="assembly-spine__marker-dot" aria-hidden="true"></span>
             </button>
           ) : (
-            <span class="assembly-spine__marker" aria-label={`${node.label}：${stateLabel[state]}`}>
+            /*
+             * Static mode: the marker itself is `aria-hidden="true"` (spec
+             * §6: "Marker 設為 aria-hidden=true") — it contributes no
+             * accessible name of its own. Semantics come entirely from the
+             * two VISIBLE text nodes already rendered below in
+             * .assembly-spine__meta (the label span and the state-tag
+             * span), which normal DOM flow already exposes to assistive
+             * tech without needing a duplicate aria-label here. This also
+             * fixes the previous version's redundant aria-label on a
+             * plain <span> (a `<span aria-label>` with no button/img role
+             * is not reliably exposed by all screen readers the way an
+             * aria-labelledby reference to the real visible text would
+             * be — removing it and relying on the visible text is both
+             * simpler and more robust).
+             */
+            <span class="assembly-spine__marker" aria-hidden="true">
               <span class="assembly-spine__marker-dot" aria-hidden="true"></span>
             </span>
           )}
@@ -85,12 +125,16 @@ const stateLabel: Record<string, string> = {
 </div>
 
 {interactive && (
-  <script define:vars={{ uid }}>
+  <script define:vars={{ uid, stateLabel }}>
     (function () {
       const root = document.querySelector(`[data-assembly-spine="${uid}"]`);
       if (!root) return;
       const order = ['unconnected', 'aligned', 'connected'];
-      const stateLabel = { unconnected: '未連接', aligned: '已對齊', connected: '已連接' };
+      // stateLabel comes from define:vars above (the component's resolved
+      // stateLabels prop, or its Chinese default) — not redeclared here, so
+      // the interactive click handler's ARIA label stays in sync with
+      // whatever locale the caller configured (CC-02-02: "狀態更新必須同
+      // 步" / "正式英文頁使用前，狀態文字不得固定中文").
 
       root.querySelectorAll('[data-node-index]').forEach((li) => {
         const btn = li.querySelector('button');
