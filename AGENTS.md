@@ -1,37 +1,19 @@
-# Agent instructions (Codex)
+# Codex isolated-worktree rules
 
-Before doing anything else this session, read:
+Read `docs/agents/DUAL_AGENT_PROTOCOL.md`, `docs/agents/CURRENT_TASK.md`,
+`docs/agents/TASK_REGISTRY.json`, and `CONTEXT.md`, then run
+`pnpm agent:doctor` and `pnpm agent:status`.
 
-1. `docs/agents/DUAL_AGENT_PROTOCOL.md` — the full coordination rules.
-2. `docs/agents/CURRENT_TASK.md` — live stage/ticket/step state.
-3. `CONTEXT.md` — project domain vocabulary.
-
-Then run `pnpm agent:status`.
-
-## Rules
-
-- Do not `Edit`/`Write`/run a mutating command until you hold the claim
-  (`pnpm agent:claim -- --agent codex --stage <s> --ticket <t>`) and have
-  an active step (`pnpm agent:step-start -- ...`).
-- Before claiming, start or confirm the watcher is running
-  (`pnpm agent:watch`) — it's what keeps a recovery breadcrumb warm if you
-  lose quota mid-edit.
-- If Claude Code stopped mid-task without a handoff, use
-  `pnpm agent:recover -- --agent codex` before touching anything — don't
-  assume, don't rely on any chat history (you have none for Claude's
-  session), don't `reset`/`restore`/`clean`/`stash`.
-- Before every ticket: `pnpm agent:step-start`. After every meaningful
-  sub-step: update the step or write a checkpoint
-  (`pnpm agent:checkpoint`).
-- Every ticket ends with its own test run and one atomic commit.
-- Never `git push`.
-- Never change a design direction ChatGPT has already approved (see
-  `docs/engineering/handoffs/` for what's been approved so far).
-- After a full CC stage completes, build the review bundle
-  (`pnpm review:bundle`) and wait for ChatGPT — do not start the next
-  stage automatically.
-
-Skills available to you are symlinked at `.agents/skills/` (sourced from
-`.claude/skills/`) — in particular `.agents/skills/dual-agent` documents
-every verb referenced above. If a skill you expect isn't visible, restart
-the Codex extension.
+- Codex may modify files only in `$HOME/projects/forgeon-worktrees/codex`.
+- Never develop in the integration checkout or Claude worktree.
+- Worktree separation, the workflow CLI, and this protocol constrain Codex;
+  Claude hooks do not constrain the Codex extension.
+- Claim a registered ticket and start a step before edits.
+- Record tests with `pnpm agent:test --agent codex -- <command>`.
+- Stage only with `pnpm agent:stage-ticket --agent codex`.
+- Commit only with `pnpm agent:commit-ticket --agent codex --message "..."`.
+- Never push, reset --hard, clean, restore, rebase, amend, delete branches,
+  use repo-wide add, or use commit `-a`/`-am`.
+- On quota pressure, snapshot, create a checkpoint commit, make a structured
+  handoff, and stop. Do not rely on chat history.
+- CC-02I is not claimable until ChatGPT supplies its formal spec and tickets.

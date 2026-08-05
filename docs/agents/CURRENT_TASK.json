@@ -1,42 +1,16 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "project_id": "forgeon-automation-demo",
   "last_completed_stage": "CC-02F",
   "current_stage": "CC-02I",
   "current_stage_title": "Production Header and Hero Integration",
   "status": "paused_ready",
   "active_agent": null,
-  "preferred_agent": "claude",
-  "fallback_agent": "codex",
-  "external_reviewer": "ChatGPT",
-  "branch": "master",
-  "base_commit": "2a0cb4a53c8725fc5083132ece1e1de53c177aa1",
-  "head_commit": "2a0cb4a53c8725fc5083132ece1e1de53c177aa1",
-  "last_verified_commit": "2a0cb4a53c8725fc5083132ece1e1de53c177aa1",
   "current_ticket": null,
   "current_step": null,
-  "step_status": null,
-  "completed": [
-    "CC-02F Variant C+ prototype completed",
-    "ChatGPT approved the C+ direction",
-    "Dual-agent Claude/Codex failover workflow tooling built and validated (scripts/agent_workflow.py, agent_watcher.py, dual-agent skill, hooks, 35 tests) — see docs/agents/checkpoints/setup/ for the build session's own checkpoints"
-  ],
-  "next_actions": [
-    "Wait for explicit instruction to start CC-02I"
-  ],
-  "blocked_by": [],
-  "do_not_change": [
-    "Do not start CC-02I during workflow setup",
-    "Do not modify the production Header or Hero",
-    "Do not start CC-03",
-    "Do not use Higgsfield",
-    "Do not push"
-  ],
-  "last_tests": [
-    "pnpm agent:doctor, pnpm agent:validate, python3 tests/tooling/agent_workflow.test.py (35/35), pnpm check (0 errors), pnpm build (57 pages), check:h1, check:links, check:locale-routes — all pass"
-  ],
-  "last_checkpoint": "docs/agents/checkpoints/setup/20260805T172615Z-claude.md",
-  "last_handoff": null,
-  "last_recovery": null,
-  "updated_at": "2026-08-05T17:33:26Z"
+  "claimable": false,
+  "external_reviewer": "ChatGPT",
+  "repository_base_commit": "b588fe55835b3eaffab60489a9d925ab5540238e",
+  "last_verified_commit": "b588fe55835b3eaffab60489a9d925ab5540238e",
+  "updated_at": "2026-08-06T00:00:00Z"
 }

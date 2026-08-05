@@ -1,33 +1,11 @@
-## Agent skills
+# Claude isolated-worktree rules
 
-### Issue tracker
+Read `docs/agents/DUAL_AGENT_PROTOCOL.md`, `docs/agents/CURRENT_TASK.md`,
+`docs/agents/TASK_REGISTRY.json`, and `CONTEXT.md`, then run doctor/status.
 
-Local markdown under `.scratch/<feature-slug>/` — no GitHub Issues, no external tracker. See `docs/agents/issue-tracker.md`.
+Claude may modify files only in `$HOME/projects/forgeon-worktrees/claude` after
+claiming a registered ticket and starting a step. The integration checkout and
+Codex worktree are read-only to Claude. Bash is fail-closed by the project hook;
+stage and commit only through the workflow CLI. Never push or rewrite history.
 
-### Domain docs
-
-Single-context layout — one `CONTEXT.md` at the repo root, ADRs in `docs/adr/`. See `docs/agents/domain.md`.
-
-## Dual-agent failover workflow
-
-This project's working tree may also be edited by a Codex extension in the
-same VS Code window. Full rules: `docs/agents/DUAL_AGENT_PROTOCOL.md`. Live
-state: `docs/agents/CURRENT_TASK.md`. External stage-gate reviewer is
-ChatGPT, not Claude — never start the next CC stage automatically.
-
-- Start of session: read `docs/agents/CURRENT_TASK.md`, then run `pnpm
-  agent:status`.
-- Do not `Edit`/`Write`/run a mutating command without first holding the
-  claim and an active step — see the `dual-agent` skill
-  (`.claude/skills/dual-agent/SKILL.md`) for the exact verbs
-  (`claim`, `step-start`, `step-complete`, `checkpoint`, `handoff`,
-  `resume`, `recover`, `release`).
-- Quota running low: checkpoint and hand off immediately
-  (`/dual-agent handoff --to codex --reason quota`) rather than trying to
-  finish more first.
-- Picking up work Codex left mid-task: use `resume` if a clean handoff
-  exists and its recorded HEAD/branch/status matches reality; otherwise
-  use `recover` — never assume, never rely on chat memory alone.
-- Don't confuse this with the `handoff` skill: that one compacts a
-  *conversation* for a fresh agent; `dual-agent handoff` hands off an
-  *active claimed ticket*'s git/task state.
+CC-02I remains unclaimable until ChatGPT provides its formal spec and tickets.

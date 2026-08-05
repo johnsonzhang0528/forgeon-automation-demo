@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "stages": {
+    "CC-02I": {
+      "title": "Production Header and Hero Integration",
+      "claimable": false,
+      "spec": null,
+      "tickets": []
+    }
+  }
+}
