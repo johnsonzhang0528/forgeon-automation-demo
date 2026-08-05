@@ -45,7 +45,27 @@
      large backgrounds/decorative gradients — see DESIGN_SYSTEM.md. ---- */
   --color-copper-600: #b84e1d; /* AS SPECIFIED — primary CTA fill + text/link on paper-50, 4.61:1 (passes 4.5:1 with a real but small margin) */
   --color-copper-700: #9c4014; /* new — deeper copper for text on paper-100 or wherever more margin is needed (6.06:1); same hue family, not a new accent */
+  --color-copper-800: #84340f; /* CC-02 new — Primary Action hover state, 7.71:1 on paper-50; same 19° hue as copper-600/700, one step darker (L 29% vs 35%/42%), not a new accent */
   --color-copper-500: #d5662b; /* AS SPECIFIED — non-text UI/decorative on paper (3.32:1, clears 3:1 border floor) and accent text on ink-950 dark backgrounds (5.18:1); do not use as body text on paper (3.32:1 fails 4.5:1) */
+
+  /* ---- Primary Action semantic tokens (CC-02-03) ----
+     Spec explicitly asks for a semantic --color-action-primary distinct
+     from --color-copper-600, so a future stage can retarget the token
+     without touching every existing copper-600 consumer (Datum Origin,
+     highlight annotations, existing-component text/link use — see
+     DESIGN_SYSTEM.md's copper-600 role list, which this token does NOT
+     take over). --color-action-primary points at copper-700 (6.06:1 on
+     paper-50), not copper-600 (4.61:1) — CONTRAST_AUDIT.md and
+     DATUM_DECISION_LOG.md both flag copper-600's 4.61:1 as the palette's
+     thinnest margin and constrain future stages from darkening/lightening
+     it further; rather than touch that constrained token, the new
+     semantic role starts one step deeper in the same hue family, clearing
+     spec §7's "至少約 5:1" target with real margin (6.06:1) on its own
+     terms. Hover deepens further to copper-800 (7.71:1) — more margin
+     again, not less, matching CONTRAST_AUDIT.md's existing pattern where
+     :hover states get MORE contrast margin than the default state. */
+  --color-action-primary: var(--color-copper-700);
+  --color-action-primary-hover: var(--color-copper-800);
 
   /* ---- Functional ---- */
   --color-signal-green: #34745a; /* success / can-deploy state, 5.04:1 on paper-50 */

@@ -10,6 +10,41 @@ per WCAG 1.4.11.
 
 All Token values live in `src/styles/tokens.css`.
 
+## CC-02 — Primary Action semantic token
+
+**Date:** 2026-08-05
+
+New semantic tokens `--color-action-primary` / `--color-action-primary-hover`
+(spec §7), used by the CC-02 Hero prototypes' primary CTA button — kept
+distinct from `--color-copper-600` (which stays the token for Datum Origin,
+highlight annotations, and existing-component text/link use per
+DESIGN_SYSTEM.md's role list) precisely so this new role never has to touch
+`--color-copper-600`'s already-thin 4.61:1 margin, which
+`DATUM_DECISION_LOG.md`'s CC-01 entry explicitly locks against further
+darkening/lightening without redoing this whole calculation.
+
+| Pair | FG | BG | Ratio | Threshold | Pass? |
+|---|---|---|---|---|---|
+| `--color-action-primary` (= `--color-copper-700`) on `--color-paper-50` | `#9c4014` | `#f7f4ed` | 6.06:1 | ≥5:1 (spec §7 target) | PASS |
+| `--color-paper-50` on `--color-action-primary` fill (button label) | `#f7f4ed` | `#9c4014` | 6.06:1 | 4.5:1 | PASS |
+| `--color-action-primary` on white (`--color-card`) | `#9c4014` | `#ffffff` | 6.65:1 | 4.5:1 | PASS |
+| **`--color-copper-800`** (new) / `--color-action-primary-hover` on `--color-paper-50` | `#84340f` | `#f7f4ed` | **7.71:1** | 4.5:1 | PASS (more margin than default state, matching the existing hover-state pattern below) |
+| `--color-copper-800` on white | `#84340f` | `#ffffff` | 8.44:1 | 4.5:1 | PASS |
+
+**Hue check:** `--color-copper-800` (`#84340f`) is HSL(19°, 80%, 29%) —
+same 19° hue as `--color-copper-600` (19°) and `--color-copper-700` (19°),
+one lightness step further down the same family (29% vs. 35% vs. 42%). No
+new accent color introduced, consistent with every prior correction in this
+file staying inside the existing copper-bronze hue family.
+
+**Why not just re-target `--color-copper-600` directly:** `--color-copper-600`
+remains the correct token for its existing roles (Datum Origin, highlight
+annotations, existing 10-component text/link use) at its already-verified
+4.61:1 margin — spec §7 explicitly says "不直接重新映射全站所有 Legacy
+Accent." `--color-action-primary` is a new, separate semantic role for CTA
+buttons specifically, free to target a more comfortable ratio without
+touching every other copper-600 consumer's contrast math.
+
 ## CC-01 — Precision Datum System palette
 
 **Date:** 2026-08-05
