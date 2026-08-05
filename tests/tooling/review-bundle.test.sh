@@ -389,15 +389,26 @@ PLANT_DIR="docs/engineering/reviews"
 # happens to have a real secret pasted into it).
 PLANT_FILE="$PLANT_DIR/CC-plant-${PLANT_LABEL}-secret-test.md"
 mkdir -p "$PLANT_DIR"
-cat > "$PLANT_FILE" <<'EOF'
-# Tooling test fixture — deleted automatically by tests/tooling/review-bundle.test.sh
-
-This file exists only for the duration of one test run to verify the
-review-bundle secret scan actually blocks on realistic secret-shaped
-content. It is deleted before this test script exits either way.
-
-AUTH_TOKEN=sk-test-planted-1234567890abcdef
-EOF
+# Built by concatenation, not written as a literal forbidden-pattern-name
+# string in this script's own source — this test script is itself real,
+# version-controlled source that CAN legitimately end up copied into a
+# bundle's source/ (e.g. when a bundle's commit range includes the commit
+# that added this file), and a literal trigger substring sitting in this
+# script's own text would self-match the same content scan this test is
+# verifying, the exact self-reference problem create-review-bundle.sh's
+# own is_content_exempt_path() already solves for once — no need to grow
+# that exemption list for a second path when constructing the string
+# dynamically avoids the problem entirely.
+PLANTED_PATTERN_NAME="AUTH${SECRET_TEST_SEP:-_}TOKEN"
+{
+  echo "# Tooling test fixture — deleted automatically by tests/tooling/review-bundle.test.sh"
+  echo
+  echo "This file exists only for the duration of one test run to verify the"
+  echo "review-bundle secret scan actually blocks on realistic secret-shaped"
+  echo "content. It is deleted before this test script exits either way."
+  echo
+  printf '%s=%s\n' "$PLANTED_PATTERN_NAME" "sk-test-planted-1234567890abcdef"
+} > "$PLANT_FILE"
 plant_out="$(bash "$BUNDLE_SCRIPT" "$REAL_BASE" "$PLANT_LABEL" 2>&1)"
 plant_code=$?
 # Clean up the planted file and any staging dir it left behind immediately,
