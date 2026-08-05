@@ -1,7 +1,8 @@
 # Codex isolated-worktree rules
 
 Read `docs/agents/DUAL_AGENT_PROTOCOL.md`, `docs/agents/CURRENT_TASK.md`,
-`docs/agents/TASK_REGISTRY.json`, and `CONTEXT.md`, then run
+`docs/agents/RECOVERY_PROTOCOL.md`, `docs/agents/TASK_REGISTRY.json`, and
+`CONTEXT.md`, then run
 `pnpm agent:doctor` and `pnpm agent:status`.
 
 - Codex may modify files only in `$HOME/projects/forgeon-worktrees/codex`.

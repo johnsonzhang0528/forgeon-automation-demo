@@ -50,6 +50,8 @@ worktree from that commit, and continues without modifying the source worktree.
 
 ## Sudden-stop recovery
 
+The canonical procedure is in `docs/agents/RECOVERY_PROTOCOL.md`.
+
 The watcher writes `<common>/agent-state/autosnapshots/<agent>-latest.json` and
 `patches/<agent>-latest.patch`. Paths come from NUL-delimited Git output. The
 patch is `git diff --binary <snapshot-base> -- .` with generated, secret, font,

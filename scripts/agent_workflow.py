@@ -33,6 +33,12 @@ EXCLUDED = (
 SECRET_NAMES = (".env", "id_rsa", "id_ed25519", "credentials", "secrets")
 SECRET_RE = re.compile(r"(?i)(api[_-]?key|token|password|secret)\s*[:=]\s*['\"]?[A-Za-z0-9_/+=.-]{12,}")
 PRIVATE_PATH_RE = re.compile(r"(?:^|[\s'\"])/(?:home|Users)/[^\s'\"]+")
+RUNTIME_RULES = (
+    ("private-key-header", re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----")),
+    ("access-token", re.compile(r"(?:gh[pousr]_[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]{12,}|sk-[A-Za-z0-9]{20,})")),
+    ("credential-value", re.compile(r"(?i)(?:api[_-]?key|token|password|credential|secret)\s*[:=]\s*['\"]?[^\s'\"]{8,}")),
+    ("private-absolute-path", re.compile(r"(?:^|[\s'\"])/(?:home|Users)/[^\s'\"]+")),
+)
 
 
 class WorkflowError(RuntimeError):
@@ -182,6 +188,36 @@ def authorization_has_unsafe_value(value) -> bool:
     if not isinstance(value, str):
         return False
     return bool(SECRET_RE.search(value) or PRIVATE_PATH_RE.search(value) or "-----BEGIN " in value)
+
+
+def json_strings(value):
+    if isinstance(value, dict):
+        for item in value.values(): yield from json_strings(item)
+    elif isinstance(value, list):
+        for item in value: yield from json_strings(item)
+    elif isinstance(value, str):
+        yield value
+
+
+def runtime_json_files() -> list[Path]:
+    base = state_dir()
+    files = [base / "current-task.json", base / "runtime-lock.json"]
+    for name in ("autosnapshots", "handoffs", "recoveries"):
+        files.extend(sorted((base / name).glob("**/*.json")))
+    return [p for p in files if p.is_file()]
+
+
+def runtime_value_findings() -> list[tuple[str, str]]:
+    findings = []
+    for path in runtime_json_files():
+        value = read_json(path)
+        matched = set()
+        for text_value in json_strings(value):
+            for rule, pattern in RUNTIME_RULES:
+                if pattern.search(text_value): matched.add(rule)
+        rel = str(path.relative_to(state_dir()))
+        findings.extend((rel, rule) for rule in sorted(matched))
+    return findings
 
 
 def maintenance_ticket(ticket: dict) -> dict:
@@ -773,8 +809,8 @@ def cmd_doctor(_):
         for path in ROOT.rglob("*"):
             if ".git" in path.parts: continue
             if path.is_symlink() and not path.resolve().is_relative_to(ROOT): problems.append(f"symlink escape: {path.relative_to(ROOT)}")
-        serialized = json.dumps(runtime)
-        if re.search(r"/(home|Users|tmp)/", serialized): problems.append("runtime state leaks an absolute path")
+        for rel, rule in runtime_value_findings():
+            problems.append(f"runtime value finding: {rel}: {rule}")
     except (WorkflowError, OSError, ValueError) as exc: problems.append(str(exc))
     if problems:
         print("doctor: problems found:")

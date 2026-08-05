@@ -203,6 +203,32 @@ class IsolatedWorkflowTests(unittest.TestCase):
         (self.f.repo/"escape").unlink(); common=self.f.common(self.f.repo); state=json.loads((common/"agent-state/current-task.json").read_text()); state["bad"]="/home/person/private"; (common/"agent-state/current-task.json").write_text(json.dumps(state))
         self.assertNotEqual(self.f.run(self.f.repo,"doctor").returncode,0)
 
+    def test_doctor_scans_runtime_values_without_disclosing_them(self):
+        common=self.f.common(self.f.repo); state_path=common/"agent-state/current-task.json"
+        baseline=json.loads(state_path.read_text())
+        cases=(
+            ("credential-value", "password=" + "not-a-real-password"),
+            ("private-key-header", "-----BEGIN PRIVATE KEY-----\nnot-real"),
+            ("access-token", "ghp_" + "A"*24),
+            ("private-absolute-path", "/home/person/private/file"),
+        )
+        for rule, secret_value in cases:
+            with self.subTest(rule=rule):
+                value=dict(baseline); value["fixture_value"]=secret_value; state_path.write_text(json.dumps(value))
+                result=self.f.run(self.f.repo,"doctor")
+                self.assertNotEqual(result.returncode,0); self.assertIn(rule,result.stdout)
+                self.assertIn("current-task.json",result.stdout); self.assertNotIn(secret_value,result.stdout+result.stderr)
+        state_path.write_text(json.dumps({**baseline,"secret_scan_status":"documented secret token password api key"}))
+        self.assertEqual(self.f.run(self.f.repo,"doctor").returncode,0)
+
+    def test_doctor_scans_nested_runtime_collections(self):
+        common=self.f.common(self.f.repo)
+        for folder in ("autosnapshots","handoffs","recoveries"):
+            path=common/"agent-state"/folder/"nested"/"finding.json"; path.parent.mkdir(parents=True,exist_ok=True)
+            path.write_text(json.dumps({"value":"credential=" + "not-a-real-value"}))
+            result=self.f.run(self.f.repo,"doctor")
+            self.assertNotEqual(result.returncode,0); self.assertIn(f"{folder}/nested/finding.json",result.stdout)
+            path.unlink()
     def test_secret_scan_rejects_ticket_content(self):
         wt=self.f.claim_step(); (wt/"work.txt").write_text("api_" + "key=" + "abcdefghijklmnop\n")
         self.assertNotEqual(self.f.run(wt,"stage-ticket","--agent","codex").returncode,0)
