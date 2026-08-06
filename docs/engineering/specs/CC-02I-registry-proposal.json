@@ -1,0 +1,147 @@
+{
+  "_note": "This is a PROPOSAL, not the live registry. It must not be copied over docs/agents/TASK_REGISTRY.json directly — the actual registry is updated only through the workflow CLI under human/ChatGPT stage-gate authorization, per docs/agents/DUAL_AGENT_PROTOCOL.md. claimable stays false until ChatGPT approves this spec and these tickets.",
+  "stage": {
+    "id": "CC-02I",
+    "title": "Production Header and Hero Integration",
+    "claimable": false,
+    "external_reviewer": "ChatGPT",
+    "spec": "docs/engineering/specs/CC-02I-header-hero-production-spec.md"
+  },
+  "tickets": [
+    {
+      "id": "CC-02I-01",
+      "title": "Production Contract and Locale API",
+      "status": "proposed",
+      "file": "docs/engineering/tickets/CC-02I/00-production-contract-locale-api.md",
+      "depends_on": [],
+      "allowed_files": [
+        "src/data/locales/zh-tw.ts",
+        "src/data/locales/en.ts"
+      ],
+      "required_tests": [
+        "pnpm check"
+      ]
+    },
+    {
+      "id": "CC-02I-02",
+      "title": "Header Production Implementation",
+      "status": "proposed",
+      "file": "docs/engineering/tickets/CC-02I/01-header-production-implementation.md",
+      "depends_on": ["CC-02I-01"],
+      "allowed_files": [
+        "src/components/layout/Header.astro",
+        "src/components/ui/Logo.astro",
+        "src/components/ui/Button.astro"
+      ],
+      "required_tests": [
+        "pnpm test:e2e -- tests/e2e/mobile-nav.spec.ts",
+        "pnpm test:axe"
+      ]
+    },
+    {
+      "id": "CC-02I-03",
+      "title": "Mobile Navigation Verification and Hardening",
+      "status": "proposed",
+      "file": "docs/engineering/tickets/CC-02I/02-mobile-navigation.md",
+      "depends_on": ["CC-02I-02"],
+      "allowed_files": [
+        "src/components/layout/Header.astro",
+        "tests/e2e/mobile-nav.spec.ts"
+      ],
+      "required_tests": [
+        "pnpm test:e2e -- tests/e2e/mobile-nav.spec.ts",
+        "pnpm test:axe"
+      ]
+    },
+    {
+      "id": "CC-02I-04",
+      "title": "Hero Production Structure",
+      "status": "proposed",
+      "file": "docs/engineering/tickets/CC-02I/03-hero-production-structure.md",
+      "depends_on": ["CC-02I-01", "CC-02I-05"],
+      "allowed_files": [
+        "src/components/sections/Hero.astro",
+        "src/pages/zh-tw/index.astro",
+        "src/pages/en/index.astro"
+      ],
+      "required_tests": [
+        "pnpm test:e2e -- tests/e2e/responsive-overflow.spec.ts",
+        "pnpm test:axe",
+        "pnpm check:h1"
+      ]
+    },
+    {
+      "id": "CC-02I-05",
+      "title": "Brand Primitives and Hero Visual",
+      "status": "proposed",
+      "file": "docs/engineering/tickets/CC-02I/04-brand-primitives-hero-visual.md",
+      "depends_on": ["CC-02I-01"],
+      "allowed_files": [
+        "src/components/sections/PrecisionSystemVisual.astro",
+        "src/components/sections/ProcessRail.astro",
+        "src/components/sections/EvaluationLedger.astro",
+        "src/components/brand/PrecisionSystemVisual.astro"
+      ],
+      "required_tests": [
+        "pnpm test:e2e -- tests/e2e/cc02f-final-hero.spec.ts"
+      ]
+    },
+    {
+      "id": "CC-02I-06",
+      "title": "Motion, Reduced Motion, and Performance Verification",
+      "status": "proposed",
+      "file": "docs/engineering/tickets/CC-02I/05-motion-reduced-motion-performance.md",
+      "depends_on": ["CC-02I-04", "CC-02I-05"],
+      "allowed_files": [
+        "src/components/sections/Hero.astro",
+        "src/components/sections/PrecisionSystemVisual.astro",
+        "tests/e2e/**"
+      ],
+      "required_tests": [
+        "pnpm test:e2e",
+        "pnpm test:axe"
+      ]
+    },
+    {
+      "id": "CC-02I-07",
+      "title": "Responsive, Locale, and Accessibility Verification",
+      "status": "proposed",
+      "file": "docs/engineering/tickets/CC-02I/06-responsive-locale-accessibility.md",
+      "depends_on": ["CC-02I-02", "CC-02I-03", "CC-02I-04", "CC-02I-05", "CC-02I-06"],
+      "allowed_files": [
+        "src/components/layout/Header.astro",
+        "src/components/sections/Hero.astro",
+        "src/components/sections/PrecisionSystemVisual.astro",
+        "src/components/sections/ProcessRail.astro",
+        "src/components/sections/EvaluationLedger.astro",
+        "tests/e2e/**"
+      ],
+      "required_tests": [
+        "pnpm test:e2e -- tests/e2e/responsive-overflow.spec.ts",
+        "pnpm test:axe"
+      ]
+    },
+    {
+      "id": "CC-02I-08",
+      "title": "Regression, QA, and Review Bundle",
+      "status": "proposed",
+      "file": "docs/engineering/tickets/CC-02I/07-regression-qa-review-bundle.md",
+      "depends_on": ["CC-02I-01", "CC-02I-02", "CC-02I-03", "CC-02I-04", "CC-02I-05", "CC-02I-06", "CC-02I-07"],
+      "allowed_files": [
+        "docs/screenshots/**",
+        "docs/engineering/handoffs/**",
+        "docs/engineering/reviews/**"
+      ],
+      "required_tests": [
+        "pnpm test:e2e",
+        "pnpm test:axe",
+        "pnpm check:h1",
+        "pnpm check:links",
+        "pnpm check:locale-routes",
+        "pnpm check",
+        "pnpm typecheck",
+        "pnpm build"
+      ]
+    }
+  ]
+}
