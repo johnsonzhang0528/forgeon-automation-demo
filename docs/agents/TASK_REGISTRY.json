@@ -117,6 +117,44 @@
           "required_tests": []
         }
       ]
+    },
+    "WF-CC02I-SPEC-R2": {
+      "title": "Finalize CC-02I Specification Package (Narrow Revision 2)",
+      "type": "maintenance",
+      "claimable": true,
+      "external_reviewer": "ChatGPT",
+      "tickets": [
+        {
+          "id": "WF-CC02I-SPEC-R2-01",
+          "title": "Finalize CC-02I authorization, motion, acceptance, and baseline contracts",
+          "status": "ready",
+          "allowed_files": [
+            "docs/engineering/specs/CC-02I-header-hero-production-spec.md",
+            "docs/engineering/specs/CC-02I-registry-proposal.json",
+            "docs/engineering/reviews/CC-02I-stage-gate-review.md",
+            "docs/engineering/reviews/CC-02I-stage-gate-r1-review.md",
+            "docs/engineering/reviews/CC-02I-stage-gate-r2-review.md",
+            "docs/engineering/tickets/CC-02I/**",
+            "docs/engineering/handoffs/CC-02I-spec-r2-chatgpt-review-handoff.md"
+          ],
+          "required_tests": []
+        },
+        {
+          "id": "WF-CC02I-SPEC-R2-02",
+          "title": "Verify Revision 2 consistency and build ChatGPT Stage Gate Bundle",
+          "status": "ready",
+          "allowed_files": [
+            "docs/engineering/specs/CC-02I-header-hero-production-spec.md",
+            "docs/engineering/specs/CC-02I-registry-proposal.json",
+            "docs/engineering/reviews/CC-02I-stage-gate-review.md",
+            "docs/engineering/reviews/CC-02I-stage-gate-r1-review.md",
+            "docs/engineering/reviews/CC-02I-stage-gate-r2-review.md",
+            "docs/engineering/tickets/CC-02I/**",
+            "docs/engineering/handoffs/CC-02I-spec-r2-chatgpt-review-handoff.md"
+          ],
+          "required_tests": []
+        }
+      ]
     }
   }
 }
