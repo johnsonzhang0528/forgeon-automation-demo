@@ -1,24 +1,37 @@
 # CC-02I Header/Hero Production Implementation Spec
 
-Status: **Draft — Revision 1 — awaiting ChatGPT Stage Gate re-review.**
+Status: **Draft — Revision 2 — awaiting ChatGPT Stage Gate re-review.**
 `CC-02I` remains `claimable: false` in `docs/agents/TASK_REGISTRY.json`
 until that review approves this spec and its tickets and an independent
 activation workflow (`WF-CC02I-ACT-01`, not created this round) applies
 the change. Nothing in this document authorizes implementation to begin.
 
-## Revision 1 note
+**The single, canonical Implementation Authorization Gate for CC-02I is
+`docs/engineering/reviews/CC-02I-stage-gate-r2-review.md`, together with
+`docs/engineering/specs/CC-02I-registry-proposal.json`.** No other review
+document is part of that gate — see §17.
 
-This is Revision 1, produced under maintenance stage `WF-CC02I-SPEC-R1` in
-response to ChatGPT's **REVISE AND RESUBMIT** verdict on the CC-02I-PREP
-Stage Gate bundle (`20260806-085203-cc02i-prep-explicit-stage-gate.zip`).
+## Revision 2 note
+
+This is Revision 2, produced under maintenance stage `WF-CC02I-SPEC-R2` in
+response to ChatGPT's **REVISE AND RESUBMIT — Narrow Revision 2** verdict
+on the Revision 1 bundle (`20260806-2107-cc02i-spec-r1-stage-gate.zip`).
 Variant C ("Engineering Editorial Sheet") is unchanged and not
-re-compared against Variant A/B. This revision resolves thirteen specific
-findings (R1-01 through R1-13) — schema ambiguity, path/dependency
-inconsistency, an unresolved motion-architecture contradiction, and
-several underspecified acceptance criteria. Each finding's resolution is
-called out inline in the relevant section below with an "**R1:**" marker,
-and the full finding→fix mapping is recorded in
-`docs/engineering/reviews/CC-02I-stage-gate-r1-review.md`.
+re-compared against Variant A/B — Revision 2 is a narrow fix pass over six
+specific findings (R2-01 through R2-06): gate-document consolidation, the
+Motion Orchestrator's first-frame state model, a pre-fixed Production
+Acceptance Gate schema, a fixed Implementation Base Commit rule, a
+corrected review-bundle handoff, and a scoped-down `Button.astro` change
+allowance. Each finding's resolution is called out inline in the relevant
+section below with an "**R2:**" marker, and the full finding→fix mapping
+is recorded in `docs/engineering/reviews/CC-02I-stage-gate-r2-review.md`.
+
+Revision 1 (`WF-CC02I-SPEC-R1`) resolved thirteen earlier findings
+(R1-01 through R1-13) — schema ambiguity, path/dependency inconsistency,
+the original JS/no-JS motion contradiction, and several underspecified
+acceptance criteria. That history is preserved, unmodified in content, in
+`docs/engineering/reviews/CC-02I-stage-gate-r1-review.md`, which is now
+superseded by this Revision 2 document for gate purposes only — see §17.
 
 Follows the same flat, checkable-spec convention as `CC-01-verification-
 spec.md` / `CC-02-header-hero-design-spike.md` / `CC-02F-final-editorial-
@@ -64,7 +77,7 @@ reviewed design (§8.6 fixes the exact production paths).
 | Copy data source | `src/data/cc02-final-hero.ts` — isolated, duplicates brand name, own `Record<FinalHeroLocale, …>` shape | `src/data/locales/{zh-tw,en}.ts` (`Dictionary` type via `getDictionary()`) + `siteConfig` (`src/config/site.ts`) | Hero/nav copy moves into the fixed, final named-object `hero` schema (R1, §7); `cc02-final-hero.ts` itself is not imported by production code and is not deleted this stage |
 | Nav items | 5 prototype-only labels: solutions/products/industries/**engineeringMethod**/**resources** | 6 real routes via `navItems`: solutions/products/industries/about/insights/contact | Production Header uses the real 6-item `navItems` unchanged |
 | `<html lang>` / locale routing | Hand-computed ternary, real `getStaticPaths()` per-locale routes | `getHtmlLang()` via `src/utils/i18n.ts`, same per-locale static route pattern | Use `getHtmlLang()`; the per-locale static route pattern is already correct |
-| Animation trigger | Two independent `IntersectionObserver`s (one per primitive), three-layer reduced-motion defense | Same per-primitive pattern already used by `DatumOrigin`/`VisionLockFrame` | **R1 (§10): replaced by a single Motion Orchestrator owned by `Hero.astro`** — one observer, one state machine, no per-primitive observer in production |
+| Animation trigger | Two independent `IntersectionObserver`s (one per primitive), three-layer reduced-motion defense | Same per-primitive pattern already used by `DatumOrigin`/`VisionLockFrame` | **Replaced by a single Motion Orchestrator owned by `Hero.astro`** (R1 §10, first-frame model fixed in R2 §10) — one observer, one four-state machine, no per-primitive observer in production, `armed` set synchronously before first paint |
 | SEO/indexing | `noindex, nofollow` hardcoded, no `SEOHead`, no `StructuredData` | `SEOHead` + `StructuredData` via `BaseLayout`, indexability gated by Demo Mode (`allowIndexing`) | Homepage keeps its existing `BaseLayout`-driven SEO — no bespoke SEO code in the new Hero component |
 
 ### 1.2 What's temporary in the prototype and must not be carried in as-is
@@ -108,8 +121,8 @@ token addition through the normal design-system process.
 | Page | `src/pages/{zh-tw,en}/index.astro` | Locale param (route segment) | Server-rendered (SSG) | Provides `locale`/`path`/`otherLocalePath` to `BaseLayout` |
 | Layout | `src/layouts/BaseLayout.astro` | `siteConfig`, `getDictionary` | Server-rendered | Skip link, landmark structure, `<html lang>` |
 | Header | `src/components/layout/Header.astro` | `navItems`, `getDictionary`, `siteConfig` | Server-rendered + one `<script>` for mobile drawer | Focus trap, Escape, focus return, `aria-current`, `aria-expanded`, No-JS `<noscript>` fallback (R1, §4) |
-| Hero | `src/components/sections/Hero.astro` (fixed path) | `getDictionary(locale).hero` (R1 fixed schema, §7) | Server-rendered + Motion Orchestrator `<script>` (R1, §10) | Single real `<h1>`, fixed DOM order (R1, §5) |
-| Hero visual components | `src/components/sections/{PrecisionSystemVisual,ProcessRail,EvaluationLedger}.astro` (fixed paths, R1 §8.6) | Props only | Server-rendered SVG/markup; motion state driven by Hero's orchestrator via `data-motion-state`, no independent observer | `aria-hidden` + text alternative; `tabindex="0"`+`aria-label` on scrollable rail |
+| Hero | `src/components/sections/Hero.astro` (fixed path), carries `[data-hero-motion-root]` (R2 §10) | `getDictionary(locale).hero` (R1 fixed schema, §7) | Server-rendered + Motion Orchestrator `<script>`, synchronous bootstrap (R1 §10, R2 §10) | Single real `<h1>`, fixed DOM order (R1, §5) |
+| Hero visual components | `src/components/sections/{PrecisionSystemVisual,ProcessRail,EvaluationLedger}.astro` (fixed paths, R1 §8.6) | Props only | Server-rendered SVG/markup; motion state driven by Hero's orchestrator via `[data-hero-motion-root][data-motion-state]`, no independent observer | `aria-hidden` + text alternative; `tabindex="0"`+`aria-label` on scrollable rail |
 | Brand Primitives | `src/components/brand/*.astro` (six existing, unchanged) | Props only | Server-rendered | Existing `decorative`/`ariaLabel` contract, unmodified |
 | Locale Messages | `src/data/locales/{zh-tw,en}.ts`, `src/utils/i18n.ts` | Static TS objects, fixed `hero` schema (R1, §7) | Build-time only | N/A (data layer) |
 | CTA | `src/components/ui/Button.astro` | Props | Server-rendered | Focus-visible, `aria-busy`/`aria-disabled` |
@@ -205,9 +218,20 @@ is explicitly out of scope.
   never overflowing at 320px (R1-07, §14).
 - **Primary CTA**: token changes from `--color-accent` to
   `--color-action-primary` / `--color-action-primary-hover`
-  (copper-700/800) — a token substitution inside the existing
-  `Button.astro` call. If `Button.astro` doesn't yet expose a variant that
-  resolves to these tokens, CC-02I-02 adds one.
+  (copper-700/800). **R2-06 (fixed constraint):** `Button.astro` is a
+  sitewide shared component and is not modified unless the Header CTA's
+  `action-primary` token genuinely cannot be expressed through
+  `Button.astro`'s existing public API. If a change is unavoidable, it is
+  strictly an opt-in addition (a new `variant` value or a new opt-in
+  prop) — every existing variant's default output is byte-for-byte
+  unchanged, no existing Button call site is affected, and CC-02I-02 must
+  inventory every current `Button.astro` call site and add a regression
+  test proving a Button that does not pass the new opt-in variant/prop
+  renders an identical computed style before and after. If an opt-in
+  change is not achievable, CC-02I-02 stops without touching
+  `Button.astro` and a separate Remediation Proposal is raised instead —
+  it does not modify the component's defaults under this ticket. See
+  Ticket CC-02I-02 §8 for the full constraint.
 - **Sticky behavior**: unchanged — `position: sticky; top: 0`.
 - **Scroll state / transparent-solid**: **not introduced by this stage** —
   out of scope, not a silent gap.
@@ -480,17 +504,21 @@ receive no API changes.
 - **Locale data**: `getDictionary(locale).hero` (§7).
 - **ARIA**: no additional landmark; exactly one `<h1>`.
 - **State**: owns the Motion Orchestrator's four-state machine (`settled`/
-  `armed`/`running`/`complete`, §10) via a `data-motion-state` attribute
-  on its root element.
+  `armed`/`running`/`complete`, §10) via a `data-motion-state` attribute on
+  its root element, which also carries the `data-hero-motion-root`
+  selector hook (§10) so descendant CSS never has to guess which ancestor
+  is authoritative.
 - **Events**: CTA clicks fire the existing `trackEvent="cta_click"`
   analytics pattern via `Button.astro`, unchanged.
 - **Slots**: none — content is fully data-driven.
 - **Fallback**: none needed.
-- **Reduced motion**: the orchestrator checks `matchMedia` once and never
-  creates an `IntersectionObserver` if reduced motion is active — root
-  state is `settled` immediately (§10).
-- **Server/client rendering**: server-rendered markup; one `<script>` for
-  the Motion Orchestrator.
+- **Reduced motion**: a synchronous Motion Bootstrap (§10) checks
+  `matchMedia` before the first animated child paints and never creates an
+  `IntersectionObserver` if reduced motion is active — root state stays
+  `settled`.
+- **Server/client rendering**: server-rendered markup; one minimal,
+  non-deferred `<script>` for the Motion Bootstrap + Orchestrator, placed
+  so it runs before the Hero's animated children are first painted (§10).
 - **JavaScript allowed?**: Yes, minimal — exactly one orchestrator script,
   no per-child-component script for motion purposes.
 - **Test responsibility**: H1 line-break correctness, DOM order assertion,
@@ -501,7 +529,8 @@ receive no API changes.
 
 - **Responsibility**: render the primary + secondary system visual
   (layered SVG), with its visual state driven entirely by the Hero root's
-  `data-motion-state` via CSS — no independent motion trigger of its own.
+  `[data-hero-motion-root][data-motion-state]` via CSS — no independent
+  motion trigger of its own.
 - **Fixed prop contract (R1, R1-04)**:
 
   ```ts
@@ -521,12 +550,15 @@ receive no API changes.
   reproducible across builds.
 - **ARIA**: SVG `aria-hidden="true"`; required text alternative renders as
   visually-hidden text adjacent to the SVG.
-- **State**: purely CSS-reactive to the ancestor Hero root's
-  `data-motion-state` attribute — no own `IntersectionObserver` (R1,
-  §10).
+- **State**: purely CSS-reactive to the ancestor
+  `[data-hero-motion-root][data-motion-state]` attribute — no own
+  `IntersectionObserver` (R1, §10).
 - **Reduced motion / No-JS default**: renders the fully-settled end state
-  by default (i.e. when no ancestor `data-motion-state="running"` is
-  present) — never a "not yet drawn" flash.
+  by default (i.e. under `[data-hero-motion-root][data-motion-state=
+  "settled"]`, or when no `data-hero-motion-root` ancestor exists at all,
+  such as with CSS disabled) — never a "not yet drawn" flash, and never a
+  state that shows the settled end state first and then animates
+  backward into a start position (R2, §10).
 - **Server/client rendering**: SVG server-rendered; no own `<script>`.
 - **JavaScript allowed?**: No, for this component specifically — motion
   triggering is centralized in `Hero.astro`.
@@ -662,49 +694,122 @@ dependency, reasonable DOM node count, animation only via transform/
 opacity/stroke, must render in a complete/settled state under reduced
 motion or before JS runs, decorative graphics get `aria-hidden`.
 
-## 10. Motion Orchestrator (R1 — fixed architecture, R1-06)
+## 10. Motion Orchestrator (R1 §10 fixed the architecture; R2 §10 fixes the first-frame state model)
 
 **This section replaces the original spec's contradictory "Hero ships no
-JS" + "five components animate in sync" language.** The fixed
-architecture:
+JS" + "five components animate in sync" language (R1), and then closes a
+second contradiction Revision 1 left open (R2-02): `settled` was defined
+as both "the SSR initial state" and "the state that never animates,"
+while normal JS mode was expected to leave `settled` for `armed`/
+`running` — which, without a synchronous bootstrap, risks a real user
+seeing the fully-complete visual for one frame and then watching it jump
+backward into its animation-start position.** The model below is fixed —
+not an implementation choice.
 
-- **`Hero.astro` owns a single Motion Orchestrator** — one small vanilla-
-  JavaScript `<script>`, one `IntersectionObserver`, one state machine.
-  No child component (`PrecisionSystemVisual`, `ProcessRail`) creates its
-  own observer.
-- **Four states**, held as `data-motion-state` on the Hero root:
+### Selector convention (R2 — corrected)
 
-  | State | Meaning | Trigger |
-  |---|---|---|
-  | `settled` | Default. No animation has run or will run — fully-complete visual end state. | Initial HTML state; also the terminal state under reduced motion or missing `IntersectionObserver` support. |
-  | `armed` | JS loaded, reduced motion is NOT active, Hero is entering/about to enter viewport. | `IntersectionObserver` callback fires for the first time. |
-  | `running` | The five-step narrative is actively playing. | Immediately follows `armed`. |
-  | `complete` | Narrative finished — visually identical to `settled`'s end state. | ~800-1100ms after `running` begins. |
+The Hero's own root element carries **both** `data-hero-motion-root` and
+`data-motion-state`:
 
-- **Child selector / delay / duration**: child components read the
-  ancestor `[data-motion-state="running"]` selector via CSS to time their
-  own sub-steps with `animation-delay`, using existing
+```html
+<section data-hero-motion-root data-motion-state="settled">
+```
+
+Every CSS rule that reacts to motion state is scoped through
+`[data-hero-motion-root]`, e.g.:
+
+```css
+[data-hero-motion-root][data-motion-state="settled"] .some-child { ... }
+[data-hero-motion-root]:not([data-motion-state]) .some-child { ... }
+```
+
+**A bare `:root:not([data-motion-state])` selector must never appear
+anywhere in implementation or documentation** — `:root` matches `<html>`,
+not the Hero root, and using it was Revision 1's mistake (R2-02). Every
+selector is scoped to the actual Hero root via `[data-hero-motion-root]`.
+
+### Four states — final semantics (R2 — fixed, not left to implementers)
+
+| State | Meaning | When it applies |
+|---|---|---|
+| `settled` | The complete, final visual state. Once a page instance is in `settled`, it **will not** animate — this is a terminal state for that page load, not a transient starting point that JS is expected to leave. | SSR/initial HTML; No-JS; `prefers-reduced-motion: reduce`; no `IntersectionObserver` support. Any one of these conditions being true means the page stays in `settled` for its entire lifetime. |
+| `armed` | Exists **only** on a page load where normal JS is running, reduced motion is NOT active, and `IntersectionObserver` is supported. Must be set **synchronously**, before the Primary Visual's animated sub-elements are first painted — never after a `settled`-looking first frame. Only decorative visual elements (the SVG's own internal animated parts) may be in their animation-start visual state under `armed`; H1, Body, both CTAs, and every accessible/interactive element render their normal, fully-visible, fully-interactive state under `armed` exactly as they do under `settled` — motion state never hides, dims, or displaces content, text, or controls. | Set by the synchronous Motion Bootstrap (below), immediately, before first paint of animated children. |
+| `running` | The five-step narrative is actively playing. | Entered when the `IntersectionObserver` fires for the first time (Hero enters/is about to enter the viewport). |
+| `complete` | Terminal post-animation state. Visually **equivalent** to `settled`'s end state — a viewer cannot tell the two apart by looking at the page. | ~800-1100ms after `running` begins. Never re-enters `running` afterward. |
+
+The critical correction from Revision 1: **`settled` is never a state
+that JS is expected to leave.** A page load either qualifies for
+animation (goes `armed` → `running` → `complete`, synchronously bootstrapped
+so `armed` is set before the first relevant paint) or it does not
+(stays `settled` for its whole lifetime, decided once, at bootstrap time).
+There is no code path where a page starts in `settled`, paints the
+settled visual, and only then decides to animate — that path is exactly
+what produced the flash/backward-jump defect R2-02 targets.
+
+### Motion Bootstrap (R2 — new, mandatory)
+
+`Hero.astro` ships a **minimal, synchronous, non-deferred** inline
+`<script>` — not a `type="module"` script, not `defer`, not appended
+after other Hero content — placed immediately after the Hero root's
+opening markup and before the Primary Visual's animated sub-elements in
+document order, so it executes and sets `data-motion-state` before the
+browser paints those elements. The bootstrap:
+
+1. Reads `window.matchMedia('(prefers-reduced-motion: reduce)').matches`.
+2. Checks `typeof IntersectionObserver === 'function'`.
+3. If reduced motion is active, **or** `IntersectionObserver` is
+   unsupported: leaves/sets `data-motion-state="settled"` and does not
+   create an observer at all — not created-then-disconnected, never
+   instantiated.
+4. Otherwise: sets `data-motion-state="armed"` synchronously, then creates
+   exactly one `IntersectionObserver` on the Hero root.
+5. That single observer's callback, on first intersection, sets
+   `data-motion-state="running"`; a timer (matching the narrative's actual
+   staggered `animation-delay` total) sets `data-motion-state="complete"`
+   once the five-step sequence finishes, then disconnects the observer.
+
+No module script, no deferred script, and no post-first-paint code path
+may perform step 3 or step 4 — the state must be correct at first paint,
+not corrected after it.
+
+### Other fixed rules (carried from R1, restated for clarity)
+
+- **Child selector / delay / duration**: child components read
+  `[data-hero-motion-root][data-motion-state="running"]` via CSS to time
+  their own sub-steps with `animation-delay`, using existing
   `--duration-section`/`--duration-ui` tokens and the CC-02F prototype's
   proven stagger values — no new duration/easing token.
-- **Reduced motion**: `matchMedia('(prefers-reduced-motion: reduce)')` is
-  checked once, before the observer is created. If true, root state is
-  set directly to `settled` and the observer is **never created** — not
-  created-then-disconnected.
-- **No-JS fallback**: default HTML state (no `data-motion-state`
-  attribute, or explicitly `settled`) renders the fully-settled end state
-  via CSS alone. H1, Body, CTA, and the Primary/Secondary Visual are never
-  hidden, dimmed, or displaced waiting for JavaScript.
-- **Failure fallback**: if `IntersectionObserver` is unavailable, root
-  state stays `settled` — same behavior as reduced motion, no error.
 - **Trigger**: fires once; the observer disconnects after first firing (or
-  is never created at all under reduced motion) — the narrative never
-  re-triggers on repeated scroll-into-view.
+  is never created at all under reduced motion / no support) — the
+  narrative never re-triggers on repeated scroll-into-view.
 - **Prohibited**: looping, re-triggering, blocking H1/Body/CTA
-  interactivity or focus during `running`, staggered fade-up per line of
-  text, mouse-follow effects, parallax, particles, scroll-hijacking, heavy
-  blur.
+  interactivity or focus during `running` or `armed`, staggered fade-up
+  per line of text, mouse-follow effects, parallax, particles,
+  scroll-hijacking, heavy blur.
 - **Numeric duration tolerance**: 800-1100ms target, 750-1150ms accepted
   measured range (§12).
+
+### Required test coverage (R2 — mandatory, assigned to CC-02I-06)
+
+1. **No-JS**: root stays `settled`; full content visible (Playwright
+   `javaScriptEnabled: false`).
+2. **Reduced motion**: root stays `settled`; `IntersectionObserver`
+   constructor call count is 0 (verified via an injected spy/counter, not
+   source inspection alone).
+3. **Normal JS**: at the first frame where the Primary Visual's animated
+   sub-elements are observable, `data-motion-state` is already `armed` or
+   `running` — never observably `settled` for even one frame before
+   transitioning. No settled-then-backward-jump sequence is observable.
+4. **All states**: H1, Body, Primary CTA, and Secondary CTA's computed
+   `opacity`, `visibility`, and `transform` do not change across
+   `settled`/`armed`/`running`/`complete`.
+5. **Complete**: never re-triggers after reaching `complete`; the final
+   visual state is equivalent to `settled`'s.
+6. **Observer count**: exactly 1 Hero-owned motion `IntersectionObserver`
+   per page; 0 child-component-owned observers.
+7. **First-frame flash**: automated evidence (a frame-by-frame or
+   screenshot-diff test) proving no flash/backward-jump — source-code
+   inspection alone does not satisfy this requirement.
 
 ## 11. Accessibility
 
@@ -840,8 +945,14 @@ Vague language ("small enough," "does not regress," "0 CLS,"
   verified via Playwright `reducedMotion: 'reduce'` context, and the
   Motion Orchestrator's `IntersectionObserver` is never created under
   that condition.
+- Normal-JS page loads never observably render a `settled` first frame
+  before transitioning to `armed`/`running` — the Motion Bootstrap (§10)
+  sets `armed` synchronously before the Primary Visual's animated
+  sub-elements first paint, verified with automated first-frame evidence,
+  not source inspection alone (R2-02).
 - DOM order matches §5's fixed sequence exactly, at every breakpoint.
-- No child Hero component creates its own `IntersectionObserver`.
+- No child Hero component creates its own `IntersectionObserver`; exactly
+  one Hero-owned observer exists per page.
 - No `Math.random()`-derived ID anywhere in production Hero components.
 - Zero Critical/Serious axe violations, both locales, desktop + mobile.
 - Numeric performance thresholds in §12 are met, or any miss is
@@ -883,22 +994,108 @@ documented reason):**
   Stage Gates in §17 are passed and each ticket below is claimed and
   completed individually.
 
-## 17. Two distinct Stage Gates (R1 — fixed, R1-13)
+## 17. Two distinct Stage Gates (R1 fixed the split; R2-01/R2-03/R2-04 fix the remaining ambiguity)
 
-This stage has two separate, never-merged gate documents:
+This stage has two separate, never-merged gate documents. Revision 1
+introduced the split but left a naming ambiguity — `CC-02I-stage-gate-
+review.md` said it was superseded while other documents still cited it as
+current, and the finding-mapping document (`CC-02I-stage-gate-r1-review.md`)
+was itself ambiguous about whether it or the original review was
+authoritative. **Revision 2 (R2-01) removes that ambiguity completely: the
+gate documents named below are the only correct references, full
+filenames, no "as revised" or "current revision's" indirection anywhere.**
 
-1. **CC-02I Implementation Authorization Gate** —
-   `docs/engineering/reviews/CC-02I-stage-gate-review.md` (as revised
-   under this Revision 1) plus `docs/engineering/specs/CC-02I-registry-
-   proposal.json`. Decides only whether the eight tickets below may
-   **start**. Evaluated entirely before any ticket touches `src/**` or
-   `public/**`.
-2. **CC-02I Production Acceptance Gate** — a document CC-02I-08 creates
-   only after all eight tickets are complete and the finished
-   implementation exists. Judges the **shipped result**: whether it
-   matches Variant C, whether regression passed, whether it's ready to
-   integrate. Never reused as, or merged with, the Implementation
-   Authorization Gate document.
+### 17.1 CC-02I Implementation Authorization Gate (canonical, R2)
 
-Neither gate document declares its own approval — both remain ChatGPT's/
-the user's decision.
+Composed of **exactly two files**:
+
+1. `docs/engineering/reviews/CC-02I-stage-gate-r2-review.md`
+2. `docs/engineering/specs/CC-02I-registry-proposal.json`
+
+Decides only whether the eight tickets below may **start**. Evaluated
+entirely before any ticket touches `src/**` or `public/**`. Does not
+declare its own approval — that remains ChatGPT's/the user's decision.
+
+**Historical documents, not part of the gate:**
+
+- `docs/engineering/reviews/CC-02I-stage-gate-review.md` — the original
+  CC-02I-PREP submission. Status: **Historical / Superseded.** Kept only
+  as a record of what was originally submitted; carries no current gate
+  authority.
+- `docs/engineering/reviews/CC-02I-stage-gate-r1-review.md` — the
+  Revision 1 finding→fix mapping. Status: **Superseded by Revision 2.**
+  Its R1-01 through R1-13 finding history is preserved unmodified as a
+  historical record; it is not consulted to determine current gate
+  status — only `CC-02I-stage-gate-r2-review.md` is.
+
+Every other document in this stage that references "the Implementation
+Authorization Gate" — the production spec itself, every ticket, the
+registry proposal, and this stage's handoff — names
+`CC-02I-stage-gate-r2-review.md` explicitly, by full filename. No
+document may use an indirect phrase ("the current review," "as revised
+this round," "the latest stage-gate-review") that could resolve to more
+than one file.
+
+### 17.2 CC-02I Production Acceptance Gate (fixed schema, R2-03)
+
+A **new** document, `docs/engineering/reviews/CC-02I-production-
+acceptance-gate.md`, created by CC-02I-08 only after all eight
+implementation tickets are complete and the finished implementation
+exists. Judges the **shipped result** — never reused as, or merged with,
+the Implementation Authorization Gate documents in §17.1.
+
+**Its structure is fixed now, not left for CC-02I-08 to invent.** It must
+contain exactly these eighteen sections, in this order:
+
+1. Gate identity and purpose.
+2. Implementation Base Commit (§17.3 — the exact SHA `WF-CC02I-ACT-01`
+   produced).
+3. Candidate / Final Checkpoint Commit (the exact SHA CC-02I-08 finishes
+   at).
+4. CC-02I-01 through CC-02I-08 commit map (one SHA per ticket, showing the
+   implementation's actual commit history).
+5. Actual changed files and scope diff (relative to the Implementation
+   Base Commit).
+6. Variant C visual consistency.
+7. Header acceptance.
+8. Hero structure and DOM order acceptance.
+9. Locale and real-route acceptance.
+10. No-JS, reduced motion, and Motion State acceptance (per §10's fixed
+    four-state model and its required test coverage).
+11. Responsive, 320px, and 200% zoom acceptance.
+12. Accessibility and keyboard acceptance.
+13. Performance data table (per §12's numeric thresholds).
+14. Full regression test results.
+15. Screenshot and review bundle paths.
+16. Known deviations, failures, and risks.
+17. Integration readiness.
+18. External Reviewer Verdict — **placeholder only.** Neither Claude nor
+    Codex fills this section with PASS/FAIL/APPROVED. It contains exactly
+    the literal text `Awaiting ChatGPT / User External Review` until a
+    human or ChatGPT writes a real verdict into it.
+
+Ticket CC-02I-08 (§CC-02I-08 in the ticket set) is updated to reference
+this exact eighteen-section structure rather than free-authoring its own.
+
+### 17.3 CC-02I Implementation Base Commit (fixed rule, R2-04)
+
+**Definition**: the Activation Commit that `WF-CC02I-ACT-01` produces when
+it writes the ChatGPT-approved `activation_target` (from the registry
+proposal) into the live `TASK_REGISTRY.json` is, by definition, the **CC-
+02I Implementation Base Commit**. It is the single fixed point that:
+
+- Precedes every CC-02I-01 through CC-02I-08 implementation commit.
+- Is the `<base-commit>` argument CC-02I-08 uses when it runs `pnpm
+  review:bundle <base-commit> ...` to build the Production Acceptance
+  Gate's review bundle.
+- Is the "Before" state for CC-02I-08's before/after screenshot pairs —
+  "After" is CC-02I-08's own final checkpoint commit.
+- Is listed, by exact SHA, in the Production Acceptance Gate's §2, next to
+  the Final Checkpoint Commit's SHA in §3 (§17.2 above).
+
+**CC-02I-08 does not guess, derive, or search for this commit** — it is
+handed the SHA directly, because `WF-CC02I-ACT-01`'s own spec and handoff
+are required to output it explicitly when that workflow completes. This
+round (`WF-CC02I-SPEC-R2`) only defines this rule — `WF-CC02I-ACT-01`
+itself is not created or executed this round (§ii of the governing
+authorization's constraints).

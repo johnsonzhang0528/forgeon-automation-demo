@@ -12,6 +12,16 @@ the ticket owner. Allowed paths now explicitly include
 `LanguageSwitcher.astro` and a dedicated `tests/e2e/header.spec.ts`, and
 explicitly exclude `Logo.astro`.
 
+## Revision note (R2)
+
+Revision 2 per ChatGPT's REVISE AND RESUBMIT — Narrow Revision 2 finding
+R2-06: `Button.astro` is a sitewide shared component and this ticket's
+original permission to modify it was underspecified — a Header-local test
+pass is not sufficient proof that a sitewide component change is safe.
+§8's CTA requirement and §14's acceptance criteria are tightened to an
+opt-in-only constraint with a mandatory call-site inventory and a
+no-regression proof; see the new §8 sub-section below.
+
 ## 1. Ticket ID
 
 CC-02I-02
@@ -84,6 +94,33 @@ against).
   modify `Logo.astro` itself (§6).
 - Swap Header primary CTA token from `--color-accent` to
   `--color-action-primary` / `--color-action-primary-hover`.
+
+### `Button.astro` constraint (R2-06 — fixed, mandatory)
+
+1. **Default to not modifying `Button.astro` at all.** Attempt the token
+   swap first using `Button.astro`'s existing public API (existing
+   variants, existing props, existing CSS custom property overrides at
+   the call site).
+2. Only if the existing API genuinely cannot express the
+   `action-primary`/`action-primary-hover` token pairing may
+   `Button.astro` be modified.
+3. If modified, the change **must** be a new opt-in `variant` value or a
+   new opt-in prop — never a change to any existing variant's default
+   output, and never a re-mapping of the component's default token
+   references.
+4. Before modifying, enumerate **every existing call site** of
+   `Button.astro` across the codebase (grep for `<Button`) and record the
+   list in completion evidence.
+5. Add at least one regression test asserting that a `Button` instance
+   which does **not** pass the new opt-in variant/prop renders an
+   unchanged computed style (color, background, border) before and after
+   this ticket's change.
+6. This regression must be re-verified in CC-02I-08's sitewide screenshot
+   pass (§CC-02I-08).
+7. **If an opt-in-only implementation is not achievable**, this ticket
+   stops without touching `Button.astro`, and a separate, independently
+   authorized Remediation Proposal is raised instead — this ticket does
+   not modify the component's shared defaults under any circumstance.
 - Nav hover keeps a short Datum-line treatment — either the existing
   `border-bottom-color` swap or an equivalent `::after` scaleX animation
   using `--duration-ui`/`--ease-standard` (no new duration/easing token).
@@ -158,6 +195,13 @@ against).
 - [ ] `pnpm test:axe` 0 Critical/Serious across all 14 page types.
 - [ ] No horizontal overflow at 360px or 320px in either locale.
 - [ ] No scroll-triggered background state was added.
+- [ ] If `Button.astro` was modified: the change is a strictly opt-in
+      variant/prop; every pre-existing call site is inventoried; a
+      regression test proves unmodified call sites are pixel-identical
+      before/after (R2-06).
+- [ ] If `Button.astro` was **not** modifiable via opt-in, this ticket
+      stopped and a Remediation Proposal was raised instead of touching
+      shared defaults (R2-06).
 
 ## 15. Completion evidence
 
@@ -181,7 +225,11 @@ adjustment in completion evidence. If keeping the Datum mark composed in
 `Header.astro` (rather than inside `Logo.astro`) produces a visual result
 that genuinely cannot achieve the CC-02F reference composition, stop and
 flag for Stage Gate — do not fall back to modifying `Logo.astro` without a
-new authorization, since that path is explicitly forbidden by R1.
+new authorization, since that path is explicitly forbidden by R1. If the
+`Button.astro` opt-in change (R2-06) cannot be implemented without
+affecting an existing variant's default output, do not force it through —
+stop, revert any `Button.astro` edit, and raise a separate Remediation
+Proposal instead.
 
 ## 18. Agent eligibility
 

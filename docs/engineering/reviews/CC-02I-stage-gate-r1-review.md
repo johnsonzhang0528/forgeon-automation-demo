@@ -1,6 +1,22 @@
 # CC-02I Stage Gate Review — Revision 1
 
-Status: **Awaiting ChatGPT Stage Gate Review — Revision 1.**
+Status: **Superseded by Revision 2.**
+
+ChatGPT reviewed the Revision 1 bundle this document accompanied
+(`20260806-2107-cc02i-spec-r1-stage-gate.zip`) and returned **REVISE AND
+RESUBMIT — Narrow Revision 2**. This document's R1-01 through R1-13
+finding→fix history is preserved below, unmodified, as a historical
+record — it remains an accurate account of what Revision 1 changed. It
+carries **no current gate authority** — it is not part of, and must not
+be cited as, the CC-02I Implementation Authorization Gate.
+
+**The single, canonical Implementation Authorization Gate for CC-02I is
+`docs/engineering/reviews/CC-02I-stage-gate-r2-review.md`, together with
+`docs/engineering/specs/CC-02I-registry-proposal.json`.** Read that
+document, not this one, for the current state of CC-02I's planning
+package.
+
+---
 
 This document does not itself approve or reject CC-02I. It records what
 changed in Revision 1 (`WF-CC02I-SPEC-R1`) in response to ChatGPT's

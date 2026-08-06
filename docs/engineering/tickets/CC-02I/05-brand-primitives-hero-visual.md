@@ -12,6 +12,15 @@ This ticket now runs *before* CC-02I-04 in the stage sequence (R1-09), not
 after — Hero assembly always has a finished, real component to integrate,
 never a placeholder.
 
+## Revision note (R2)
+
+Revision 2 per finding R2-02: the CSS motion-state selector convention is
+corrected from a bare `data-motion-state` reference to the fully-scoped
+`[data-hero-motion-root][data-motion-state="..."]` form, so these
+components' CSS never accidentally matches an unrelated ancestor. No
+change to the `uid` contract, component paths, or prop contracts from
+Revision 1.
+
 ## 1. Ticket ID
 
 CC-02I-05
@@ -110,14 +119,18 @@ No file under `src/components/prototypes/cc02-final/` or
   zero + component-local override setting animated elements' initial
   state to their settled end-state + no independent
   `IntersectionObserver` — see §8's Motion Orchestrator note below).
-- **Motion Orchestrator integration (R1-06)**: this component does **not**
-  create its own `IntersectionObserver`. It exposes CSS hooks (data
-  attributes or classes, e.g. `[data-motion-state="settled|armed|running|
-  complete"]` on its root) that `Hero.astro`'s single Motion Orchestrator
-  (built in CC-02I-06) sets. This ticket implements the CSS that responds
-  to those state attributes/classes; CC-02I-06 implements the JS that sets
-  them. Default (no JS, or before the orchestrator runs) renders the fully
-  settled end state — never a "not yet drawn" flash.
+- **Motion Orchestrator integration (R1-06, selector fixed R2-02)**: this
+  component does **not** create its own `IntersectionObserver`. It
+  exposes CSS hooks that react to the ancestor Hero root's
+  `[data-hero-motion-root][data-motion-state="settled|armed|running|
+  complete"]` — never a bare `:root:not(...)` selector, which incorrectly
+  targets `<html>` instead of the Hero root. `Hero.astro`'s single Motion
+  Orchestrator (built in CC-02I-06) sets the attribute; this ticket
+  implements only the CSS that responds to it. Default rendering (no JS,
+  reduced motion, or before the bootstrap runs) is the fully settled end
+  state — never a "not yet drawn" flash, and only decorative sub-elements
+  of the SVG may differ between `settled` and `armed`; nothing
+  accessibility-relevant changes.
 
 ### ProcessRail.astro
 
@@ -143,10 +156,10 @@ No file under `src/components/prototypes/cc02-final/` or
   mobile container.
 - Does **not** create its own `IntersectionObserver` — same Motion
   Orchestrator contract as `PrecisionSystemVisual` above (R1-06). Exposes
-  the same `data-motion-state` hook pattern; `AssemblySpine`'s own
-  existing reveal behavior (if any) is left as static/non-interactive
-  under Hero usage, matching the "current step may use Copper, other
-  steps use Steel" static framing.
+  the same `[data-hero-motion-root][data-motion-state]` hook pattern
+  (R2-02); `AssemblySpine`'s own existing reveal behavior (if any) is left
+  as static/non-interactive under Hero usage, matching the "current step
+  may use Copper, other steps use Steel" static framing.
 
 ### EvaluationLedger.astro
 
@@ -187,11 +200,12 @@ No file under `src/components/prototypes/cc02-final/` or
   CC-02F gap).
 - `EvaluationLedger`: semantic `<dl>`/`<dt>`/`<dd>`.
 - Full three-layer reduced-motion defense on `PrecisionSystemVisual` and
-  `ProcessRail`'s CSS response to `data-motion-state` — default/no-JS
-  state is always the fully settled end state, never requiring JS
-  execution to become visible or complete (this satisfies the Motion
-  Orchestrator's "settled by default" contract from CC-02I-06's spec even
-  though the orchestrator script itself is built there).
+  `ProcessRail`'s CSS response to `[data-hero-motion-root][data-motion-
+  state]` (R2-02 selector fix) — default/no-JS state is always the fully
+  settled end state, never requiring JS execution to become visible or
+  complete (this satisfies the Motion Orchestrator's "settled by default"
+  contract from CC-02I-06's spec even though the orchestrator script
+  itself is built there).
 
 ## 11. Performance requirements
 

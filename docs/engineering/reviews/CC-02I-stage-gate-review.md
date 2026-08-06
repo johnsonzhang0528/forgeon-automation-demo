@@ -1,17 +1,21 @@
 # CC-02I Stage Gate Review
 
-Status: **Awaiting ChatGPT Stage Gate Review — Revision 1.**
+Status: **Historical / Superseded.**
 
-**Superseded by Revision 1.** ChatGPT returned a **REVISE AND RESUBMIT**
-verdict on the CC-02I-PREP bundle this document originally accompanied
-(`20260806-085203-cc02i-prep-explicit-stage-gate.zip`). This document is
-kept as the historical record of that first submission — it is not
-rewritten to declare a different outcome. The current, active review is
-`docs/engineering/reviews/CC-02I-stage-gate-r1-review.md`, produced under
-maintenance stage `WF-CC02I-SPEC-R1`, which maps every ChatGPT finding
-from this round to its exact fix location in the revised production spec,
-registry proposal, and eight tickets. Read the R1 review, not this one,
-for the current state of CC-02I's planning package.
+This document is the original CC-02I-PREP submission. ChatGPT returned a
+**REVISE AND RESUBMIT** verdict on the bundle it accompanied
+(`20260806-085203-cc02i-prep-explicit-stage-gate.zip`). It is kept
+verbatim as the historical record of that first submission and carries
+**no current gate authority** — it is not part of, and must not be cited
+as, the CC-02I Implementation Authorization Gate.
+
+**The single, canonical Implementation Authorization Gate for CC-02I is
+`docs/engineering/reviews/CC-02I-stage-gate-r2-review.md`, together with
+`docs/engineering/specs/CC-02I-registry-proposal.json`.** (See
+`docs/engineering/specs/CC-02I-header-hero-production-spec.md` §17 for the
+full gate structure, fixed under Revision 2 / `WF-CC02I-SPEC-R2`, R2-01.)
+Read `CC-02I-stage-gate-r2-review.md`, not this file, for the current
+state of CC-02I's planning package.
 
 This document does not itself approve or reject CC-02I. It exists so
 ChatGPT (and the user) can evaluate the spec/ticket package produced this

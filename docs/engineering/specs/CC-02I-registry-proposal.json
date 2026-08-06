@@ -1,7 +1,7 @@
 {
-  "_note": "This is a PROPOSAL, not the live registry. It must not be copied over docs/agents/TASK_REGISTRY.json directly. current_live_state reflects the real, current TASK_REGISTRY.json entry for CC-02I as of this revision (Revision 1, WF-CC02I-SPEC-R1). activation_target is the state this proposal asks ChatGPT to approve moving toward — it is not applied by this document and is not applied by any ticket in WF-CC02I-SPEC-R1. Moving from current_live_state to activation_target requires a separate, independently-authorized activation workflow (WF-CC02I-ACT-01, not yet created) after ChatGPT approves this revised spec and ticket package. The existing register-maintenance command is a generic maintenance-stage bootstrap mechanism (see docs/agents/DUAL_AGENT_PROTOCOL.md's 'Maintenance registration' section) — it cannot be used to unlock CC-02I itself, since CC-02I is a Product Stage, not a Maintenance Stage, and the same protocol explicitly states an agent cannot use maintenance registration to unlock a blocked Product Stage. Until WF-CC02I-ACT-01 is authorized, claimed, and completed, CC-02I remains claimable:false in the live registry, regardless of what this proposal's activation_target says.",
-  "revision": 1,
-  "revision_context": "Produced under WF-CC02I-SPEC-R1 in response to ChatGPT's REVISE AND RESUBMIT verdict on the CC-02I-PREP Stage Gate bundle (20260806-085203-cc02i-prep-explicit-stage-gate.zip). Variant C (Engineering Editorial Sheet) is unchanged; this revision resolves spec ambiguities, path/dependency inconsistencies, and underspecified acceptance criteria flagged by that review.",
+  "_note": "This is a PROPOSAL, not the live registry. It must not be copied over docs/agents/TASK_REGISTRY.json directly. current_live_state reflects the real, current TASK_REGISTRY.json entry for CC-02I as of this revision (Revision 2, WF-CC02I-SPEC-R2). activation_target is the state this proposal asks ChatGPT to approve moving toward — it is not applied by this document and is not applied by any ticket in WF-CC02I-SPEC-R2. Moving from current_live_state to activation_target requires a separate, independently-authorized activation workflow (WF-CC02I-ACT-01, not yet created) after ChatGPT approves this revised spec and ticket package. The existing register-maintenance command is a generic maintenance-stage bootstrap mechanism (see docs/agents/DUAL_AGENT_PROTOCOL.md's 'Maintenance registration' section) — it cannot be used to unlock CC-02I itself, since CC-02I is a Product Stage, not a Maintenance Stage, and the same protocol explicitly states an agent cannot use maintenance registration to unlock a blocked Product Stage. Until WF-CC02I-ACT-01 is authorized, claimed, and completed, CC-02I remains claimable:false in the live registry, regardless of what this proposal's activation_target says. The single canonical Implementation Authorization Gate is docs/engineering/reviews/CC-02I-stage-gate-r2-review.md plus this file — CC-02I-stage-gate-review.md and CC-02I-stage-gate-r1-review.md are both Historical/Superseded and carry no gate authority (R2-01).",
+  "revision": 2,
+  "revision_context": "Produced under WF-CC02I-SPEC-R2 in response to ChatGPT's REVISE AND RESUBMIT — Narrow Revision 2 verdict on the Revision 1 bundle (20260806-2107-cc02i-spec-r1-stage-gate.zip). Variant C (Engineering Editorial Sheet) is unchanged; this narrow revision resolves six findings (R2-01 through R2-06): gate-document consolidation, the Motion Orchestrator's first-frame state model, a pre-fixed Production Acceptance Gate schema, a fixed Implementation Base Commit rule, a corrected review-bundle handoff, and a scoped-down Button.astro change allowance. Revision 1 (WF-CC02I-SPEC-R1, produced in response to the original CC-02I-PREP REVISE AND RESUBMIT verdict) resolved thirteen earlier findings and remains in effect except where explicitly refined here.",
   "current_live_state": {
     "stage": "CC-02I",
     "claimable": false,
@@ -66,7 +66,8 @@
           "pnpm test:e2e -- tests/e2e/header.spec.ts",
           "pnpm test:e2e -- tests/e2e/mobile-nav.spec.ts",
           "pnpm test:axe"
-        ]
+        ],
+        "note_r2": "src/components/ui/Button.astro remains an allowed path, but R2-06 restricts it to an opt-in-only change with a mandatory call-site inventory and no-regression proof — see ticket §8. If opt-in isn't achievable, this ticket must stop without touching Button.astro rather than use this allowed-path entry to modify shared defaults."
       },
       {
         "id": "CC-02I-03",
@@ -116,7 +117,8 @@
         ],
         "required_tests": [
           "pnpm test:e2e -- tests/e2e/cc02i-motion.spec.ts"
-        ]
+        ],
+        "note_r2": "tests/e2e/cc02i-motion.spec.ts must cover the seven R2-02 mandatory cases (No-JS, reduced-motion observer-count spy, first-frame armed/running correctness, state-invariant accessible content, complete-is-terminal, observer count, first-frame flash evidence) in addition to the Revision 1 state-machine assertions."
       },
       {
         "id": "CC-02I-07",
@@ -161,7 +163,8 @@
           "pnpm check",
           "pnpm typecheck",
           "pnpm build"
-        ]
+        ],
+        "note_r2": "Produces docs/engineering/reviews/CC-02I-production-acceptance-gate.md using the fixed 18-section schema (production spec §17.2, R2-03). Uses the CC-02I Implementation Base Commit (production spec §17.3, R2-04) as pnpm review:bundle's base-commit argument — received from WF-CC02I-ACT-01's output, never derived. Verifies the review bundle selects the correct current handoff document, not a stale one (R2-05)."
       }
     ]
   },
@@ -169,12 +172,14 @@
   "activation_workflow_prerequisites": [
     "ChatGPT approves this revised production spec (docs/engineering/specs/CC-02I-header-hero-production-spec.md) and this revised ticket package.",
     "A separate, independently-authorized maintenance/activation workflow, WF-CC02I-ACT-01, is created — its sole purpose is to write the activation_target values above into the live docs/agents/TASK_REGISTRY.json under Human/ChatGPT stage-gate authorization, exactly as docs/agents/DUAL_AGENT_PROTOCOL.md's stage gate rule requires.",
-    "WF-CC02I-ACT-01 is not created, claimed, or executed as part of WF-CC02I-SPEC-R1. This revision round produces documents only.",
-    "Until WF-CC02I-ACT-01 completes, CC-02I remains claimable:false and no ticket under it may be claimed by either agent."
+    "WF-CC02I-ACT-01 is not created, claimed, or executed as part of WF-CC02I-SPEC-R2. This revision round produces documents only.",
+    "Until WF-CC02I-ACT-01 completes, CC-02I remains claimable:false and no ticket under it may be claimed by either agent.",
+    "When WF-CC02I-ACT-01 eventually runs, the Activation Commit it produces is, by definition, the CC-02I Implementation Base Commit (production spec §17.3, R2-04) — CC-02I-08 uses that exact SHA as its review-bundle base commit, not a derived or guessed value."
   ],
   "constraints": [
-    "current_live_state.claimable must equal the live docs/agents/TASK_REGISTRY.json CC-02I.claimable value at all times during WF-CC02I-SPEC-R1 — false.",
-    "No ticket in WF-CC02I-SPEC-R1 may modify docs/agents/TASK_REGISTRY.json's CC-02I entry.",
-    "activation_target is a proposal only; applying it is out of scope for this document and this stage."
+    "current_live_state.claimable must equal the live docs/agents/TASK_REGISTRY.json CC-02I.claimable value at all times during WF-CC02I-SPEC-R2 — false.",
+    "No ticket in WF-CC02I-SPEC-R2 may modify docs/agents/TASK_REGISTRY.json's CC-02I entry.",
+    "activation_target is a proposal only; applying it is out of scope for this document and this stage.",
+    "The canonical Implementation Authorization Gate is CC-02I-stage-gate-r2-review.md plus this file — no document may cite CC-02I-stage-gate-review.md or CC-02I-stage-gate-r1-review.md as current gate authority (R2-01)."
   ]
 }

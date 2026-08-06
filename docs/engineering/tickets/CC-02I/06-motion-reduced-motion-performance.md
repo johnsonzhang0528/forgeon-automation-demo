@@ -12,6 +12,20 @@ reproducible (R1-11), replacing vague language ("small enough," "does not
 regress," "0 CLS," "meaningfully") with actual baseline-derived
 thresholds. Fixes the "Lighthouic" typo.
 
+## Revision note (R2)
+
+Revision 2 per finding R2-02: Revision 1's four-state model still left a
+real defect — `settled` was described as both the terminal non-animating
+state and the state normal JS mode starts in and immediately leaves,
+which risks a visible flash where the complete visual renders for one
+frame before jumping backward into its animation-start position. The
+No-JS fallback selector example (`:root:not([data-motion-state])`) also
+incorrectly implied `<html>` was the reactive element. This revision
+replaces §8's Motion Orchestrator section with corrected state semantics,
+a mandatory synchronous Motion Bootstrap, the corrected
+`[data-hero-motion-root]` selector convention, and seven new mandatory
+test requirements (§13/§14 below).
+
 ## 1. Ticket ID
 
 CC-02I-06
@@ -61,36 +75,73 @@ visual components).
 
 ## 8. Implementation requirements
 
-### Motion Orchestrator architecture (R1-06 — fixed, mandatory design)
+### Motion Orchestrator architecture (R1-06 fixed the design; R2-02 fixes the first-frame model)
 
 `Hero.astro` owns a single, minimal vanilla-JavaScript orchestrator:
 
-- **One Hero Root state machine.** A single root element (the `<section>`
-  or top-level wrapper `Hero.astro` renders) carries a
-  `data-motion-state` attribute with exactly one of four values:
+- **One Hero Root state machine.** The Hero's root element carries **both**
+  `data-hero-motion-root` and `data-motion-state`:
 
-  | State | Meaning |
-  |---|---|
-  | `settled` | Default. No animation has run or will run. All child elements render their fully-complete visual end state immediately. |
-  | `armed` | JavaScript has loaded, `prefers-reduced-motion` is NOT set, and the Hero has entered (or is about to enter) the viewport — the orchestrator is about to start the narrative. |
-  | `running` | The five-step narrative is actively playing. |
-  | `complete` | The narrative has finished. Visually identical to `settled`'s end state, but reachable only after `running` — distinguishes "never animated" from "finished animating," which matters only for internal bookkeeping (e.g. guaranteeing the narrative never re-triggers), not for any visual difference. |
+  ```html
+  <section data-hero-motion-root data-motion-state="settled">
+  ```
 
-- **One `IntersectionObserver`**, created once, attached to the Hero root.
-  No child component (`PrecisionSystemVisual`, `ProcessRail`) creates its
-  own observer — both existing CC-02F-era independent-observer patterns
-  are removed/not reused in production. The observer fires the
-  `settled → armed → running` transition exactly once; after it fires
-  once (or after the Hero starts in `complete`/`settled` for any reason),
-  the observer is disconnected — the narrative never re-triggers on
-  repeated scroll-into-view.
+  `data-motion-state` holds exactly one of four values, with **fixed,
+  final semantics (R2-02)**:
+
+  | State | Meaning | Once reached |
+  |---|---|---|
+  | `settled` | The complete, final visual state. | **Terminal for the page load.** A page that is in `settled` will not animate during that load — this is not a starting point JS is expected to leave. |
+  | `armed` | Exists only on a page load where normal JS is running, reduced motion is inactive, and `IntersectionObserver` is supported. Set **synchronously**, before the Primary Visual's animated sub-elements are first painted. Only decorative SVG sub-elements may be in their animation-start visual state; H1, Body, both CTAs, and every accessible/interactive element look and behave exactly as they do under `settled`. | Transitions to `running` on first intersection. |
+  | `running` | The five-step narrative is actively playing. | Transitions to `complete` after ~800–1100ms. |
+  | `complete` | Terminal. Visually equivalent to `settled`'s end state. | Never re-enters `running`. |
+
+  **The critical rule**: a page load is decided **once**, at bootstrap
+  time (below), to either stay `settled` for its entire lifetime or
+  proceed through `armed → running → complete`. There is no code path
+  where `settled` renders first and JavaScript later moves the page off
+  it — that path is exactly what produces the flash/backward-jump defect
+  this revision fixes.
+
+- **Synchronous Motion Bootstrap (R2-02 — new, mandatory).** A minimal,
+  non-deferred, non-`type="module"` inline `<script>`, placed immediately
+  after the Hero root's opening tag and before the Primary Visual's
+  markup in document order, so it runs and sets `data-motion-state`
+  before the browser paints the animated sub-elements. The bootstrap:
+
+  1. Reads `window.matchMedia('(prefers-reduced-motion: reduce)').matches`.
+  2. Checks `typeof IntersectionObserver === 'function'`.
+  3. If reduced motion is active, or `IntersectionObserver` is
+     unsupported: leaves/confirms `data-motion-state="settled"` and does
+     **not** create an observer — not created-then-disconnected, never
+     instantiated.
+  4. Otherwise: sets `data-motion-state="armed"` synchronously, then
+     creates exactly one `IntersectionObserver` on the Hero root.
+  5. On first intersection, the observer callback sets
+     `data-motion-state="running"`; a timer matching the actual staggered
+     `animation-delay` total sets `data-motion-state="complete"` once the
+     sequence finishes, then disconnects the observer.
+
+  No module script, deferred script, or post-first-paint code path may
+  perform steps 3 or 4 — correctness at first paint is the requirement,
+  not correction after it.
+
+- **One `IntersectionObserver`**, created once (per the bootstrap above),
+  attached to the Hero root. No child component (`PrecisionSystemVisual`,
+  `ProcessRail`) creates its own observer — both existing CC-02F-era
+  independent-observer patterns are removed/not reused in production.
+- **Selector convention (R2-02 — corrected)**: every CSS rule that reacts
+  to motion state is scoped through `[data-hero-motion-root]`, e.g.
+  `[data-hero-motion-root][data-motion-state="running"] .some-child { ...
+  }`. **A bare `:root:not([data-motion-state])` selector must never be
+  used** — `:root` matches `<html>`, not the Hero root; this was Revision
+  1's mistake.
 - **State propagation**: the orchestrator sets `data-motion-state` on the
-  Hero root only. Every child component (`DatumOrigin` internally,
-  `PrecisionSystemVisual`, `ProcessRail`) reads that single ancestor
-  attribute via CSS descendant selectors (`[data-motion-state="running"]
-  .some-child-selector { ... }`) to time its own visual sub-steps via
+  Hero root only. Every child component reads
+  `[data-hero-motion-root][data-motion-state="running"]` via CSS
+  descendant selectors to time its own visual sub-steps via
   `animation-delay`/`transition-delay` — no child component has its own
-  JS-driven state, only CSS that reacts to the shared root attribute.
+  JS-driven state.
 - **Trigger**: viewport intersection (Hero root crosses into view),
   matching the existing `IntersectionObserver` convention already used by
   `VisionLockFrame`/`DatumOrigin` elsewhere in the codebase — but
@@ -101,23 +152,11 @@ visual components).
   `--duration-section`/`--duration-ui` tokens and their existing
   `animation-delay` stagger values from the CC-02F prototype design — no
   new duration/easing token.
-- **Reduced motion**: `window.matchMedia('(prefers-reduced-motion:
-  reduce)').matches` is checked once, before the observer is even
-  created. If true, the Hero root is set directly to `data-motion-state=
-  "settled"` and the `IntersectionObserver` is never created at all — not
-  created-then-immediately-disconnected, never created.
-- **No-JS fallback**: the Hero root's default HTML (no `data-motion-state`
-  attribute, or explicitly `data-motion-state="settled"` set server-side)
-  renders the fully-settled end state via CSS alone (`[data-motion-state
-  ="settled"], :root:not([data-motion-state])` selectors, or equivalent) —
-  H1, Body, CTA, and the Primary/Secondary Visual are never hidden,
-  dimmed, or displaced waiting for JavaScript to execute.
-- **Failure fallback**: if `IntersectionObserver` is unavailable in the
-  browser (matching the existing fallback pattern used elsewhere in the
-  codebase), the Hero root stays at `settled` — same behavior as reduced
-  motion, no narrative plays, no error.
+- **Failure fallback**: if `IntersectionObserver` is unavailable, the Hero
+  root stays at `settled` — same behavior as reduced motion, no error.
 - **Prohibited**: looping, re-triggering on repeated scroll-into-view,
-  blocking H1/Body/CTA interactivity or focus during `running`.
+  blocking H1/Body/CTA interactivity or focus during `running` or
+  `armed`.
 
 ### Numeric performance criteria (R1-11 — fixed, mandatory thresholds)
 
@@ -182,11 +221,13 @@ does not introduce new visual design.
 
 - Full three-layer reduced-motion defense verified on the *assembled*
   Hero: `tokens.css` global duration-zero, each component's CSS response
-  to `data-motion-state="settled"`, and the orchestrator's own
-  `matchMedia` check that skips creating the observer entirely — test via
-  Playwright `browser.newContext({ reducedMotion: 'reduce' })`, confirming
-  the root's `data-motion-state` is `settled` immediately and no
-  `IntersectionObserver` fires.
+  to `[data-hero-motion-root][data-motion-state="settled"]`, and the
+  Motion Bootstrap's own `matchMedia` check that skips creating the
+  observer entirely — test via Playwright `browser.newContext({
+  reducedMotion: 'reduce' })`, confirming the root's `data-motion-state`
+  is `settled` immediately and the `IntersectionObserver` constructor is
+  never called (verified via an injected call-count spy, not source
+  inspection alone — R2-02).
 - No animation blocks keyboard focus from reaching the CTAs or Process
   Rail during the `running` state.
 - CTAs and all primary content are interactive and visible from first
@@ -208,30 +249,69 @@ one.
 
 ## 13. Tests
 
-- New `tests/e2e/cc02i-motion.spec.ts`: asserts the four-state machine
-  (`settled`/`armed`/`running`/`complete`) transitions correctly; asserts
-  exactly one `IntersectionObserver`-driven trigger (no re-trigger on
-  scroll away and back); asserts CTA interactivity during `running`;
-  asserts reduced-motion context yields immediate `settled` with no
-  observer created (verify via a page-injected instrumentation flag or
-  equivalent, not just visual inspection); asserts total narrative
-  duration falls in the 750–1150ms accepted range.
-- Lighthouse runs per §8's methodology — recorded, not just eyeballed.
+New `tests/e2e/cc02i-motion.spec.ts` must cover all seven R2-02 mandatory
+cases, in addition to the Revision 1 assertions:
+
+1. **No-JS**: with `javaScriptEnabled: false`, the Hero root's
+   `data-motion-state` is `settled` and full content (H1, Body, both
+   CTAs, Primary/Secondary Visual) is visible in the rendered DOM.
+2. **Reduced motion**: `browser.newContext({ reducedMotion: 'reduce' })`
+   yields `data-motion-state="settled"` immediately, and an injected
+   `IntersectionObserver` constructor spy records **0** calls.
+3. **Normal JS, first-frame correctness**: at the earliest observable
+   frame where the Primary Visual's animated sub-elements would be
+   painted, `data-motion-state` is already `armed` or `running` — never
+   observably `settled` for a frame before transitioning. No
+   settled-then-backward-jump sequence is observable (paired with the
+   first-frame-flash evidence in case 7).
+4. **State-invariant accessible content**: across all four states,
+   computed `opacity`, `visibility`, and `transform` for H1, Body, Primary
+   CTA, and Secondary CTA are asserted unchanged.
+5. **Complete is terminal**: after reaching `complete`, scrolling away and
+   back does not re-trigger `running`; the visual state at `complete`
+   matches the visual state at `settled` (screenshot or computed-style
+   comparison).
+6. **Observer count**: exactly 1 `IntersectionObserver` construction
+   attributable to the Hero motion system per page load; 0 constructions
+   from any child component.
+7. **First-frame flash evidence**: automated frame-by-frame capture or
+   screenshot-diff proving no flash/backward-jump on a normal (non-
+   reduced-motion) page load — source-code inspection alone does not
+   satisfy this requirement; a reviewer must be able to see the actual
+   evidence artifact.
+
+Also retained from Revision 1: asserts the four-state machine transitions
+correctly end-to-end; asserts total narrative duration falls in the
+750–1150ms accepted range.
+
+Lighthouse runs per §8's methodology — recorded, not just eyeballed.
 
 ## 14. Acceptance criteria
 
-- [ ] `Hero.astro` implements exactly one `IntersectionObserver`, exactly
-      one `data-motion-state` root attribute, four states as specified.
+- [ ] `Hero.astro` implements exactly one `IntersectionObserver`, the
+      `data-hero-motion-root`/`data-motion-state` attribute pair on its
+      root, four states with the fixed R2-02 semantics (not the R1
+      language).
+- [ ] Motion Bootstrap is synchronous, non-deferred, and runs before the
+      Primary Visual's animated sub-elements first paint (R2-02).
+- [ ] No `:root:not([data-motion-state])` selector exists anywhere in the
+      implementation — only `[data-hero-motion-root]`-scoped selectors
+      (R2-02).
 - [ ] No child component (`PrecisionSystemVisual`, `ProcessRail`) creates
       its own `IntersectionObserver` in production.
-- [ ] Reduced motion: observer is never created, root state is `settled`
-      immediately, verified via Playwright context.
+- [ ] Reduced motion: observer constructor call count is 0 (spy-verified),
+      root state is `settled` immediately.
 - [ ] No-JS/default state renders the fully-settled end state — H1, Body,
       CTA, Primary/Secondary Visual are never hidden or displaced.
+- [ ] Normal JS mode never observably renders `settled` before
+      transitioning to `armed`/`running` — automated first-frame evidence
+      provided, not source-inspection claims (R2-02, case 7).
 - [ ] CTAs are clickable/focusable from first paint, regardless of motion
       state.
-- [ ] Narrative never re-triggers on repeated scroll-into-view.
+- [ ] Narrative never re-triggers on repeated scroll-into-view; `complete`
+      and `settled` are visually equivalent.
 - [ ] Measured narrative duration: 750–1150ms, both locales.
+- [ ] All seven R2-02 mandatory test cases (§13) pass.
 - [ ] Performance Score delta: ≤5 points below baseline, mobile and
       desktop, median-of-3.
 - [ ] LCP: ≤2.5s mobile, median-of-3.

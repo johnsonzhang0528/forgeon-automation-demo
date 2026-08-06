@@ -12,6 +12,17 @@ touch targets still meet the bar). If the project's global
 `tests/e2e/fixtures.ts` `VIEWPORTS` fixture is not modified, this ticket
 uses a CC-02I-specific matrix instead — it does not silently skip 320px.
 
+## Revision note (R2)
+
+Revision 2 per finding R2-02: this ticket's cross-cutting verification
+scope now explicitly includes confirming that no implementation or test
+file anywhere in the CC-02I surface uses the incorrect
+`:root:not([data-motion-state])` selector (a Revision 1 defect) — only
+`[data-hero-motion-root][data-motion-state="..."]`-scoped selectors are
+allowed. This is a targeted grep-and-verify addition to this ticket's
+existing accessibility/motion-adjacent checks, not new scope beyond what
+CC-02I-06 already implements.
+
 ## 1. Ticket ID
 
 CC-02I-07
@@ -122,6 +133,11 @@ never silently skipped or left untested.
 - Contrast spot-check: every new/changed text-on-background pairing
   cross-referenced against `docs/CONTRAST_AUDIT.md` — flag, don't
   silently accept, any new pairing not already audited.
+- **Motion selector audit (R2-02)**: grep the entire CC-02I implementation
+  surface (`src/components/sections/**`, `src/components/layout/
+  Header.astro`) for the literal string `:root:not` — zero matches
+  expected. Confirm every motion-state-reactive CSS rule uses the
+  `[data-hero-motion-root][data-motion-state="..."]` scoped form.
 
 ## 9. Design requirements
 

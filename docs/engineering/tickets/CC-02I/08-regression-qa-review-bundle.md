@@ -13,6 +13,27 @@ CC-02I **Production Acceptance Gate** review (distinct from the
 Implementation Authorization Gate that governs whether the eight tickets
 may start — R1-13).
 
+## Revision note (R2)
+
+Revision 2 per findings R2-01, R2-03, R2-04, and R2-05:
+
+- **R2-01**: this ticket's references to "the Implementation Authorization
+  Gate" now name `docs/engineering/reviews/CC-02I-stage-gate-r2-review.md`
+  explicitly — the original `CC-02I-stage-gate-review.md` reference from
+  Revision 1 is stale (that file is now Historical/Superseded).
+- **R2-03**: the Production Acceptance Gate document this ticket creates
+  no longer has a free-form structure — its eighteen fixed sections are
+  specified below and in the production spec §17.2. Section 18 is a
+  placeholder only.
+- **R2-04**: the review bundle's `<base-commit>` is no longer this
+  ticket's choice — it is fixed to the CC-02I Implementation Base Commit
+  (the Activation Commit `WF-CC02I-ACT-01` produces), handed to this
+  ticket, not derived or guessed.
+- **R2-05**: this ticket's bundle-build step must verify the correct
+  Revision 2 handoff document is selected as the bundle's `handoff/`
+  content, not a stale historical CC-02 prototype-stage document (a real
+  defect found in the Revision 1 bundle).
+
 ## 1. Ticket ID
 
 CC-02I-08
@@ -70,37 +91,105 @@ Also forbidden: any new component, any new page, any new locale key,
 - Capture the full CC-02F-style screenshot set for the *production*
   homepage (not `/internal-preview/`): 320×800, 360×800, 390×844,
   768×1024, 1024×768, 1280×800, 1440×900, 1920×1080, both locales — plus
-  a reduced-motion screenshot and a before/after comparison against the
-  pre-CC-02I homepage.
+  a reduced-motion screenshot and a before/after comparison pair.
 - Build the review bundle via `pnpm review:bundle <base-commit>
-  cc02i-header-hero` (per `docs/engineering/REVIEW_BUNDLE_GUIDE.md`'s
-  existing convention).
+  cc02i-header-hero`, where **`<base-commit>` is the CC-02I Implementation
+  Base Commit (§7.2 below, R2-04) — never a value this ticket derives,
+  guesses, or picks from the local git log.**
 - Produce a CC-02I ChatGPT handoff document under
-  `docs/engineering/handoffs/`.
+  `docs/engineering/handoffs/`, and verify it — not any historical
+  document — is what the review bundle actually selects as its `handoff/`
+  content (§7.3, R2-05).
 - Produce the **CC-02I Production Acceptance Gate** review under
-  `docs/engineering/reviews/` (R1-13 — see §8 below for what this
-  document must and must not contain).
+  `docs/engineering/reviews/CC-02I-production-acceptance-gate.md`, using
+  the fixed eighteen-section schema in §7.1 below (R2-03) — not a
+  free-authored structure.
 
-### Two distinct gates (R1-13 — mandatory separation)
+### 7.1 Production Acceptance Gate — fixed eighteen-section schema (R2-03)
 
-This stage now has two separate gate documents, never merged into one:
+`docs/engineering/reviews/CC-02I-production-acceptance-gate.md` must
+contain exactly these sections, in this order — this schema is fixed by
+the production spec (§17.2) and by this ticket; it is not invented at
+ticket-execution time:
 
-1. **CC-02I Implementation Authorization Gate** — the *existing*
-   `docs/engineering/specs/CC-02I-registry-proposal.json` plus
-   `docs/engineering/reviews/CC-02I-stage-gate-review.md` (as revised
-   under CC-02I-01 in this same R1 pass). This gate decides only whether
-   the eight tickets may **start**. It does not, and must not, attempt to
-   judge the finished implementation — it is a pre-work authorization
-   gate, evaluated before any ticket touches `src/**`.
-2. **CC-02I Production Acceptance Gate** — a **new** document this ticket
-   creates (`docs/engineering/reviews/CC-02I-production-acceptance-gate.
-   md` or an equivalent clearly-named file under `docs/engineering/
-   reviews/`), built only after CC-02I-08 completes. It judges the
-   **finished, implemented** result: whether the shipped Header/Hero
-   actually matches Variant C, whether regression passed, whether it's
-   ready to integrate/merge, whether any rework is needed. It must not
-   reuse or extend the Implementation Authorization Gate document —
-   distinct file, distinct purpose, distinct point in the timeline.
+1. Gate identity and purpose.
+2. Implementation Base Commit (exact SHA, §7.2 below).
+3. Candidate / Final Checkpoint Commit (exact SHA, this ticket's own final
+   commit).
+4. CC-02I-01 through CC-02I-08 commit map (one SHA per ticket).
+5. Actual changed files and scope diff (relative to the Implementation
+   Base Commit).
+6. Variant C visual consistency.
+7. Header acceptance.
+8. Hero structure and DOM order acceptance.
+9. Locale and real-route acceptance.
+10. No-JS, reduced motion, and Motion State acceptance (per the production
+    spec §10's four-state model and CC-02I-06's required test coverage).
+11. Responsive, 320px, and 200% zoom acceptance.
+12. Accessibility and keyboard acceptance.
+13. Performance data table (per the production spec §12's numeric
+    thresholds).
+14. Full regression test results.
+15. Screenshot and review bundle paths.
+16. Known deviations, failures, and risks.
+17. Integration readiness.
+18. External Reviewer Verdict — **placeholder only.** This ticket writes
+    exactly the literal text `Awaiting ChatGPT / User External Review`
+    into this section. Neither Claude nor Codex writes PASS, FAIL,
+    APPROVED, or any other verdict here, under any circumstance.
+
+### 7.2 Implementation Base Commit (fixed rule, R2-04)
+
+The CC-02I Implementation Base Commit is, by definition, the Activation
+Commit `WF-CC02I-ACT-01` produces when it writes the ChatGPT-approved
+`activation_target` into the live `TASK_REGISTRY.json`. This ticket:
+
+- Receives that SHA as a known input (from `WF-CC02I-ACT-01`'s own spec/
+  handoff output) — it does not search git history or infer it.
+- Uses it as the `<base-commit>` argument to `pnpm review:bundle`.
+- Uses it as the "Before" state for the before/after screenshot pair —
+  "After" is this ticket's own final checkpoint commit.
+- Records both SHAs explicitly in the Production Acceptance Gate's §2 and
+  §3 (§7.1 above).
+
+`WF-CC02I-ACT-01` is not created or executed as part of this stage
+(`WF-CC02I-SPEC-R2`) — this rule only defines what this ticket must do
+once that workflow exists and hands it a real SHA.
+
+### 7.3 Handoff correctness (R2-05)
+
+A defect found in the Revision 1 review bundle: its `handoff/` folder
+contained `docs/engineering/handoffs/CC-02-chatgpt-review-handoff.md` — a
+leftover CC-02 prototype-stage document, not a real Revision 1 handoff,
+because the bundle tool's stage-prefix matching picked the wrong
+historical file. Before finalizing the bundle, this ticket verifies
+`metadata/bundle-summary.txt` (or the bundle tool's equivalent output)
+names the actual CC-02I completion handoff this ticket produces — not any
+older CC-02-prefixed document — and corrects the bundle label or handoff
+file naming if the mismatch recurs.
+
+### 7.4 Two distinct gates (R1-13 fixed the split; R2-01 fixes which file is canonical)
+
+This stage has two separate gate documents, never merged into one:
+
+1. **CC-02I Implementation Authorization Gate** —
+   `docs/engineering/reviews/CC-02I-stage-gate-r2-review.md` (the
+   canonical, current review — **not** `CC-02I-stage-gate-review.md`,
+   which is Historical/Superseded, and **not**
+   `CC-02I-stage-gate-r1-review.md`, which is Superseded by Revision 2)
+   plus `docs/engineering/specs/CC-02I-registry-proposal.json`. This gate
+   decides only whether the eight tickets may **start**. It does not, and
+   must not, attempt to judge the finished implementation — it is a
+   pre-work authorization gate, evaluated before any ticket touches
+   `src/**`.
+2. **CC-02I Production Acceptance Gate** — the document this ticket
+   creates per §7.1's fixed eighteen-section schema, built only after
+   CC-02I-08 completes. It judges the **finished, implemented** result:
+   whether the shipped Header/Hero actually matches Variant C, whether
+   regression passed, whether it's ready to integrate/merge, whether any
+   rework is needed. It must not reuse or extend the Implementation
+   Authorization Gate documents — distinct file, distinct purpose,
+   distinct point in the timeline.
 
 ## 8. Design requirements
 
@@ -137,13 +226,22 @@ This ticket's entire content *is* the test run — see §7.
 - [ ] `pnpm build` — succeeds, expected page count.
 - [ ] Full 8-breakpoint × 2-locale screenshot set captured for the
       production homepage.
-- [ ] Review bundle built successfully via `pnpm review:bundle`.
-- [ ] ChatGPT handoff document complete.
-- [ ] **CC-02I Production Acceptance Gate** document created, clearly
-      separate from the Implementation Authorization Gate document, and
-      does not itself declare final approval (that remains ChatGPT's/the
-      user's decision, same as the Implementation Authorization Gate
-      never self-approves).
+- [ ] Review bundle built successfully via `pnpm review:bundle
+      <Implementation Base Commit SHA> cc02i-header-hero` — base commit
+      is the value received from `WF-CC02I-ACT-01`, not derived or
+      guessed (R2-04).
+- [ ] ChatGPT handoff document complete, and confirmed (not assumed) to
+      be the document the review bundle actually selects as its
+      `handoff/` content — no stale CC-02-prefixed document present
+      (R2-05).
+- [ ] **CC-02I Production Acceptance Gate** document created at
+      `docs/engineering/reviews/CC-02I-production-acceptance-gate.md`
+      with all eighteen fixed sections present in order (R2-03), clearly
+      separate from the Implementation Authorization Gate documents
+      (`CC-02I-stage-gate-r2-review.md` + registry proposal), and section
+      18 contains exactly the placeholder text `Awaiting ChatGPT / User
+      External Review` — no PASS/FAIL/APPROVED verdict written by either
+      agent.
 - [ ] `git diff --name-only -- src public` is **empty** for this ticket's
       own changes (this ticket adds zero lines to `src/**`/`public/**` —
       if the command shows anything, that reflects earlier tickets'
@@ -208,9 +306,10 @@ Remediation Ticket, never a same-ticket patch.
 ## 20. Stage Gate note
 
 This ticket's completion is what the **CC-02I Production Acceptance Gate**
-(built by this ticket, per R1-13) reports against — a document distinct
-from the **CC-02I Implementation Authorization Gate**
-(`CC-02I-stage-gate-review.md`, revised under CC-02I-01) that governed
-whether the eight tickets could start in the first place. Neither gate
-document decides its own outcome — both remain ChatGPT's/the user's call,
-per `docs/agents/DUAL_AGENT_PROTOCOL.md`'s stage gate rule.
+(built by this ticket per §7.1's fixed eighteen-section schema, R2-03)
+reports against — a document distinct from the **CC-02I Implementation
+Authorization Gate** (`CC-02I-stage-gate-r2-review.md` + registry
+proposal, R2-01) that governed whether the eight tickets could start in
+the first place. Neither gate document decides its own outcome — both
+remain ChatGPT's/the user's call, per
+`docs/agents/DUAL_AGENT_PROTOCOL.md`'s stage gate rule.

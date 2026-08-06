@@ -15,6 +15,20 @@ before H1 in DOM order (not after, as an earlier draft's prose
 implied) — CTA is now split into distinct Primary/Secondary DOM
 positions, both before the Primary System Visual.
 
+## Revision note (R2)
+
+Revision 2 per finding R2-02: the Hero root element this ticket builds
+must carry the `data-hero-motion-root` attribute (in addition to
+`data-motion-state`) so CC-02I-06's Motion Orchestrator CSS has an
+unambiguous, correctly-scoped selector to attach to — the previous
+`:root:not([data-motion-state])` example incorrectly implied `<html>`
+was the reactive element. This ticket does not implement the Motion
+Bootstrap script itself (still CC-02I-06's scope) but must leave the
+correct DOM hook in place, and must place the Motion Bootstrap
+`<script>` tag's eventual mount point (immediately after the Hero root's
+opening tag, before the Primary Visual markup) so CC-02I-06 does not need
+to restructure this ticket's DOM order to add it.
+
 ## 1. Ticket ID
 
 CC-02I-04
@@ -96,6 +110,23 @@ DOM order above is never changed per breakpoint. Do not implement "H1
 before Eyebrow" — that ordering from an earlier draft of this spec is
 superseded and must not appear in the shipped markup or in comments/docs
 describing it.
+
+### Motion root DOM hook (R2-02 — mandatory)
+
+The Hero's root element carries both attributes:
+
+```html
+<section data-hero-motion-root data-motion-state="settled" class="hero-root">
+```
+
+`data-motion-state="settled"` is the server-rendered default (§10 of the
+production spec — a page load either stays here for its whole lifetime or
+a synchronous bootstrap moves it to `armed` before first paint; there is
+no code path where the page visibly starts anywhere else). This ticket
+does not write the Motion Bootstrap `<script>` itself (CC-02I-06's scope)
+but must leave a clear, documented mount point for it — immediately
+following the Hero root's opening tag, before the Primary Visual's
+markup — so CC-02I-06 does not need to restructure this ticket's DOM.
 
 ### Content
 
@@ -195,6 +226,10 @@ describing it.
 - [ ] `axe.spec.ts` passes 0 Critical/Serious for `home`/`home-en`.
 - [ ] `pnpm check:h1` passes site-wide.
 - [ ] `pnpm build` succeeds, same total page count as before this ticket.
+- [ ] Hero root element carries both `data-hero-motion-root` and
+      `data-motion-state="settled"` in server-rendered HTML, and the
+      Motion Bootstrap mount point is positioned before the Primary
+      Visual's markup (R2-02).
 
 ## 15. Completion evidence
 
