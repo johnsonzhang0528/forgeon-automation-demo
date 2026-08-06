@@ -83,6 +83,40 @@
           "required_tests": []
         }
       ]
+    },
+    "WF-CC02I-SPEC-R1": {
+      "title": "Revise CC-02I Specification Package",
+      "type": "maintenance",
+      "claimable": true,
+      "external_reviewer": "ChatGPT",
+      "tickets": [
+        {
+          "id": "WF-CC02I-SPEC-R1-01",
+          "title": "修訂 CC-02I Production Spec、Registry Proposal、Stage Gate Review 與八張 Ticket",
+          "status": "ready",
+          "allowed_files": [
+            "docs/engineering/specs/CC-02I-header-hero-production-spec.md",
+            "docs/engineering/specs/CC-02I-registry-proposal.json",
+            "docs/engineering/reviews/CC-02I-stage-gate-review.md",
+            "docs/engineering/reviews/CC-02I-stage-gate-r1-review.md",
+            "docs/engineering/tickets/CC-02I/**"
+          ],
+          "required_tests": []
+        },
+        {
+          "id": "WF-CC02I-SPEC-R1-02",
+          "title": "執行規格一致性檢查並建立新版 ChatGPT Review Bundle",
+          "status": "ready",
+          "allowed_files": [
+            "docs/engineering/specs/CC-02I-header-hero-production-spec.md",
+            "docs/engineering/specs/CC-02I-registry-proposal.json",
+            "docs/engineering/reviews/CC-02I-stage-gate-review.md",
+            "docs/engineering/reviews/CC-02I-stage-gate-r1-review.md",
+            "docs/engineering/tickets/CC-02I/**"
+          ],
+          "required_tests": []
+        }
+      ]
     }
   }
 }
