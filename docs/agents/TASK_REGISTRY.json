@@ -3,9 +3,176 @@
   "stages": {
     "CC-02I": {
       "title": "Production Header and Hero Integration",
-      "claimable": false,
-      "spec": null,
-      "tickets": []
+      "claimable": true,
+      "external_reviewer": "ChatGPT",
+      "spec": "docs/engineering/specs/CC-02I-header-hero-production-spec.md",
+      "tickets": [
+        {
+          "id": "CC-02I-01",
+          "title": "Production Contract and Locale API",
+          "status": "ready",
+          "allowed_files": [
+            "src/data/locales/zh-tw.ts",
+            "src/data/locales/en.ts"
+          ],
+          "required_tests": [
+            "pnpm check",
+            "pnpm typecheck",
+            "pnpm build"
+          ],
+          "depends_on": []
+        },
+        {
+          "id": "CC-02I-05",
+          "title": "Brand Primitives and Hero Visual",
+          "status": "ready",
+          "allowed_files": [
+            "src/components/sections/PrecisionSystemVisual.astro",
+            "src/components/sections/ProcessRail.astro",
+            "src/components/sections/EvaluationLedger.astro"
+          ],
+          "required_tests": [
+            "pnpm check",
+            "pnpm typecheck",
+            "pnpm build"
+          ],
+          "depends_on": [
+            "CC-02I-01"
+          ]
+        },
+        {
+          "id": "CC-02I-02",
+          "title": "Header Production Implementation",
+          "status": "ready",
+          "allowed_files": [
+            "src/components/layout/Header.astro",
+            "src/components/ui/Button.astro",
+            "src/components/ui/LanguageSwitcher.astro",
+            "tests/e2e/header.spec.ts"
+          ],
+          "required_tests": [
+            "pnpm test:e2e -- tests/e2e/header.spec.ts",
+            "pnpm test:e2e -- tests/e2e/mobile-nav.spec.ts",
+            "pnpm test:axe"
+          ],
+          "depends_on": [
+            "CC-02I-01",
+            "CC-02I-05"
+          ]
+        },
+        {
+          "id": "CC-02I-03",
+          "title": "Mobile Navigation Verification and Hardening",
+          "status": "ready",
+          "allowed_files": [
+            "src/components/layout/Header.astro",
+            "tests/e2e/mobile-nav.spec.ts"
+          ],
+          "required_tests": [
+            "pnpm test:e2e -- tests/e2e/mobile-nav.spec.ts",
+            "pnpm test:axe"
+          ],
+          "depends_on": [
+            "CC-02I-02"
+          ]
+        },
+        {
+          "id": "CC-02I-04",
+          "title": "Hero Production Structure",
+          "status": "ready",
+          "allowed_files": [
+            "src/components/sections/Hero.astro",
+            "src/pages/zh-tw/index.astro",
+            "src/pages/en/index.astro",
+            "tests/e2e/cc02i-hero.spec.ts"
+          ],
+          "required_tests": [
+            "pnpm test:e2e -- tests/e2e/cc02i-hero.spec.ts",
+            "pnpm test:e2e -- tests/e2e/responsive-overflow.spec.ts",
+            "pnpm test:axe",
+            "pnpm check:h1"
+          ],
+          "depends_on": [
+            "CC-02I-01",
+            "CC-02I-05"
+          ]
+        },
+        {
+          "id": "CC-02I-06",
+          "title": "Motion Orchestrator and Performance Verification",
+          "status": "ready",
+          "allowed_files": [
+            "src/components/sections/Hero.astro",
+            "src/components/sections/PrecisionSystemVisual.astro",
+            "src/components/sections/ProcessRail.astro",
+            "tests/e2e/cc02i-motion.spec.ts"
+          ],
+          "required_tests": [
+            "pnpm test:e2e -- tests/e2e/cc02i-motion.spec.ts"
+          ],
+          "depends_on": [
+            "CC-02I-04",
+            "CC-02I-05"
+          ]
+        },
+        {
+          "id": "CC-02I-07",
+          "title": "Responsive, Locale, and Accessibility Verification",
+          "status": "ready",
+          "allowed_files": [
+            "src/components/layout/Header.astro",
+            "src/components/sections/Hero.astro",
+            "src/components/sections/PrecisionSystemVisual.astro",
+            "src/components/sections/ProcessRail.astro",
+            "src/components/sections/EvaluationLedger.astro",
+            "tests/e2e/cc02i-hero.spec.ts",
+            "tests/e2e/cc02i-motion.spec.ts",
+            "tests/e2e/mobile-nav.spec.ts",
+            "tests/e2e/responsive-overflow.spec.ts",
+            "tests/e2e/axe.spec.ts"
+          ],
+          "required_tests": [
+            "pnpm test:e2e -- tests/e2e/responsive-overflow.spec.ts",
+            "pnpm test:axe"
+          ],
+          "depends_on": [
+            "CC-02I-02",
+            "CC-02I-03",
+            "CC-02I-04",
+            "CC-02I-05",
+            "CC-02I-06"
+          ]
+        },
+        {
+          "id": "CC-02I-08",
+          "title": "Regression, QA, and Review Bundle",
+          "status": "ready",
+          "allowed_files": [
+            "docs/screenshots/**",
+            "docs/engineering/handoffs/**",
+            "docs/engineering/reviews/**"
+          ],
+          "required_tests": [
+            "pnpm test:e2e",
+            "pnpm test:axe",
+            "pnpm check:h1",
+            "pnpm check:links",
+            "pnpm check:locale-routes",
+            "pnpm check",
+            "pnpm typecheck",
+            "pnpm build"
+          ],
+          "depends_on": [
+            "CC-02I-01",
+            "CC-02I-02",
+            "CC-02I-03",
+            "CC-02I-04",
+            "CC-02I-05",
+            "CC-02I-06",
+            "CC-02I-07"
+          ]
+        }
+      ]
     },
     "WF-SEC-04": {
       "title": "Verification Capability Hardening",
