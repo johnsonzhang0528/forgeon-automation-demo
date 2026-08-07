@@ -5,6 +5,7 @@ import { navItems } from '../../config/nav';
 import Logo from '../ui/Logo.astro';
 import LanguageSwitcher from '../navigation/LanguageSwitcher.astro';
 import Button from '../ui/Button.astro';
+import DatumOrigin from '../brand/DatumOrigin.astro';
 
 export interface Props {
   locale: Locale;
@@ -22,7 +23,10 @@ function isActive(itemPath: string) {
 
 <header class="site-header" data-header>
   <div class="container site-header__row">
-    <Logo locale={locale} />
+    <div class="site-header__brand">
+      <DatumOrigin size={28} decorative={true} class="site-header__datum" />
+      <Logo locale={locale} />
+    </div>
 
     <nav class="desktop-nav" aria-label={locale === 'zh-tw' ? '主要導覽' : 'Main navigation'}>
       <ul>
@@ -41,7 +45,9 @@ function isActive(itemPath: string) {
     </nav>
 
     <div class="site-header__actions">
-      <LanguageSwitcher locale={locale} path={path} otherLocalePath={otherLocalePath} />
+      <div class="site-header__lang">
+        <LanguageSwitcher locale={locale} path={path} otherLocalePath={otherLocalePath} />
+      </div>
       <div class="site-header__cta">
         <Button href={`/${locale}/contact/?intent=project`} size="md" trackEvent="cta_click" data-intent="project" data-source="header-desktop">
           {dict.nav.ctaPrimary}
@@ -122,12 +128,72 @@ function isActive(itemPath: string) {
     backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--color-border);
   }
+  /*
+   * Zoom-safe height (R1-08): min-block-size, not a fixed block-size that
+   * clips content. Normal-zoom target is reached via the row's own
+   * padding-block below; at 200% zoom / large text, the row's content may
+   * grow past this minimum and the header expands with it rather than
+   * clipping.
+   */
+  .site-header {
+    min-block-size: 64px;
+  }
+  @media (min-width: 960px) {
+    .site-header {
+      min-block-size: 80px;
+    }
+  }
   .site-header__row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-md);
     padding-block: var(--space-sm);
+    min-block-size: inherit;
+  }
+  /*
+   * min-width: 0 (not flex-shrink: 0) so the brand block can compress
+   * instead of forcing .site-header__actions off-screen when the logo
+   * wordmark's own text grows very large (e.g. large-text/zoom
+   * accessibility settings, R1-08) — Logo.astro's own text has no
+   * truncation of its own (it is not modified under this ticket, §6),
+   * so the brand container must be the one that yields space rather
+   * than pushing siblings out of the flex row entirely.
+   */
+  .site-header__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    min-width: 0;
+  }
+  /*
+   * .site-header__datum targets DatumOrigin's own rendered <svg> root, not
+   * an element authored directly in Header.astro's template — same
+   * scope-hash issue documented above for .site-header__cta/.mobile-nav__cta
+   * (Astro's data-astro-cid-* scoping attribute stamps the CHILD
+   * component's own hash onto its root, not the parent's), so this
+   * selector needs :global() to actually match, exactly like the
+   * `.mobile-nav__cta > :global(.btn)` case below.
+   *
+   * The Datum mark is a desktop-only addition to the brand composition
+   * (same responsive pattern this file already uses for .desktop-nav and
+   * .site-header__cta): at mobile widths, the header row is logo + lang
+   * switch + hamburger only, matching the pre-existing mobile content
+   * budget. Adding the mark's 28px + gap unconditionally regressed the
+   * 360px/320px no-horizontal-overflow acceptance criteria (ticket §14) —
+   * hiding it below 960px keeps that criterion intact without touching
+   * any spacing/gutter token.
+   */
+  .site-header__brand > :global(.site-header__datum) {
+    display: none;
+  }
+  @media (min-width: 960px) {
+    .site-header__brand > :global(.site-header__datum) {
+      display: block;
+      flex-shrink: 0;
+      inline-size: 28px;
+      block-size: 28px;
+    }
   }
   .desktop-nav ul {
     display: flex;
@@ -139,23 +205,81 @@ function isActive(itemPath: string) {
   .desktop-nav {
     display: none;
   }
+  /*
+   * Short Datum-line nav hover (ticket §8): an ::after scaleX underline
+   * using existing --duration-ui/--ease-standard, replacing the previous
+   * full-width border-bottom-color swap. Matches the CC-02F prototype
+   * reference (FinalPrototypeHeader.astro's .final-header__link).
+   */
   .desktop-nav__link {
+    position: relative;
     color: var(--color-ink-soft);
     text-decoration: none;
     font-size: var(--fs-sm);
     font-weight: 500;
     padding-block: var(--space-3xs);
-    border-bottom: 2px solid transparent;
+  }
+  .desktop-nav__link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 16px;
+    height: 2px;
+    background: var(--color-action-primary);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--duration-ui) var(--ease-standard);
   }
   .desktop-nav__link:hover,
   .desktop-nav__link.is-active {
     color: var(--color-ink);
-    border-bottom-color: var(--color-accent);
   }
+  .desktop-nav__link:hover::after,
+  .desktop-nav__link.is-active::after {
+    transform: scaleX(1);
+  }
+  /*
+   * At the narrowest mandatory viewport (320px, ticket §14 acceptance
+   * criteria), the default --space-md (24px) gap between the language
+   * switch and the mobile toggle pushed the toggle 12-13px past the
+   * viewport edge — a pre-existing tightness in this row's content
+   * budget that no prior test caught, since 320px was not in the global
+   * VIEWPORTS fixture (tests/e2e/fixtures.ts) before this ticket. Fixed
+   * per the ticket's own §17 rollback allowance: an existing --space-*
+   * token substitution, narrower only below the breakpoint where the
+   * desktop CTA/nav reappear (960px already needs this actions row to
+   * hold three items instead of two, at desktop's much wider budget).
+   */
   .site-header__actions {
     display: flex;
     align-items: center;
-    gap: var(--space-md);
+    gap: var(--space-2xs);
+  }
+  @media (min-width: 960px) {
+    .site-header__actions {
+      gap: var(--space-md);
+    }
+  }
+  /*
+   * .site-header__lang is a native <div> wrapper around <LanguageSwitcher>
+   * for the same scope-hash reason documented below for .site-header__cta
+   * — a class handed to a child component renders on a DOM node carrying
+   * the CHILD's own Astro scope hash, not Header's, so this wrapper is
+   * necessary to apply Header-local visual-weight styling (ticket §8:
+   * "thinner border, no heavy box") without editing LanguageSwitcher.astro
+   * itself (whose own default treatment — no border, plain text link —
+   * already matches CC-02F's lighter-weight direction closely; this
+   * override only removes the base focus-ring padding assumption and
+   * confirms the >=44x44px tap target via the wrapper, per acceptance
+   * criteria, rather than restyling the component's internals).
+   */
+  .site-header__lang {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 44px;
+    min-block-size: 44px;
   }
   /*
    * .site-header__cta / .mobile-nav__cta are native <div> wrappers around
@@ -170,9 +294,26 @@ function isActive(itemPath: string) {
    * P0.1 for the full writeup; the same fix is applied everywhere else a
    * parent tried to reach into a child component's rendered class
    * (IndustryIcon's `industry-hero__icon`, Card's `insight-card`).
+   *
+   * The nested :global(.btn) override swaps only the Header CTA's token
+   * from --color-accent to --color-action-primary/-hover (ticket §8) —
+   * Button.astro's own primary variant default is untouched, so every
+   * other Button call site across the site keeps rendering
+   * --color-accent unchanged. This is the R2-06-preferred path: the
+   * token swap is expressed entirely through a scoped call-site CSS
+   * override of Button's existing public output, with no change to
+   * Button.astro itself, no new variant, and no opt-in prop needed.
    */
   .site-header__cta {
     display: none;
+  }
+  .site-header__cta > :global(.btn--primary) {
+    background: var(--color-action-primary);
+    border-color: var(--color-action-primary);
+  }
+  .site-header__cta > :global(.btn--primary:hover) {
+    background: var(--color-action-primary-hover);
+    border-color: var(--color-action-primary-hover);
   }
   .mobile-nav-toggle {
     background: none;
