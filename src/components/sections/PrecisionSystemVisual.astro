@@ -1,0 +1,266 @@
+---
+/**
+ * PrecisionSystemVisual — production Hero visual (CC-02I-05), rebuilt at
+ * its fixed path from the CC-02F prototype's reviewed design
+ * (src/components/prototypes/cc02-final/PrecisionSystemVisual.astro).
+ * Not a move or shared-import refactor — the prototype route stays fully
+ * independent as a historical/visual-regression reference.
+ *
+ * Depicts three physical stations along one Assembly Spine axis, left to
+ * right (input -> output direction): precision motion module, vision
+ * positioning head, assembly workstation, connected by the spine's axis
+ * line and Copper alignment nodes at each station. Background carries
+ * engineering hatching, a tolerance-band strip, and faded coordinate axes.
+ *
+ * Fixed `uid` contract (R1-04): every SVG id is a deterministic pure-
+ * function derivation of the required `uid` prop — no `Math.random()`,
+ * no runtime-generated value. Production usage (`Hero.astro`) always
+ * passes the literal `uid="homepage-hero-system"`.
+ *
+ * Motion Orchestrator contract (R1-06, selector fixed R2-02): this
+ * component creates no `IntersectionObserver` of its own. It only exposes
+ * CSS that reacts to the ancestor Hero root's
+ * `[data-hero-motion-root][data-motion-state="settled|armed|running|
+ * complete"]` — the orchestrator itself is built in CC-02I-06. Default
+ * rendering (no JS, reduced motion, or before the Motion Bootstrap runs)
+ * is always the fully settled end state.
+ */
+export interface Props {
+  /** Deterministic ID namespace for every gradient/mask/clipPath/ARIA id this component renders. Required — Math.random() is banned in production (R1-04). */
+  uid: string;
+  variant?: 'primary' | 'secondary';
+  /** Accessible text alternative — the SVG is always aria-hidden, so the caller supplies a real describing string for a sibling visually-hidden element. */
+  alt: string;
+  /** Text alternative for the secondary/cropped variant. Optional since only the primary variant is required to have one at every call site. */
+  secondaryAlt?: string;
+  /** Opts into the Motion Orchestrator's CSS hooks; the settled end state renders identically whether this is true or false until the orchestrator sets data-motion-state itself. */
+  animated?: boolean;
+  class?: string;
+}
+
+const { uid, variant = 'primary', alt, secondaryAlt, animated = false, class: className = '' } = Astro.props;
+const isPrimary = variant === 'primary';
+const resolvedAlt = isPrimary ? alt : (secondaryAlt ?? alt);
+---
+
+<figure class:list={['precision-visual', `precision-visual--${variant}`, className]}>
+  <svg
+    class:list={['precision-visual__svg', { 'precision-visual__svg--animated': animated }]}
+    viewBox={isPrimary ? '0 0 640 480' : '0 0 320 320'}
+    preserveAspectRatio="xMidYMid meet"
+    aria-hidden="true"
+  >
+    <defs>
+      <linearGradient id={`${uid}-metal`} x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="var(--color-steel-200)" stop-opacity="0.9" />
+        <stop offset="55%" stop-color="var(--color-steel-600)" stop-opacity="0.55" />
+        <stop offset="100%" stop-color="var(--color-ink-800)" stop-opacity="0.85" />
+      </linearGradient>
+      <linearGradient id={`${uid}-bg`} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--color-paper-100)" />
+        <stop offset="100%" stop-color="var(--color-paper-50)" />
+      </linearGradient>
+      <radialGradient id={`${uid}-node`} cx="50%" cy="35%" r="65%">
+        <stop offset="0%" stop-color="var(--color-copper-500)" />
+        <stop offset="100%" stop-color="var(--color-copper-700)" />
+      </radialGradient>
+      <pattern id={`${uid}-hatch`} width="9" height="9" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+        <line x1="0" y1="0" x2="0" y2="9" stroke="var(--color-steel-600)" stroke-width="1" opacity="0.16" />
+      </pattern>
+      <clipPath id={`${uid}-frame`}>
+        <path d={isPrimary
+          ? 'M20 8 H600 L632 40 V440 L600 472 H40 L8 440 V40 Z'
+          : 'M12 4 H300 L316 20 V300 L300 316 H20 L4 300 V20 Z'} />
+      </clipPath>
+    </defs>
+
+    <g clip-path={`url(#${uid}-frame)`}>
+      {/* ---- Background layer: hatching, tolerance band, faded axes ---- */}
+      <rect x="0" y="0" width={isPrimary ? 640 : 320} height={isPrimary ? 480 : 320} fill={`url(#${uid}-bg)`} />
+      <rect x="0" y="0" width={isPrimary ? 640 : 320} height={isPrimary ? 480 : 320} fill={`url(#${uid}-hatch)`} />
+
+      {isPrimary && (
+        <Fragment>
+          <line x1="48" y1="440" x2="48" y2="60" stroke="var(--color-steel-600)" stroke-width="1" opacity="0.35" />
+          <line x1="48" y1="440" x2="600" y2="440" stroke="var(--color-steel-600)" stroke-width="1" opacity="0.35" />
+          <rect x="48" y="418" width="552" height="22" fill="var(--color-copper-500)" opacity="0.06" />
+          <line x1="48" y1="418" x2="600" y2="418" stroke="var(--color-copper-500)" stroke-width="1" opacity="0.3" stroke-dasharray="3 3" />
+          <line x1="48" y1="440" x2="600" y2="440" stroke="var(--color-copper-500)" stroke-width="1" opacity="0.3" stroke-dasharray="3 3" />
+        </Fragment>
+      )}
+
+      {isPrimary ? (
+        <Fragment>
+          {/* ---- Midground: Assembly Spine axis + module connectors ---- */}
+          <line
+            class="precision-visual__spine"
+            x1="96" y1="260" x2="544" y2="260"
+            stroke="var(--color-steel-600)" stroke-width="2.5"
+          />
+          <line x1="96" y1="260" x2="544" y2="260" stroke="var(--color-copper-600)" stroke-width="2.5" stroke-dasharray="8 420" class="precision-visual__spine-flow" />
+
+          {/* Station 1 — Precision motion module (linear stage) */}
+          <g class="precision-visual__module" data-station="1">
+            <rect x="70" y="200" width="120" height="60" rx="4" fill={`url(#${uid}-metal)`} stroke="var(--color-ink-800)" stroke-width="1.5" />
+            {Array.from({ length: 8 }).map((_, i) => (
+              <line x1={82 + i * 13} y1="210" x2={92 + i * 13} y2="250" stroke="var(--color-ink-800)" stroke-width="1" opacity="0.4" />
+            ))}
+            <rect x="76" y="192" width="30" height="16" rx="2" fill="var(--color-ink-800)" />
+          </g>
+
+          {/* Station 2 — Vision positioning head */}
+          <g class="precision-visual__module" data-station="2">
+            <rect x="260" y="150" width="18" height="70" fill="var(--color-steel-600)" />
+            <rect x="230" y="120" width="80" height="56" rx="6" fill={`url(#${uid}-metal)`} stroke="var(--color-ink-800)" stroke-width="1.5" />
+            <circle cx="270" cy="148" r="16" fill="var(--color-ink-950)" stroke="var(--color-copper-500)" stroke-width="2" />
+            <circle cx="270" cy="148" r="7" fill="var(--color-copper-500)" opacity="0.85" />
+            <path d="M248 128 v-8 h8 M292 128 v-8 h-8 M248 168 v8 h8 M292 168 v8 h-8" fill="none" stroke="var(--color-copper-600)" stroke-width="1.6" class="precision-visual__vision-corners" />
+          </g>
+
+          {/* Station 3 — Assembly workstation (fixture + part outline) */}
+          <g class="precision-visual__module" data-station="3">
+            <rect x="420" y="205" width="110" height="50" rx="4" fill={`url(#${uid}-metal)`} stroke="var(--color-ink-800)" stroke-width="1.5" />
+            <rect x="440" y="185" width="46" height="30" rx="3" fill="none" stroke="var(--color-copper-600)" stroke-width="1.5" stroke-dasharray="5 3" />
+            <line x1="450" y1="185" x2="450" y2="205" stroke="var(--color-steel-600)" stroke-width="1" />
+            <line x1="476" y1="185" x2="476" y2="205" stroke="var(--color-steel-600)" stroke-width="1" />
+          </g>
+
+          {/* Copper alignment nodes at each station on the spine (foreground) */}
+          <circle class="precision-visual__node" data-node="1" cx="130" cy="260" r="7" fill={`url(#${uid}-node)`} />
+          <circle class="precision-visual__node" data-node="2" cx="270" cy="260" r="7" fill={`url(#${uid}-node)`} />
+          <circle class="precision-visual__node" data-node="3" cx="475" cy="260" r="7" fill={`url(#${uid}-node)`} />
+          <circle cx="130" cy="260" r="12" fill="none" stroke="var(--color-copper-500)" stroke-width="1" opacity="0.4" />
+          <circle cx="270" cy="260" r="12" fill="none" stroke="var(--color-copper-500)" stroke-width="1" opacity="0.4" />
+          <circle cx="475" cy="260" r="12" fill="none" stroke="var(--color-copper-500)" stroke-width="1" opacity="0.4" />
+
+          {/* Datum Origin — literal layout origin point for this scene, bottom-left, asymmetric arms */}
+          <g class="precision-visual__datum">
+            <line x1="48" y1="440" x2="48" y2="392" stroke="var(--color-steel-600)" stroke-width="1" />
+            <line x1="48" y1="440" x2="130" y2="440" stroke="var(--color-steel-600)" stroke-width="1" />
+            <circle cx="48" cy="440" r="3.5" fill="var(--color-copper-600)" />
+            <circle cx="48" cy="440" r="6.5" fill="none" stroke="var(--color-copper-500)" stroke-width="1" opacity="0.5" />
+          </g>
+
+          {/* Input -> output direction marker */}
+          <path d="M544 260 l-14 -7 v14 z" fill="var(--color-copper-600)" />
+        </Fragment>
+      ) : (
+        <Fragment>
+          {/* ---- Secondary Visual: vision head + one alignment node, cropped/zoomed fragment ---- */}
+          <line x1="20" y1="230" x2="300" y2="230" stroke="var(--color-steel-600)" stroke-width="2" opacity="0.5" />
+          <rect x="130" y="70" width="18" height="90" fill="var(--color-steel-600)" />
+          <rect x="90" y="30" width="100" height="70" rx="8" fill={`url(#${uid}-metal)`} stroke="var(--color-ink-800)" stroke-width="1.5" />
+          <circle cx="140" cy="65" r="22" fill="var(--color-ink-950)" stroke="var(--color-copper-500)" stroke-width="2.5" />
+          <circle cx="140" cy="65" r="10" fill="var(--color-copper-500)" opacity="0.85" />
+          <path d="M108 38 v-10 h10 M172 38 v-10 h-10 M108 92 v10 h10 M172 92 v10 h-10" fill="none" stroke="var(--color-copper-600)" stroke-width="2" class="precision-visual__vision-corners" />
+          <circle class="precision-visual__node" data-node="secondary" cx="140" cy="230" r="9" fill={`url(#${uid}-node)`} />
+          <circle cx="140" cy="230" r="15" fill="none" stroke="var(--color-copper-500)" stroke-width="1.2" opacity="0.45" />
+        </Fragment>
+      )}
+    </g>
+
+    {/* Frame outline echoing the clip path — a hairline edge, not a plain rectangular card border */}
+    <path
+      d={isPrimary ? 'M20 8 H600 L632 40 V440 L600 472 H40 L8 440 V40 Z' : 'M12 4 H300 L316 20 V300 L300 316 H20 L4 300 V20 Z'}
+      fill="none"
+      stroke="var(--color-copper-500)"
+      stroke-width="1"
+      opacity="0.55"
+    />
+  </svg>
+
+  <span class="sr-only">{resolvedAlt}</span>
+</figure>
+
+<style>
+  .precision-visual {
+    margin: 0;
+    display: block;
+    position: relative;
+  }
+  .precision-visual__svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .precision-visual__spine-flow {
+    opacity: 0;
+  }
+
+  /* ---- Motion Orchestrator response (R1-06/R2-02): driven entirely by
+     the ancestor Hero root's [data-hero-motion-root][data-motion-state]
+     attribute — this component creates no observer of its own and reads
+     no state locally. Default (no data-motion-state ancestor, or
+     "settled") is the fully-drawn end state; only these decorative
+     sub-elements differ between states, nothing accessibility-relevant
+     changes. ---- */
+  [data-hero-motion-root][data-motion-state='armed'] .precision-visual__svg--animated .precision-visual__module,
+  [data-hero-motion-root]:not([data-motion-state]) .precision-visual__svg--animated .precision-visual__module {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .precision-visual__svg--animated .precision-visual__module {
+    transition: opacity var(--duration-section) var(--ease-standard),
+      transform var(--duration-section) var(--ease-standard);
+  }
+  [data-hero-motion-root][data-motion-state='armed'] .precision-visual__svg--animated .precision-visual__module[data-station='1'] { transition-delay: 0ms; }
+  [data-hero-motion-root][data-motion-state='armed'] .precision-visual__svg--animated .precision-visual__module[data-station='2'] { transition-delay: 90ms; }
+  [data-hero-motion-root][data-motion-state='armed'] .precision-visual__svg--animated .precision-visual__module[data-station='3'] { transition-delay: 180ms; }
+
+  [data-hero-motion-root][data-motion-state='armed'] .precision-visual__svg--animated .precision-visual__node,
+  [data-hero-motion-root]:not([data-motion-state]) .precision-visual__svg--animated .precision-visual__node {
+    opacity: 0;
+    transform-origin: center;
+    transform-box: fill-box;
+    transform: scale(0.4);
+  }
+  .precision-visual__svg--animated .precision-visual__node {
+    transition: opacity var(--duration-ui) var(--ease-standard),
+      transform var(--duration-ui) var(--ease-standard);
+    transition-delay: 260ms;
+  }
+
+  [data-hero-motion-root][data-motion-state='armed'] .precision-visual__svg--animated .precision-visual__vision-corners,
+  [data-hero-motion-root]:not([data-motion-state]) .precision-visual__svg--animated .precision-visual__vision-corners {
+    stroke-dasharray: 20;
+    stroke-dashoffset: 20;
+    opacity: 0.4;
+  }
+  .precision-visual__svg--animated .precision-visual__vision-corners {
+    transition: stroke-dashoffset var(--duration-section) var(--ease-standard),
+      opacity var(--duration-section) var(--ease-standard);
+    transition-delay: 340ms;
+  }
+
+  .precision-visual__svg--animated .precision-visual__spine-flow {
+    transition: opacity var(--duration-ui) var(--ease-standard);
+    transition-delay: 460ms;
+  }
+  [data-hero-motion-root][data-motion-state='running'] .precision-visual__svg--animated .precision-visual__spine-flow,
+  [data-hero-motion-root][data-motion-state='complete'] .precision-visual__svg--animated .precision-visual__spine-flow {
+    opacity: 0.9;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .precision-visual__svg--animated .precision-visual__module,
+    .precision-visual__svg--animated .precision-visual__node,
+    .precision-visual__svg--animated .precision-visual__vision-corners {
+      transition: none;
+      opacity: 1;
+      transform: none;
+      stroke-dashoffset: 0;
+    }
+  }
+</style>

@@ -1,0 +1,57 @@
+---
+/**
+ * ProcessRail — production Hero process rail (CC-02I-05), rebuilt at its
+ * fixed path from the CC-02F prototype
+ * (src/components/prototypes/cc02-final/ProcessRail.astro), wrapping the
+ * existing AssemblySpine Brand Primitive (unchanged API) with Hero-
+ * specific labels.
+ *
+ * Fixes the prototype's known locale gap: `railLabel` and `stateLabels`
+ * are required props with no in-component English/zh-TW fallback
+ * ternary. `Hero.astro` assembles `steps` from `hero.processRail.step1`–
+ * `step4` (CC-02I-01's fixed locale schema) in that order and passes
+ * `railLabel`/`stateLabels` straight from `hero.processRail`.
+ *
+ * Motion Orchestrator contract (R1-06, selector fixed R2-02): creates no
+ * `IntersectionObserver` of its own — same contract as
+ * PrecisionSystemVisual. AssemblySpine's own reveal behavior (if any) is
+ * left static/non-interactive under Hero usage.
+ */
+import AssemblySpine from '../brand/AssemblySpine.astro';
+
+export interface Props {
+  steps: [string, string, string, string];
+  railLabel: string;
+  stateLabels: { unconnected: string; aligned: string; connected: string };
+  class?: string;
+}
+
+const { steps, railLabel, stateLabels, class: className = '' } = Astro.props;
+
+const nodes = steps.map((label, i) => ({
+  label,
+  state: (i === 0 ? 'connected' : 'unconnected') as 'connected' | 'unconnected',
+}));
+---
+
+<div class:list={['process-rail', className]} role="group" aria-label={railLabel} tabindex="0">
+  <AssemblySpine orientation="horizontal" nodes={nodes} stateLabels={stateLabels} />
+</div>
+
+<style>
+  /*
+   * AssemblySpine's own <640px breakpoint switches to a stacked-vertical
+   * layout instead of introducing horizontal scroll — a real, keyboard-
+   * accessible mobile mode with no scroll container needed. tabindex="0"
+   * + role="group" + aria-label are kept on the wrapper regardless of
+   * breakpoint.
+   */
+  .process-rail {
+    width: 100%;
+  }
+  .process-rail:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 4px;
+    border-radius: var(--radius-xs);
+  }
+</style>
