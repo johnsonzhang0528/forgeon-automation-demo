@@ -404,6 +404,213 @@ def cmd_register_maintenance(args):
     print(f"registered maintenance stage {stage_auth['id']}; authorization consumed")
 
 
+def validate_activation_target(stage_id: str, target, registry) -> tuple[dict, list[dict]]:
+    if not isinstance(target, dict):
+        raise WorkflowError("activation target must be an object")
+    stage = target.get("stage")
+    if not isinstance(stage, dict):
+        raise WorkflowError("activation target stage must be an object")
+    if stage.get("id") != stage_id:
+        raise WorkflowError("activation target stage ID does not match the authorized stage")
+    if not isinstance(stage.get("title"), str) or not stage["title"].strip():
+        raise WorkflowError("activation target stage title is invalid")
+    if not isinstance(stage.get("external_reviewer"), str) or not stage["external_reviewer"].strip():
+        raise WorkflowError("activation target external reviewer is invalid")
+    if stage.get("claimable") is not True:
+        raise WorkflowError("activation target stage must be explicitly claimable")
+    spec = stage.get("spec")
+    if not isinstance(spec, str) or not spec.strip():
+        raise WorkflowError("activation target spec path is invalid")
+    if Path(spec).is_absolute() or "\\" in spec or any(part in ("", "..") for part in spec.split("/")):
+        raise WorkflowError("activation target spec path is unsafe")
+    spec_candidate = (ROOT / spec).resolve()
+    if spec_candidate != ROOT and not spec_candidate.is_relative_to(ROOT):
+        raise WorkflowError("activation target spec path escapes the repository")
+    if not spec_candidate.is_file() or spec_candidate.is_symlink():
+        raise WorkflowError("activation target spec file does not exist")
+
+    stages = registry.get("stages")
+    if not isinstance(stages, dict):
+        raise WorkflowError("registry stages are invalid")
+    other_ticket_ids = {
+        ticket.get("id") for existing_id, existing in stages.items() if isinstance(existing, dict)
+        for ticket in existing.get("tickets", []) if isinstance(ticket, dict) and existing_id != stage_id
+    }
+
+    tickets = target.get("tickets")
+    if not isinstance(tickets, list) or not tickets:
+        raise WorkflowError("activation target tickets must be a non-empty array")
+    ticket_ids, normalized = set(), []
+    for ticket in tickets:
+        if not isinstance(ticket, dict):
+            raise WorkflowError("activation target ticket must be an object")
+        ticket_id = ticket.get("id")
+        if (not isinstance(ticket_id, str) or
+                not re.fullmatch(re.escape(stage_id) + r"-[A-Z0-9]+(?:-[A-Z0-9]+)*", ticket_id)):
+            raise WorkflowError("activation target ticket ID is outside the stage namespace")
+        if ticket_id in ticket_ids:
+            raise WorkflowError("activation target contains duplicate ticket IDs")
+        if ticket_id in stages or ticket_id in other_ticket_ids:
+            raise WorkflowError("activation target ticket collides with an existing stage or ticket")
+        if not isinstance(ticket.get("title"), str) or not ticket["title"].strip():
+            raise WorkflowError("activation target ticket title is invalid")
+        if ticket.get("status") != "ready":
+            raise WorkflowError("activation target ticket status must be ready")
+        allowed_files = ticket.get("allowed_files")
+        if (not isinstance(allowed_files, list) or not allowed_files or
+                any(not isinstance(p, str) or not p.strip() for p in allowed_files)):
+            raise WorkflowError("activation target ticket allowed_files is invalid")
+        required_tests = ticket.get("required_tests")
+        if (not isinstance(required_tests, list) or
+                any(not isinstance(t, str) or not t.strip() for t in required_tests)):
+            raise WorkflowError("activation target ticket required_tests is invalid")
+        depends_on = ticket.get("depends_on", [])
+        if not isinstance(depends_on, list) or any(not isinstance(d, str) for d in depends_on):
+            raise WorkflowError("activation target ticket depends_on is invalid")
+        ticket_ids.add(ticket_id)
+        normalized.append({"id": ticket_id, "title": ticket["title"], "status": "ready",
+                           "allowed_files": list(allowed_files), "required_tests": list(required_tests),
+                           "depends_on": list(depends_on)})
+    for ticket in normalized:
+        for dep in ticket["depends_on"]:
+            if dep not in ticket_ids:
+                raise WorkflowError(f"activation target dependency is not part of this activation: {dep}")
+    visiting, visited = set(), set()
+    def visit(ticket_id: str, chain: list[str]):
+        if ticket_id in visited:
+            return
+        if ticket_id in visiting:
+            raise WorkflowError("activation target dependency graph contains a cycle: " + " -> ".join(chain + [ticket_id]))
+        visiting.add(ticket_id)
+        deps = next(t["depends_on"] for t in normalized if t["id"] == ticket_id)
+        for dep in deps:
+            visit(dep, chain + [ticket_id])
+        visiting.discard(ticket_id); visited.add(ticket_id)
+    for ticket in normalized:
+        visit(ticket["id"], [])
+
+    normalized_stage = {"title": stage["title"], "claimable": True,
+                        "external_reviewer": stage["external_reviewer"], "spec": spec,
+                        "tickets": normalized}
+    return normalized_stage, normalized
+
+
+def cmd_activate_product_stage(args):
+    cfg = verify_repo()
+    actual_role = role()
+    if actual_role not in VALID_AGENTS:
+        raise WorkflowError("product stage activation requires an agent worktree")
+    if changed_paths():
+        raise WorkflowError("product stage activation requires a clean worktree")
+    supplied = Path(args.authorization_file)
+    expected_parent = (state_dir() / "human-authorizations").resolve()
+    if supplied.is_symlink() or supplied.parent.resolve() != expected_parent:
+        raise WorkflowError("authorization file must be a direct runtime authorization file")
+    try:
+        info = supplied.stat()
+    except OSError as exc:
+        raise WorkflowError("authorization is missing or unreadable") from exc
+    if not stat.S_ISREG(info.st_mode) or stat.S_IMODE(info.st_mode) != 0o600:
+        raise WorkflowError("authorization permissions must be 0600")
+    auth = read_json(supplied)
+    required = {"authorization_id", "authorization_type", "authorized_agent", "authorized_base_head",
+                "authorized_branch", "project_id", "single_use", "consumed", "expires_at",
+                "stage_id", "activation_source"}
+    if not required.issubset(auth):
+        raise WorkflowError("authorization schema is incomplete")
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}", str(auth["authorization_id"])):
+        raise WorkflowError("authorization ID is invalid")
+    if authorization_has_unsafe_value(auth):
+        raise WorkflowError("authorization contains a secret-shaped or private absolute-path value")
+    if auth["authorization_type"] != "product-stage-activation" or not auth["single_use"] or auth["consumed"]:
+        raise WorkflowError("authorization is not an unused single-use product-stage-activation authorization")
+    try:
+        expiry = datetime.fromisoformat(auth["expires_at"].replace("Z", "+00:00"))
+    except (TypeError, ValueError) as exc:
+        raise WorkflowError("authorization expiry is invalid") from exc
+    if expiry <= datetime.now(timezone.utc):
+        raise WorkflowError("authorization has expired")
+    if auth["project_id"] != cfg.get("project_id") or auth["authorized_agent"] != actual_role:
+        raise WorkflowError("authorization project or agent mismatch")
+    if auth["authorized_branch"] != branch():
+        raise WorkflowError("authorization branch mismatch")
+    base = auth["authorized_base_head"]
+    if run(["git", "merge-base", "--is-ancestor", base, head()], check=False).returncode:
+        raise WorkflowError("authorization base HEAD is not an ancestor")
+
+    stage_id = auth["stage_id"]
+    if not isinstance(stage_id, str) or stage_id != args.stage:
+        raise WorkflowError("authorization stage ID does not match --stage")
+    source_rel = auth["activation_source"]
+    if (not isinstance(source_rel, str) or Path(source_rel).is_absolute() or "\\" in source_rel or
+            any(part in ("", "..") for part in source_rel.split("/"))):
+        raise WorkflowError("authorization activation_source path is unsafe")
+    source_candidate = (ROOT / source_rel).resolve()
+    if source_candidate != ROOT and not source_candidate.is_relative_to(ROOT):
+        raise WorkflowError("authorization activation_source path escapes the repository")
+    if source_rel != args.proposal:
+        raise WorkflowError("authorization activation_source does not match --proposal")
+
+    proposal = read_json(source_candidate)
+    target = proposal.get("activation_target")
+    if canonical_json(target) != canonical_json(auth.get("activation_target")):
+        raise WorkflowError("authorization activation_target does not match the current proposal file")
+
+    task = load_runtime()
+    if get_lock() or task.get("active_agent") is not None:
+        raise WorkflowError("runtime must be fully released before activation")
+
+    with critical():
+        registry_bytes = REGISTRY.read_bytes()
+        registry = read_json(REGISTRY)
+        stages = registry.setdefault("stages", {})
+        existing = stages.get(stage_id)
+        if not isinstance(existing, dict):
+            raise WorkflowError(f"stage is not registered: {stage_id}")
+        if existing.get("claimable") is not False or existing.get("spec") is not None or existing.get("tickets") != []:
+            raise WorkflowError("stage is not in the blocked pre-activation state (claimable:false, spec:null, tickets:[])")
+        before_others = {sid: canonical_json(s) for sid, s in stages.items() if sid != stage_id}
+        normalized_stage, _ = validate_activation_target(stage_id, target, registry)
+        stages[stage_id] = normalized_stage
+        for sid, digest in before_others.items():
+            if canonical_json(stages.get(sid)) != digest:
+                raise WorkflowError(f"activation unexpectedly mutated another stage: {sid}")
+        consumed = dict(auth)
+        consumed.update(consumed=True, consumed_at=now(), consumed_by=actual_role,
+                        activated_stage=stage_id, activation_commit=head(),
+                        registry_digest=hashlib.sha256(canonical_json(registry)).hexdigest())
+        consumed_dir = expected_parent / "consumed"
+        consumed_path = consumed_dir / f"{auth['authorization_id']}.json"
+        audit_dir = state_dir() / "activation-audits"
+        audit_path = audit_dir / f"{auth['authorization_id']}.json"
+        audit = {"authorization_id": auth["authorization_id"], "stage": stage_id,
+                 "agent": actual_role, "branch": branch(), "activation_commit": head(),
+                 "registry_digest": consumed["registry_digest"], "activated_at": now()}
+        if consumed_path.exists() or audit_path.exists():
+            raise WorkflowError("authorization was already consumed")
+        auth_bytes = supplied.read_bytes()
+        registry_written = auth_moved = audit_written = False
+        try:
+            atomic_bytes(REGISTRY, json.dumps(registry, indent=2, ensure_ascii=False).encode() + b"\n", 0o644)
+            registry_written = True
+            if os.environ.get("AGENT_TEST_FAIL_REGISTRY_WRITE") == "1": raise WorkflowError("injected registry failure")
+            consumed_dir.mkdir(parents=True, exist_ok=True)
+            atomic_bytes(consumed_path, json.dumps(consumed, indent=2, ensure_ascii=False).encode() + b"\n")
+            os.unlink(supplied); fsync_dir(expected_parent); auth_moved = True
+            if os.environ.get("AGENT_TEST_FAIL_AUTH_MOVE") == "1": raise WorkflowError("injected authorization failure")
+            atomic_json(audit_path, audit); audit_written = True; fsync_dir(audit_dir)
+            if os.environ.get("AGENT_TEST_FAIL_AUDIT_WRITE") == "1": raise WorkflowError("injected audit failure")
+        except Exception:
+            if audit_written:
+                with contextlib.suppress(FileNotFoundError): audit_path.unlink()
+            if auth_moved:
+                atomic_bytes(supplied, auth_bytes)
+            with contextlib.suppress(FileNotFoundError): consumed_path.unlink()
+            if registry_written: atomic_bytes(REGISTRY, registry_bytes, 0o644)
+            raise
+    print(f"activated product stage {stage_id}; authorization consumed")
+
+
 def render_versioned(task: dict) -> str:
     dash = lambda value: "—" if value is None else str(value)
     return (
@@ -891,6 +1098,7 @@ def parser():
     p = argparse.ArgumentParser(); sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("init-runtime"); sub.add_parser("status"); sub.add_parser("doctor")
     q = sub.add_parser("register-maintenance"); q.add_argument("--authorization-file", required=True)
+    q = sub.add_parser("activate-product-stage"); q.add_argument("--agent", required=True); q.add_argument("--stage", required=True); q.add_argument("--proposal", required=True); q.add_argument("--authorization-file", required=True)
     q = sub.add_parser("claim"); q.add_argument("--agent", required=True); q.add_argument("--stage", required=True); q.add_argument("--ticket", required=True)
     q = sub.add_parser("step-start"); q.add_argument("--agent", required=True); q.add_argument("--summary", required=True); q.add_argument("--expected-files", default=""); q.add_argument("--verification", default="")
     q = sub.add_parser("step-complete"); q.add_argument("--agent", required=True)
@@ -909,7 +1117,7 @@ def parser():
 
 
 COMMANDS = {"init-runtime": cmd_init_runtime, "status": cmd_status, "doctor": cmd_doctor,
-            "register-maintenance": cmd_register_maintenance,
+            "register-maintenance": cmd_register_maintenance, "activate-product-stage": cmd_activate_product_stage,
             "claim": cmd_claim, "step-start": cmd_step_start, "step-complete": cmd_step_complete,
             "test": cmd_test, "stage-ticket": cmd_stage, "commit-ticket": cmd_commit, "checkpoint": cmd_checkpoint,
             "handoff": cmd_handoff, "resume": cmd_resume, "complete": cmd_complete, "human-abort": cmd_abort,
