@@ -21,6 +21,27 @@ components' CSS never accidentally matches an unrelated ancestor. No
 change to the `uid` contract, component paths, or prop contracts from
 Revision 1.
 
+## Revision note (CC-02I-R2-FIX-01)
+
+Narrow fix per ChatGPT's final CC-02I R2 Stage Gate HIGH-01 finding: this
+ticket's Allowed Paths (§5) are the three isolated components only — no
+production page imports them yet (that happens in CC-02I-04). §13/§14
+previously required Playwright `reducedMotion` context runs, keyboard
+focus verification, and locale `aria-label` runtime checks against a
+rendered page that cannot exist inside this ticket's own scope, without
+inventing a test harness or route outside the Allowed Paths. This
+revision narrows §13/§14 to what is actually verifiable by source/static
+inspection and isolated unit-level checks at this stage, and explicitly
+hands the deferred runtime assertions to CC-02I-04 (basic integrated
+render/DOM/SVG-ID checks), CC-02I-06 (reduced-motion/no-JS/observer
+runtime behavior), and CC-02I-07 (keyboard focus and both-locale
+`aria-label` verification on the assembled Header+Hero). No requirement
+is dropped — each moves to the nearest ticket where a real production
+render surface exists to test it against. This ticket remains a
+pre-integration component-construction ticket; it does not gain a new
+route, harness, or forbidden-path exception to reach these engines
+itself.
+
 ## 1. Ticket ID
 
 CC-02I-05
@@ -223,36 +244,73 @@ No file under `src/components/prototypes/cc02-final/` or
   stages" / Pending·Preparing·In progress) — verify both.
 - `PrecisionSystemVisual`'s `alt`/`secondaryAlt` verified in both locales.
 
-## 13. Tests
+## 13. Tests (narrowed per CC-02I-R2-FIX-01 — see revision note above)
+
+Verifiable within this ticket's own Allowed Paths and execution stage
+(components exist but are not yet imported by any production page):
+
+- Source inspection: confirm no `Math.random()` or other runtime-generated
+  value appears anywhere in the three components' source.
+- Source inspection: confirm every SVG `id` used for a gradient, mask,
+  clip-path, or ARIA cross-reference is a pure-function derivation of the
+  `uid` prop (string template or deterministic short hash per §17) — not
+  a call to any non-deterministic source.
+- SVG ID determinism check: render each component twice in isolation (two
+  builds or two SSR passes of the component alone, not the assembled
+  page) with the same `uid` and assert identical output IDs both times
+  (proves no `Math.random()` — R1-04's acceptance bar) — this does not
+  require the Hero or a page route, only the component itself.
+- Source inspection: confirm `ProcessRail`'s `railLabel`/`stateLabels` are
+  required props with no in-component English/zh-TW fallback ternary
+  (the CC-02F-era gap this ticket fixes).
+- Source inspection: confirm neither `PrecisionSystemVisual` nor
+  `ProcessRail` instantiates `IntersectionObserver` anywhere in their own
+  script/markup.
+- Source/static inspection: confirm every motion-state-reactive CSS rule
+  uses the `[data-hero-motion-root][data-motion-state="..."]`-scoped
+  form, never a bare `data-motion-state` or `:root` selector.
+- `pnpm check` / `pnpm typecheck` / `pnpm build` — components exist and
+  compile but are not yet imported anywhere (build must not fail on
+  unused files).
+- Content-integrity check: no forbidden visual language readings (no
+  crosshair, no "NO MEDIA" text) — visual/manual check on the component
+  rendered in isolation, documented with screenshot.
+- `prototypes/cc02-final/**` / `internal-preview/cc02-final/**` zero diff
+  (`git diff --stat` or equivalent).
+
+**Explicitly deferred to a ticket with a real production render surface**
+(not dropped — see the ticket each item now lives in):
 
 - Reduced-motion end-state assertion (Playwright `reducedMotion: 'reduce'`
-  context) for `PrecisionSystemVisual` and `ProcessRail`'s default
-  rendering (no JS execution required to reach settled state).
-- `ProcessRail` keyboard-focus + `aria-label` correctness in both locales.
-- SVG ID uniqueness/determinism check: render the page twice (two builds
-  or two SSR passes) and assert `PrecisionSystemVisual`'s SVG IDs are
-  identical both times (proves no `Math.random()` — R1-04's acceptance
-  bar).
-- Content-integrity check: no forbidden visual language readings (no
-  crosshair, no "NO MEDIA" text) — visual/manual check, documented with
-  screenshot.
-- Runtime visual/DOM tests that require the assembled Hero (not just the
-  isolated component) are explicitly **deferred to CC-02I-04/06/07** — this
-  ticket verifies the three components in isolation, not integrated.
+  context) against the assembled Hero — **CC-02I-06** (§13, case 2 and
+  the full reduced-motion/no-JS defense verification).
+- `ProcessRail` keyboard-focus + `aria-label` correctness in both locales
+  against the assembled Header+Hero — **CC-02I-07** (§8's keyboard
+  walkthrough and locale-independent verification).
+- Rendered-DOM SVG ID presence/uniqueness and basic integration
+  correctness once the components are actually imported — **CC-02I-04**
+  (§13/§14, DOM-order and rendered-content assertions).
+- No `IntersectionObserver` construction attributable to
+  `PrecisionSystemVisual`/`ProcessRail` at runtime (observer-count
+  spy) — **CC-02I-06** (§13, case 6).
 
-## 14. Acceptance criteria
+## 14. Acceptance criteria (narrowed per CC-02I-R2-FIX-01 — blocking for this ticket)
 
 - [ ] All three components exist at `src/components/sections/` with the
       fixed prop contracts in §8 — no component under `src/components/
       brand/`.
 - [ ] No `Math.random()` anywhere in any of the three components.
 - [ ] All SVG/mask/clip-path/ARIA-reference IDs are derived from the
-      `uid` prop, verified deterministic across two separate builds.
+      `uid` prop, verified deterministic across two separate isolated
+      component renders (not a page route).
 - [ ] `ProcessRail`'s `aria-label` ternary is gone — `railLabel` is a
       required prop with no in-component fallback.
-- [ ] Reduced motion / no-JS default state is the fully-settled end state
-      for both `PrecisionSystemVisual` and `ProcessRail`, verified via
-      Playwright context.
+- [ ] Neither `PrecisionSystemVisual` nor `ProcessRail` instantiates
+      `IntersectionObserver` in its own source (source-inspection
+      verified; runtime observer-count proof is CC-02I-06's scope).
+- [ ] Every motion-state CSS rule in both components uses the
+      `[data-hero-motion-root][data-motion-state="..."]`-scoped form
+      (source-inspection verified).
 - [ ] `src/components/prototypes/cc02-final/**` and
       `src/pages/internal-preview/cc02-final/**` have zero diff.
 - [ ] `pnpm check` 0 errors/0 warnings.
@@ -261,16 +319,31 @@ No file under `src/components/prototypes/cc02-final/` or
       anywhere until CC-02I-04 — build must not fail on unused files).
 - [ ] No change to any of the six existing Brand Primitives.
 
-## 15. Completion evidence
+**Not blocking for this ticket** (deferred — see §13's deferred-tests list
+and the revision note above for exactly which later ticket owns each
+item): reduced-motion Playwright runtime assertion, keyboard-focus/
+locale `aria-label` runtime assertion, rendered-DOM SVG ID runtime
+assertion, and `IntersectionObserver` runtime call-count proof. These
+remain mandatory requirements of the overall CC-02I stage — they are not
+removed from the spec, only moved to the ticket where a production render
+surface actually exists to test them against.
+
+## 15. Completion evidence (narrowed per CC-02I-R2-FIX-01)
 
 - Diff showing the `railLabel` ternary removal (relative to the CC-02F
   prototype's `ProcessRail.astro`, as a design reference, not a file
   diff — since this is a new file at a new path).
-- SVG ID determinism test output (two-build comparison).
-- Reduced-motion screenshot/test output.
+- SVG ID determinism test output (two-build comparison of the isolated
+  component, not a page route).
+- Source-inspection confirmation (grep or equivalent) that neither
+  component instantiates `IntersectionObserver` and that every
+  motion-state selector uses the `[data-hero-motion-root][data-motion-
+  state="..."]`-scoped form.
 - Confirmation (`git diff --stat` or equivalent) that
   `prototypes/cc02-final/**` and `internal-preview/cc02-final/**` are
   untouched.
+- Reduced-motion runtime screenshot/test output is **not** produced by
+  this ticket — see CC-02I-06's completion evidence for that artifact.
 
 ## 16. Handoff requirements
 

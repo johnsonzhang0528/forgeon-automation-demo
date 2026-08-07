@@ -119,6 +119,14 @@ never silently skipped or left untested.
 
 ### Other verification requirements
 
+- **Cross-reference (CC-02I-R2-FIX-01)**: CC-02I-05 could not
+  runtime-verify `ProcessRail`'s keyboard-focus and both-locale
+  `aria-label` correctness against a rendered page, since no production
+  page imports it at that ticket's stage. The full keyboard walkthrough
+  and locale-independent verification below is where that requirement is
+  actually verified at runtime — not new scope added by this
+  cross-reference, only an explicit pointer back to where CC-02I-05's
+  deferred item lands.
 - Zero horizontal overflow at all eight breakpoints, both locales.
 - 200% browser zoom reflow (manual or Playwright zoom emulation) verified
   at least one desktop and one mobile viewport, both locales — no content

@@ -249,6 +249,14 @@ one.
 
 ## 13. Tests
 
+**Cross-reference (CC-02I-R2-FIX-01)**: CC-02I-05 could not runtime-verify
+`PrecisionSystemVisual`/`ProcessRail`'s reduced-motion end-state or
+`IntersectionObserver` non-instantiation, since neither component has a
+production render surface at that ticket's stage. This ticket's cases 1,
+2, and 6 below are where those requirements are actually verified at
+runtime — they are not new scope added by this cross-reference, only an
+explicit pointer back to where CC-02I-05's deferred items land.
+
 New `tests/e2e/cc02i-motion.spec.ts` must cover all seven R2-02 mandatory
 cases, in addition to the Revision 1 assertions:
 

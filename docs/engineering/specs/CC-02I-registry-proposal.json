@@ -48,7 +48,8 @@
           "pnpm check",
           "pnpm typecheck",
           "pnpm build"
-        ]
+        ],
+        "note_fix01": "CC-02I-05 is a pre-integration component-construction ticket. Runtime Playwright verification is intentionally deferred to CC-02I-04 / CC-02I-06 / CC-02I-07 after the components have a real production render surface."
       },
       {
         "id": "CC-02I-02",
@@ -101,7 +102,8 @@
           "pnpm test:e2e -- tests/e2e/responsive-overflow.spec.ts",
           "pnpm test:axe",
           "pnpm check:h1"
-        ]
+        ],
+        "note_fix01": "Receives CC-02I-05's deferred rendered-DOM SVG ID presence/uniqueness and basic post-integration correctness verification, now that the three CC-02I-05 components have a real production render surface here."
       },
       {
         "id": "CC-02I-06",
@@ -118,7 +120,8 @@
         "required_tests": [
           "pnpm test:e2e -- tests/e2e/cc02i-motion.spec.ts"
         ],
-        "note_r2": "tests/e2e/cc02i-motion.spec.ts must cover the seven R2-02 mandatory cases (No-JS, reduced-motion observer-count spy, first-frame armed/running correctness, state-invariant accessible content, complete-is-terminal, observer count, first-frame flash evidence) in addition to the Revision 1 state-machine assertions."
+        "note_r2": "tests/e2e/cc02i-motion.spec.ts must cover the seven R2-02 mandatory cases (No-JS, reduced-motion observer-count spy, first-frame armed/running correctness, state-invariant accessible content, complete-is-terminal, observer count, first-frame flash evidence) in addition to the Revision 1 state-machine assertions.",
+        "note_fix01": "Receives CC-02I-05's deferred reduced-motion end-state and IntersectionObserver non-instantiation runtime verification for PrecisionSystemVisual/ProcessRail (covered by this ticket's existing cases 1, 2, and 6)."
       },
       {
         "id": "CC-02I-07",
@@ -141,7 +144,8 @@
         "required_tests": [
           "pnpm test:e2e -- tests/e2e/responsive-overflow.spec.ts",
           "pnpm test:axe"
-        ]
+        ],
+        "note_fix01": "Receives CC-02I-05's deferred ProcessRail keyboard-focus and both-locale aria-label runtime verification, covered by this ticket's existing keyboard walkthrough and locale-independent verification requirements."
       },
       {
         "id": "CC-02I-08",

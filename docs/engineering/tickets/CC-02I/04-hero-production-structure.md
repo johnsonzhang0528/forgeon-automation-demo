@@ -203,6 +203,15 @@ markup — so CC-02I-06 does not need to restructure this ticket's DOM.
   1920/1440/1280/1024/768/390/360/320px; CTA presence, distinct DOM
   positions, and real `href` targets; content-integrity check (no
   fabricated numbers).
+- **Cross-reference (CC-02I-R2-FIX-01)**: this ticket is the first point
+  where `PrecisionSystemVisual`/`ProcessRail`/`EvaluationLedger` render on
+  a real production page. Basic rendered-DOM SVG ID presence and
+  `ProcessRail` post-integration focusability (verified here at a
+  structural level) satisfy the "rendered-DOM SVG ID presence/uniqueness
+  and basic integration correctness" item CC-02I-05 deferred to this
+  ticket. Full keyboard-focus/locale `aria-label` verification remains
+  CC-02I-07's scope; full reduced-motion/observer runtime behavior
+  remains CC-02I-06's scope — this ticket does not repeat those.
 - Full existing `responsive-overflow.spec.ts` for `home`/`home-en` page
   types must pass, extended to include 320px (R1-07; may use a CC-02I-
   specific matrix if the global fixture is not modified — see CC-02I-07).
