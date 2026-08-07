@@ -61,7 +61,7 @@ function isActive(itemPath: string) {
         aria-controls="mobile-nav"
         aria-label={dict.nav.menuOpen}
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
         </svg>
       </button>
@@ -133,9 +133,17 @@ function isActive(itemPath: string) {
    * clips content. Normal-zoom target is reached via the row's own
    * padding-block below; at 200% zoom / large text, the row's content may
    * grow past this minimum and the header expands with it rather than
-   * clipping.
+   * clipping. `display: flex; align-items: center` on the header itself
+   * (not just the row) is required for mobile: the row's own content
+   * (44px touch target + 8px vertical padding budget below) sizes to
+   * 60px, shorter than the 64px floor, so the header must be the one
+   * vertically centering it in the remaining 4px rather than the row
+   * stretching to fill via `min-block-size: inherit` (removed below —
+   * see the mobile-height remediation note on .site-header__row).
    */
   .site-header {
+    display: flex;
+    align-items: center;
     min-block-size: 64px;
   }
   @media (min-width: 960px) {
@@ -147,9 +155,59 @@ function isActive(itemPath: string) {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--space-md);
-    padding-block: var(--space-sm);
-    min-block-size: inherit;
+    /*
+     * Touch-target remediation (CC-02I-02 review, HIGH-03 follow-on): once
+     * .site-header__lang and .mobile-nav-toggle carry `flex-shrink: 0`
+     * (below) so their own 44px+ boxes stop silently compressing under
+     * width pressure, the full squeeze at the 320px acceptance-criteria
+     * viewport lands on .site-header__brand alone — with the original
+     * --space-md (24px) row gap, that squeeze produced a real 4px
+     * horizontal overflow (324 > 320). --space-2xs (8px), the same token
+     * already used for .site-header__actions's internal gap, frees that
+     * budget back without shrinking either touch target; desktop restores
+     * --space-md in the 960px block below where the row holds three
+     * items (brand/nav/actions) at a much wider budget.
+     */
+    gap: var(--space-2xs);
+    /*
+     * Mobile-height remediation (CC-02I-02 review, HIGH-01): the ticket's
+     * 64-68px mobile contract and the 44x44px touch-target floor on
+     * .site-header__lang (below) are only simultaneously satisfiable with
+     * a small padding-block — `--space-sm` (16px/side) forced 32px of
+     * padding onto a 44px-tall content row, landing at 76px, clear of the
+     * 68px ceiling. `--space-2xs` (8px/side) is the next-smallest existing
+     * token; at 8+8+44=60px the row is shorter than the header's own
+     * min-block-size (64px) floor, so it no longer stretches the header
+     * via inheritance — the header's own `align-items: center` (above)
+     * centers the shorter row within the 64px floor instead. No new
+     * spacing token, no magic number: --space-2xs already exists in
+     * tokens.css and is used elsewhere in this same file's mobile rules.
+     */
+    padding-block: var(--space-2xs);
+    /*
+     * Mobile horizontal budget (CC-02I-02 review, HIGH-01/HIGH-03
+     * follow-on): `.container`'s own `padding-inline` resolves to
+     * `--container-padding` (= `--page-gutter-desktop`, clamp(32px, 4vw,
+     * 64px)) at every width — a shared, sitewide token this ticket's file
+     * scope does not include (`src/styles/utilities.css`). At the 320px
+     * acceptance-criteria viewport (ticket §14) that leaves too little
+     * width for .site-header__brand's full-width logo text once both
+     * touch targets hold their real 44px+ floors (flex-shrink: 0, below)
+     * — the Chinese wordmark wrapped mid-character onto a 3rd line,
+     * growing the header past the 68px ceiling. This override is scoped
+     * to `.site-header__row` only (not `.container` itself, so every
+     * other `.container` consumer sitewide is unaffected) and reuses the
+     * existing `--page-gutter-mobile` token (20px) that other mobile-only
+     * layout in this codebase already uses for exactly this role.
+     */
+    padding-inline: var(--page-gutter-mobile);
+  }
+  @media (min-width: 960px) {
+    .site-header__row {
+      padding-block: var(--space-sm);
+      gap: var(--space-md);
+      padding-inline: var(--container-padding);
+    }
   }
   /*
    * min-width: 0 (not flex-shrink: 0) so the brand block can compress
@@ -195,15 +253,30 @@ function isActive(itemPath: string) {
       block-size: 28px;
     }
   }
+  /*
+   * Zoom-safety fix (CC-02I-02 review, HIGH-02): at 200%-equivalent
+   * font-size, the nav list's un-wrapped intrinsic width overflowed the
+   * viewport, pushing the CTA fully off-screen and overlapping the brand
+   * — a real bug the previous test suite's `zoom: 200%` simulation never
+   * caught (see the suite-level comment on the 200%-zoom tests above).
+   * `flex-wrap: wrap` lets nav items reflow onto additional lines instead
+   * of forcing horizontal overflow; `row-gap` reuses the existing gap
+   * token rather than introducing a new one. The header's own
+   * `min-block-size` (not a fixed height) already accommodates the
+   * resulting taller content without clipping.
+   */
   .desktop-nav ul {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--space-lg);
+    row-gap: var(--space-2xs);
     list-style: none;
     margin: 0;
     padding: 0;
   }
   .desktop-nav {
     display: none;
+    min-width: 0;
   }
   /*
    * Short Datum-line nav hover (ticket §8): an ::after scaleX underline
@@ -255,6 +328,7 @@ function isActive(itemPath: string) {
     display: flex;
     align-items: center;
     gap: var(--space-2xs);
+    flex-shrink: 0;
   }
   @media (min-width: 960px) {
     .site-header__actions {
@@ -278,6 +352,7 @@ function isActive(itemPath: string) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
     min-inline-size: 44px;
     min-block-size: 44px;
   }
@@ -315,12 +390,28 @@ function isActive(itemPath: string) {
     background: var(--color-action-primary-hover);
     border-color: var(--color-action-primary-hover);
   }
+  /*
+   * Touch-target remediation (CC-02I-02 review, HIGH-03): the 24px svg +
+   * previous --space-2xs (8px) padding rendered a 40x40px actual button
+   * box, under the ticket's 44x44px floor for "mobile toggle" (§10/§13).
+   * --space-xs (12px, an existing token — no new magic-number spacing) +
+   * the icon's own markup dimension reduced from 24px to 20px (adjusted
+   * directly in Header.astro's own inline svg, not a shared token) lands
+   * the button's own box at exactly 44x44px: enough headroom over the
+   * floor without the extra 4px/side that a 24px icon would have added,
+   * which is the width this exact ticket's 320px acceptance-criteria
+   * viewport (§14) has no slack for once both this control and
+   * .site-header__lang stop silently compressing below their own floors
+   * (see `flex-shrink: 0` below and .site-header__brand's note on why
+   * brand, not the touch targets, is the element that yields space).
+   */
   .mobile-nav-toggle {
     background: none;
     border: none;
     color: var(--color-ink);
     display: inline-flex;
-    padding: var(--space-2xs);
+    flex-shrink: 0;
+    padding: var(--space-xs);
     border-radius: var(--radius-sm);
   }
   .mobile-nav-toggle:hover {
