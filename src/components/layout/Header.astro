@@ -1,6 +1,6 @@
 ---
 import type { Locale } from '../../config/site';
-import { getDictionary } from '../../utils/i18n';
+import { getDictionary, otherLocale, switchLocalePath } from '../../utils/i18n';
 import { navItems } from '../../config/nav';
 import Logo from '../ui/Logo.astro';
 import LanguageSwitcher from '../navigation/LanguageSwitcher.astro';
@@ -19,6 +19,14 @@ const dict = getDictionary(locale);
 function isActive(itemPath: string) {
   return path === itemPath || path.startsWith(itemPath);
 }
+
+// No-JS fallback (CC-02I-03, §9/R1-08): duplicates LanguageSwitcher.astro's
+// own href-resolution call (not imported from a new shared utility) because
+// LanguageSwitcher.astro itself is outside this ticket's allowed file scope
+// (§5/§6) — this is the ticket's documented minimum-duplication path rather
+// than a new abstraction (§17 rollback note).
+const noJsLangTarget = otherLocale(locale);
+const noJsLangHref = otherLocalePath ?? switchLocalePath(path, noJsLangTarget);
 ---
 
 <header class="site-header" data-header>
@@ -118,6 +126,35 @@ function isActive(itemPath: string) {
     </div>
   </div>
 </div>
+
+<!--
+  No-JS fallback (CC-02I-03, R1-08): the mobile drawer above is entirely
+  unusable without JavaScript — it starts `hidden` and only the toggle
+  button's `click` handler (itself JS) can reveal it. This <noscript> block
+  renders unconditionally in the static HTML: real nav links, a real locale
+  switch link, and the primary CTA, independent of the drawer/script below.
+  Plain, minimally-styled markup — a functional fallback, not a design
+  deliverable (ticket §9).
+-->
+<noscript>
+  <nav class="mobile-nav-nojs" aria-label={locale === 'zh-tw' ? '行動裝置導覽（無 JavaScript）' : 'Mobile navigation (no JavaScript)'}>
+    <ul class="mobile-nav-nojs__list">
+      {navItems.map((item) => (
+        <li>
+          <a href={item.path(locale)} class="mobile-nav-nojs__link">
+            {dict.nav[item.labelKey]}
+          </a>
+        </li>
+      ))}
+    </ul>
+    <a href={noJsLangHref} class="mobile-nav-nojs__link" hreflang={noJsLangTarget === 'zh-tw' ? 'zh-Hant-TW' : 'en'} lang={noJsLangTarget === 'zh-tw' ? 'zh-Hant-TW' : 'en'}>
+      {dict.footer.langSwitch}
+    </a>
+    <a href={`/${locale}/contact/?intent=project`} class="mobile-nav-nojs__link mobile-nav-nojs__link--cta">
+      {dict.nav.ctaPrimary}
+    </a>
+  </nav>
+</noscript>
 
 <style>
   .site-header {
@@ -496,6 +533,35 @@ function isActive(itemPath: string) {
     .mobile-nav-toggle {
       display: none;
     }
+  }
+
+  /*
+   * No-JS fallback styling (CC-02I-03, §9): plain/minimal per ticket —
+   * not a design deliverable. Reuses existing spacing/color/border tokens
+   * only; no new tokens introduced. Static block-level list, no drawer/
+   * overlay mechanics (those all depend on the script this fallback exists
+   * because of the absence of).
+   */
+  .mobile-nav-nojs {
+    padding: var(--space-md) var(--page-gutter-mobile);
+    border-top: 1px solid var(--color-border);
+  }
+  .mobile-nav-nojs__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .mobile-nav-nojs__link {
+    display: block;
+    padding: var(--space-sm) 0;
+    color: var(--color-ink);
+    text-decoration: underline;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .mobile-nav-nojs__link--cta {
+    font-weight: 600;
   }
 </style>
 
