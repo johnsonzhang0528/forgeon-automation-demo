@@ -47,7 +47,7 @@
           "allowed_files": [
             "src/components/layout/Header.astro",
             "src/components/ui/Button.astro",
-            "src/components/ui/LanguageSwitcher.astro",
+            "src/components/navigation/LanguageSwitcher.astro",
             "tests/e2e/header.spec.ts"
           ],
           "required_tests": [

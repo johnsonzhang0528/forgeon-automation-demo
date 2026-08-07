@@ -53,7 +53,7 @@ against).
 
 - `src/components/layout/Header.astro`
 - `src/components/ui/Button.astro`
-- `src/components/ui/LanguageSwitcher.astro`
+- `src/components/navigation/LanguageSwitcher.astro`
 - `tests/e2e/header.spec.ts` (new)
 
 ## 6. Forbidden paths
@@ -76,8 +76,8 @@ against).
 
 - Modified: `src/components/layout/Header.astro`
 - Possibly modified: `src/components/ui/Button.astro`,
-  `src/components/ui/LanguageSwitcher.astro` (only if a new token mapping
-  or visual-weight adjustment is genuinely needed)
+  `src/components/navigation/LanguageSwitcher.astro` (only if a new token
+  mapping or visual-weight adjustment is genuinely needed)
 - New: `tests/e2e/header.spec.ts`
 
 ## 8. Implementation requirements
