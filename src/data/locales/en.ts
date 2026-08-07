@@ -115,4 +115,26 @@ export const en: Dictionary = {
     technicalHeading: 'Request Technical Advice',
     technicalBody: "Not ready to submit a full project brief yet? Describe the technical question you're facing and we'll help evaluate a starting direction. This page demonstrates the RFQ form's validation flow; nothing you submit is sent or stored.",
   },
+  hero: {
+    eyebrow: 'Precision Automation Integration',
+    headline: 'Align positioning, inspection and assembly\ninto a production-ready system.',
+    body: 'From parts and cycle time to site constraints, FORGEON combines precision motion,\nvision positioning and modular workstations into an automation solution that can be\nevaluated, configured and verified.',
+    ctaPrimary: 'Start a Project Assessment',
+    ctaSecondary: 'Review Integration Requirements',
+    visualAlt: 'System diagram of a precision motion module, vision positioning head and assembly workstation connected along one assembly axis',
+    secondaryVisualAlt: 'Close-up of the vision positioning head and its alignment node',
+    ledger: {
+      input: { heading: 'Project Inputs', detail: 'Part drawings, target cycle time, site constraints' },
+      evaluation: { heading: 'Evaluation Scope', detail: 'Positioning, inspection, assembly and station integration' },
+      output: { heading: 'Project Outputs', detail: 'System architecture, module configuration, acceptance criteria' },
+    },
+    processRail: {
+      step1: 'INPUT',
+      step2: 'EVALUATE',
+      step3: 'CONFIGURE',
+      step4: 'VERIFY',
+      railLabel: 'Process stages',
+      stateLabels: { unconnected: 'Pending', aligned: 'Preparing', connected: 'In progress' },
+    },
+  },
 };

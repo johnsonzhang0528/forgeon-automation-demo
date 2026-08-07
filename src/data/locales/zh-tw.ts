@@ -110,6 +110,28 @@ export const zhTW = {
     technicalHeading: '索取技術建議',
     technicalBody: '若您尚未準備好完整專案需求，也可以先說明遇到的技術問題，我們會協助評估初步方向。本頁為 RFQ 表單驗證流程的展示，資料不會被送出或儲存。',
   },
+  hero: {
+    eyebrow: '精密自動化整合',
+    headline: '把定位、檢測與組裝，\n校準成可導入的生產流程。',
+    body: '從工件、節拍到現場限制，鋒岳整合精密運動、視覺定位與模組化工作站，\n建立可評估、可配置、可驗證的自動化方案。',
+    ctaPrimary: '開始專案評估',
+    ctaSecondary: '查看導入條件',
+    visualAlt: '精密運動模組、視覺定位頭與組裝工作站沿模組組裝軸連接的系統示意圖',
+    secondaryVisualAlt: '視覺定位頭近拍與對齊節點細節',
+    ledger: {
+      input: { heading: '需求輸入', detail: '工件圖、目標節拍、現場限制' },
+      evaluation: { heading: '評估範圍', detail: '定位、檢測、組裝與站點整合' },
+      output: { heading: '交付輸出', detail: '系統架構、模組配置、驗收條件' },
+    },
+    processRail: {
+      step1: '需求輸入',
+      step2: '方案評估',
+      step3: '模組配置',
+      step4: '驗證條件',
+      railLabel: '流程階段導覽',
+      stateLabels: { unconnected: '待處理', aligned: '準備中', connected: '進行中' },
+    },
+  },
 };
 
 /**
