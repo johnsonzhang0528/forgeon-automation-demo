@@ -39,6 +39,18 @@
  * the Hero subtree — PrecisionSystemVisual and ProcessRail react to the
  * root's state purely through [data-hero-motion-root]-scoped CSS and
  * create no observer of their own.
+ *
+ * Five-step visual narrative (CC-02I-06 remediation, ticket §3/§8 —
+ * "Datum Origin -> axis -> modules align -> vision lock -> rail
+ * completes"): step 1 (Datum Origin) is wired here via this file's own
+ * <style> reacting to DatumOrigin's rendered sub-elements (see the
+ * dedicated rule block below `.hero-root__origin`); steps 2-5 (axis,
+ * modules align, vision lock, rail completes) live in
+ * PrecisionSystemVisual.astro and ProcessRail.astro's own CSS, each
+ * reacting to this root's [data-hero-motion-root][data-motion-state] —
+ * see those files' own narrative-timeline comments for the full ordered
+ * timing budget. All five steps' transitions finish before the ~1000ms
+ * NARRATIVE_MS timer below fires `complete`.
  */
 import { getDictionary } from '../../utils/i18n';
 import type { Locale } from '../../config/site';
@@ -106,6 +118,25 @@ const processSteps: [string, string, string, string] = [
   <div class="hero-root__origin">
     <DatumOrigin size={40} orientation="both" label="0,0" />
   </div>
+
+  {/*
+    Five-step narrative, step 1 (CC-02I-06 remediation, MEDIUM/HIGH-01):
+    DatumOrigin.astro is a forbidden path for this ticket (brand primitive),
+    so its own `animated` prop (which autoplays on mount, independent of
+    the Motion Orchestrator) is intentionally left unset above. Instead
+    this Hero-owned <style> block below reacts to the ancestor root's
+    [data-hero-motion-root][data-motion-state] and drives DatumOrigin's
+    *own* already-rendered classes (.datum-origin__axis/__point/__ring/
+    __label) directly, entirely from Hero's side. This is not a Hero-
+    scoped selector reaching across an Astro component boundary in the
+    HIGH-01 sense (a class Hero hands to the child's root element) — it is
+    a plain global descendant-combinator rule, `:global(...)`, which
+    Astro's scoping never rewrites, so it matches DatumOrigin's rendered
+    DOM regardless of which component's data-astro-cid scope attribute
+    is present on those elements. Verified against compiled output (see
+    completion report's Compiled CSS Verification section).
+  */}
+
 
   <p class="hero-root__eyebrow mono">{hero.eyebrow}</p>
 
@@ -397,10 +428,72 @@ const processSteps: [string, string, string, string] = [
     }
   }
 
+  /*
+   * Five-step narrative, step 1 (Datum Origin) — CC-02I-06 remediation.
+   * DatumOrigin.astro's own axes/point/ring/label are always rendered
+   * fully-drawn by default (no `animated` prop passed above); these rules
+   * drive that already-rendered markup directly from Hero's motion state
+   * instead. `armed`/no-state-yet start each element at its animation-
+   * start visual (axis undrawn, point/ring/label hidden) purely as a
+   * decorative sub-element start state — per R2-02 this must never touch
+   * H1/Body/CTA, and it does not: only DatumOrigin's own SVG sub-elements
+   * are targeted. `running`/`complete` draw the finished state in, timed
+   * to start first (0ms) so Datum Origin visibly leads the narrative
+   * before the axis step below.
+   */
+  [data-hero-motion-root][data-motion-state='armed'] .hero-root__origin :global(.datum-origin__axis) {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  [data-hero-motion-root][data-motion-state='armed'] .hero-root__origin :global(.datum-origin__point),
+  [data-hero-motion-root][data-motion-state='armed'] .hero-root__origin :global(.datum-origin__ring),
+  [data-hero-motion-root][data-motion-state='armed'] .hero-root__origin :global(.datum-origin__label) {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  .hero-root__origin :global(.datum-origin__axis) {
+    transition: stroke-dashoffset var(--duration-section) var(--ease-standard);
+    transition-delay: 0ms;
+  }
+  .hero-root__origin :global(.datum-origin__point),
+  .hero-root__origin :global(.datum-origin__ring) {
+    transform-origin: center;
+    transform-box: fill-box;
+    transition: opacity var(--duration-ui) var(--ease-standard),
+      transform var(--duration-ui) var(--ease-standard);
+    transition-delay: 60ms;
+  }
+  .hero-root__origin :global(.datum-origin__label) {
+    transition: opacity var(--duration-ui) var(--ease-standard);
+    transition-delay: 100ms;
+  }
+  [data-hero-motion-root][data-motion-state='running'] .hero-root__origin :global(.datum-origin__axis),
+  [data-hero-motion-root][data-motion-state='complete'] .hero-root__origin :global(.datum-origin__axis) {
+    stroke-dashoffset: 0;
+  }
+  [data-hero-motion-root][data-motion-state='running'] .hero-root__origin :global(.datum-origin__point),
+  [data-hero-motion-root][data-motion-state='running'] .hero-root__origin :global(.datum-origin__ring),
+  [data-hero-motion-root][data-motion-state='running'] .hero-root__origin :global(.datum-origin__label),
+  [data-hero-motion-root][data-motion-state='complete'] .hero-root__origin :global(.datum-origin__point),
+  [data-hero-motion-root][data-motion-state='complete'] .hero-root__origin :global(.datum-origin__ring),
+  [data-hero-motion-root][data-motion-state='complete'] .hero-root__origin :global(.datum-origin__label) {
+    opacity: 1;
+    transform: scale(1);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .hero-root * {
       animation-duration: 0.01ms !important;
       transition-duration: 0.01ms !important;
+    }
+    .hero-root__origin :global(.datum-origin__axis) {
+      stroke-dashoffset: 0 !important;
+    }
+    .hero-root__origin :global(.datum-origin__point),
+    .hero-root__origin :global(.datum-origin__ring),
+    .hero-root__origin :global(.datum-origin__label) {
+      opacity: 1 !important;
+      transform: none !important;
     }
   }
 </style>

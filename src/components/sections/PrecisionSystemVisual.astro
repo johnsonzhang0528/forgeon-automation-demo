@@ -96,6 +96,7 @@ const resolvedAlt = isPrimary ? alt : (secondaryAlt ?? alt);
             class="precision-visual__spine"
             x1="96" y1="260" x2="544" y2="260"
             stroke="var(--color-steel-600)" stroke-width="2.5"
+            pathLength="1"
           />
           <line x1="96" y1="260" x2="544" y2="260" stroke="var(--color-copper-600)" stroke-width="2.5" stroke-dasharray="8 420" class="precision-visual__spine-flow" />
 
@@ -195,7 +196,22 @@ const resolvedAlt = isPrimary ? alt : (secondaryAlt ?? alt);
     border: 0;
   }
 
+  /*
+   * Default (settled / no-JS / reduced-motion / before Motion Bootstrap
+   * runs) renders the fully-drawn end state — opacity 0.9, matching
+   * running/complete below — per this file's own settled-equivalence
+   * contract (see block comment further down). Found via this ticket's
+   * own Case 5 full-inventory test: with only `opacity: 0` as the
+   * unconditional default, the settled/reduced-motion/No-JS renders were
+   * missing this accent line entirely while normal-JS "complete" showed
+   * it, which is exactly the settled/complete visual-equivalence defect
+   * spec §11 exists to catch.
+   */
   .precision-visual__spine-flow {
+    opacity: 0.9;
+  }
+  :global([data-hero-motion-root][data-motion-state='armed']) .precision-visual__svg--animated .precision-visual__spine-flow,
+  :global([data-hero-motion-root]:not([data-motion-state])) .precision-visual__svg--animated .precision-visual__spine-flow {
     opacity: 0;
   }
 
@@ -205,22 +221,94 @@ const resolvedAlt = isPrimary ? alt : (secondaryAlt ?? alt);
      no state locally. Default (no data-motion-state ancestor, or
      "settled") is the fully-drawn end state; only these decorative
      sub-elements differ between states, nothing accessibility-relevant
-     changes. ---- */
-  [data-hero-motion-root][data-motion-state='armed'] .precision-visual__svg--animated .precision-visual__module,
-  [data-hero-motion-root]:not([data-motion-state]) .precision-visual__svg--animated .precision-visual__module {
+     changes.
+
+     HIGH-01 remediation (CC-02I-06): Astro scopes every plain selector in
+     this file's <style> block with THIS component's own
+     data-astro-cid-* attribute, appended to every compound selector
+     segment — including bare attribute selectors like
+     `[data-hero-motion-root]`. The actual Hero root DOM element (Hero.
+     astro's own <section>) carries only Hero.astro's data-astro-cid-*,
+     never this file's, so a scoped `[data-hero-motion-root]` compiles to
+     `[data-astro-cid-THIS][data-hero-motion-root]` — a selector that can
+     never match the real ancestor element (confirmed against built
+     output: dist/_astro/*.css shows exactly this broken compiled form
+     for the pre-remediation source). `:global(...)` around the ancestor
+     combinator is the fix: it stops Astro from appending this file's
+     scope to that part of the selector, while the nested descendant
+     classes (`.precision-visual__spine` etc.) stay correctly scoped
+     since those elements genuinely are rendered by this file. Re-verified
+     against the rebuilt compiled CSS after this change (see completion
+     report's Compiled CSS Verification section) — not source inspection
+     alone.
+
+     Five-step narrative timeline (CC-02I-06 remediation — retimed so each
+     named step is a distinct, separately-provable phase, ordered and
+     finishing strictly before the next step's own transition-end, all
+     inside Hero.astro's NARRATIVE_MS=1000ms bootstrap timer):
+       step 1 Datum Origin   — Hero.astro axis/point/ring/label,
+                                delay 0/60/60/100ms, ends by  ~480ms
+       step 2 axis            — .precision-visual__spine,
+                                delay 140ms, dur 480ms (section), ends 620ms
+       step 3 modules align   — .precision-visual__module (stations,
+                                stagger preserved from the original 0/90/
+                                180ms spacing) delay 220/260/300ms, dur
+                                260ms (ui), ends 480/520/560ms; the
+                                alignment .precision-visual__node
+                                companion at delay 400ms, dur 260ms, ends
+                                660ms
+       step 4 vision lock     — .precision-visual__vision-corners,
+                                delay 560ms, dur 260ms (ui), ends 820ms
+       step 5 rail completes  — .precision-visual__spine-flow (this
+                                component's own bridge accent), delay
+                                660ms, dur 260ms, ends 920ms; ProcessRail's
+                                own accent underline (see ProcessRail.astro)
+                                delay 660ms, dur 260ms, ends 920ms — the
+                                narrative's final visible motion
+     Each step's transition-end stays inside the prior step's window or
+     immediately after it (verified via the executable rAF-sampling order
+     test in cc02i-motion.spec.ts, not source inspection alone). ---- */
+  :global([data-hero-motion-root][data-motion-state='armed']) .precision-visual__svg--animated .precision-visual__spine,
+  :global([data-hero-motion-root]:not([data-motion-state])) .precision-visual__svg--animated .precision-visual__spine {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  .precision-visual__svg--animated .precision-visual__spine {
+    transition: stroke-dashoffset var(--duration-section) var(--ease-standard);
+    transition-delay: 140ms;
+  }
+  :global([data-hero-motion-root][data-motion-state='running']) .precision-visual__svg--animated .precision-visual__spine,
+  :global([data-hero-motion-root][data-motion-state='complete']) .precision-visual__svg--animated .precision-visual__spine {
+    stroke-dashoffset: 0;
+  }
+
+  :global([data-hero-motion-root][data-motion-state='armed']) .precision-visual__svg--animated .precision-visual__module,
+  :global([data-hero-motion-root]:not([data-motion-state])) .precision-visual__svg--animated .precision-visual__module {
     opacity: 0;
     transform: translateY(10px);
   }
   .precision-visual__svg--animated .precision-visual__module {
-    transition: opacity var(--duration-section) var(--ease-standard),
-      transform var(--duration-section) var(--ease-standard);
+    transition: opacity var(--duration-ui) var(--ease-standard),
+      transform var(--duration-ui) var(--ease-standard);
   }
-  [data-hero-motion-root][data-motion-state='armed'] .precision-visual__svg--animated .precision-visual__module[data-station='1'] { transition-delay: 0ms; }
-  [data-hero-motion-root][data-motion-state='armed'] .precision-visual__svg--animated .precision-visual__module[data-station='2'] { transition-delay: 90ms; }
-  [data-hero-motion-root][data-motion-state='armed'] .precision-visual__svg--animated .precision-visual__module[data-station='3'] { transition-delay: 180ms; }
+  /*
+   * transition-delay must live on the unconditional (always-matching)
+   * rule, not inside the armed-scoped block above: the moment the state
+   * flips armed -> running, the armed-scoped selector stops matching, so
+   * a transition-delay declared only there drops out of the cascade at
+   * exactly the moment the transition would start, leaving the browser
+   * to fall back to the default 0s delay — collapsing the intended
+   * 220/260/300ms stagger to 0ms for all three stations simultaneously.
+   * (Found via this ticket's own executable narrative-order test: axis
+   * was observed starting AFTER modules at runtime, the opposite of the
+   * declared 140ms/220ms delay ordering, because of exactly this bug.)
+   */
+  .precision-visual__svg--animated .precision-visual__module[data-station='1'] { transition-delay: 220ms; }
+  .precision-visual__svg--animated .precision-visual__module[data-station='2'] { transition-delay: 260ms; }
+  .precision-visual__svg--animated .precision-visual__module[data-station='3'] { transition-delay: 300ms; }
 
-  [data-hero-motion-root][data-motion-state='armed'] .precision-visual__svg--animated .precision-visual__node,
-  [data-hero-motion-root]:not([data-motion-state]) .precision-visual__svg--animated .precision-visual__node {
+  :global([data-hero-motion-root][data-motion-state='armed']) .precision-visual__svg--animated .precision-visual__node,
+  :global([data-hero-motion-root]:not([data-motion-state])) .precision-visual__svg--animated .precision-visual__node {
     opacity: 0;
     transform-origin: center;
     transform-box: fill-box;
@@ -229,31 +317,32 @@ const resolvedAlt = isPrimary ? alt : (secondaryAlt ?? alt);
   .precision-visual__svg--animated .precision-visual__node {
     transition: opacity var(--duration-ui) var(--ease-standard),
       transform var(--duration-ui) var(--ease-standard);
-    transition-delay: 260ms;
+    transition-delay: 400ms;
   }
 
-  [data-hero-motion-root][data-motion-state='armed'] .precision-visual__svg--animated .precision-visual__vision-corners,
-  [data-hero-motion-root]:not([data-motion-state]) .precision-visual__svg--animated .precision-visual__vision-corners {
+  :global([data-hero-motion-root][data-motion-state='armed']) .precision-visual__svg--animated .precision-visual__vision-corners,
+  :global([data-hero-motion-root]:not([data-motion-state])) .precision-visual__svg--animated .precision-visual__vision-corners {
     stroke-dasharray: 20;
     stroke-dashoffset: 20;
     opacity: 0.4;
   }
   .precision-visual__svg--animated .precision-visual__vision-corners {
-    transition: stroke-dashoffset var(--duration-section) var(--ease-standard),
-      opacity var(--duration-section) var(--ease-standard);
-    transition-delay: 340ms;
+    transition: stroke-dashoffset var(--duration-ui) var(--ease-standard),
+      opacity var(--duration-ui) var(--ease-standard);
+    transition-delay: 560ms;
   }
 
   .precision-visual__svg--animated .precision-visual__spine-flow {
     transition: opacity var(--duration-ui) var(--ease-standard);
-    transition-delay: 460ms;
+    transition-delay: 660ms;
   }
-  [data-hero-motion-root][data-motion-state='running'] .precision-visual__svg--animated .precision-visual__spine-flow,
-  [data-hero-motion-root][data-motion-state='complete'] .precision-visual__svg--animated .precision-visual__spine-flow {
+  :global([data-hero-motion-root][data-motion-state='running']) .precision-visual__svg--animated .precision-visual__spine-flow,
+  :global([data-hero-motion-root][data-motion-state='complete']) .precision-visual__svg--animated .precision-visual__spine-flow {
     opacity: 0.9;
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .precision-visual__svg--animated .precision-visual__spine,
     .precision-visual__svg--animated .precision-visual__module,
     .precision-visual__svg--animated .precision-visual__node,
     .precision-visual__svg--animated .precision-visual__vision-corners {

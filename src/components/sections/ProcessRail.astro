@@ -69,6 +69,26 @@ const nodes = steps.map((label, i) => ({
    * `settled`/`armed` (and any state before the ancestor sets an explicit
    * value) render the fully-drawn end state — never a "not yet drawn"
    * flash.
+   *
+   * Retimed (CC-02I-06 remediation) to start at 660ms, strictly after
+   * PrecisionSystemVisual's step 4 vision-lock (540ms start / ~1020ms
+   * transition-end) and its own step-5 spine-flow bridge accent (620ms) —
+   * "rail completes" is the fifth and final step, so it must be the last
+   * visible motion in the narrative. Duration shortened from
+   * --duration-section (480ms) to --duration-ui (260ms) so the visible
+   * transition finishes at 660+260=920ms, inside Hero.astro's
+   * NARRATIVE_MS=1000ms bootstrap timer — `complete` never fires before
+   * this transition has visually finished (spec §11).
+   *
+   * HIGH-01 remediation: `[data-hero-motion-root]` is wrapped in
+   * `:global(...)` below because Astro would otherwise append THIS
+   * file's own data-astro-cid-* to the bare attribute selector, producing
+   * a compiled rule that can never match Hero.astro's real root element
+   * (which only ever carries Hero's own scope attribute) — confirmed
+   * against the pre-remediation compiled dist/_astro/*.css output. See
+   * the matching note in PrecisionSystemVisual.astro for the full
+   * explanation; re-verified against this file's own rebuilt compiled
+   * CSS after the fix.
    */
   .process-rail__complete-accent {
     position: absolute;
@@ -81,14 +101,14 @@ const nodes = steps.map((label, i) => ({
     transform-origin: left;
     pointer-events: none;
   }
-  [data-hero-motion-root][data-motion-state='armed'] .process-rail__complete-accent {
+  :global([data-hero-motion-root][data-motion-state='armed']) .process-rail__complete-accent {
     transform: scaleX(0);
   }
-  [data-hero-motion-root][data-motion-state='running'] .process-rail__complete-accent,
-  [data-hero-motion-root][data-motion-state='complete'] .process-rail__complete-accent {
+  :global([data-hero-motion-root][data-motion-state='running']) .process-rail__complete-accent,
+  :global([data-hero-motion-root][data-motion-state='complete']) .process-rail__complete-accent {
     transform: scaleX(1);
-    transition: transform var(--duration-section) var(--ease-standard);
-    transition-delay: 520ms;
+    transition: transform var(--duration-ui) var(--ease-standard);
+    transition-delay: 660ms;
   }
 
   @media (prefers-reduced-motion: reduce) {
