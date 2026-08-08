@@ -111,11 +111,27 @@ test.describe('CC-02I-04 Hero: fixed DOM order (ticket §8)', () => {
 
 test.describe('CC-02I-04 Hero: motion bootstrap DOM hook (R2-02)', () => {
   for (const { path } of ROUTES) {
-    test(`${path} Hero root carries data-hero-motion-root and data-motion-state="settled"`, async ({ page }) => {
-      await page.goto(path);
-      const root = page.locator('[data-hero-motion-root]');
-      await expect(root).toHaveCount(1);
-      await expect(root).toHaveAttribute('data-motion-state', 'settled');
+    /**
+     * Contract correction (CC-02I-06 Human/ChatGPT-authorized narrow
+     * remediation): this assertion originally read the live, post-JS DOM
+     * via `page.goto()` + `page.locator()`, which was correct only while
+     * no Motion Orchestrator existed (data-motion-state never changed
+     * after SSR). CC-02I-06's orchestrator now synchronously advances
+     * normal-JS page loads past `settled` before first paint (R2-02) —
+     * that is a required, not incidental, behavior (see
+     * tests/e2e/cc02i-motion.spec.ts's R2-02 Case 3/7). What this test
+     * actually needs to guarantee — that the server-rendered Hero root
+     * carries `data-hero-motion-root` and `data-motion-state="settled"`
+     * as its initial markup — is verified here against the raw SSR
+     * response body (`request.get` + `response.text()`), which no
+     * client-side script can have touched, instead of the live/hydrated
+     * DOM. This is the only assertion changed in this describe block.
+     */
+    test(`${path} server-rendered Hero root carries data-hero-motion-root and data-motion-state="settled" in the raw SSR response`, async ({ request }) => {
+      const response = await request.get(path);
+      expect(response.ok()).toBe(true);
+      const html = await response.text();
+      expect(html).toMatch(/<section[^>]*\bdata-hero-motion-root\b[^>]*\bdata-motion-state="settled"[^>]*>/);
     });
 
     test(`${path} Motion Bootstrap mount point precedes Primary Visual markup`, async ({ page }) => {
