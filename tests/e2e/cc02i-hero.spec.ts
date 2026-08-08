@@ -157,7 +157,20 @@ test.describe('CC-02I-04 Hero: CTA order, distinctness, and real hrefs', () => {
   }
 });
 
-test.describe('CC-02I-04 Hero: H1 line-break contract at required viewports', () => {
+test.describe('CC-02I-04 Hero: H1 exact line-break contract at required viewports', () => {
+  /**
+   * Canonical H1 text is spec-fixed (production spec §5/§7, sourced from
+   * src/data/locales/{zh-tw,en}.ts's `hero.headline`) — a single explicit
+   * `\n` at one exact position, not CSS-determined wrapping. Asserting the
+   * full string (not just "contains a newline somewhere") is what actually
+   * catches a moved/added/dropped break point; the prior test's weaker
+   * "any `\n` present" check would still pass on a wrong break position.
+   */
+  const CANONICAL_HEADLINE: Record<'zh-tw' | 'en', string> = {
+    'zh-tw': '把定位、檢測與組裝，\n校準成可導入的生產流程。',
+    en: 'Align positioning, inspection and assembly\ninto a production-ready system.',
+  };
+
   const H1_VIEWPORTS = [
     { name: '1440x900', width: 1440, height: 900 },
     { name: '768x1024', width: 768, height: 1024 },
@@ -165,18 +178,61 @@ test.describe('CC-02I-04 Hero: H1 line-break contract at required viewports', ()
     { name: '360x800', width: 360, height: 800 },
     { name: '320x800', width: 320, height: 800 },
   ];
-  for (const { path } of ROUTES) {
+  for (const { path, locale } of ROUTES) {
     for (const vp of H1_VIEWPORTS) {
-      test(`${path} @ ${vp.name}: H1 renders the spec-fixed line break via white-space: pre-line`, async ({ page }) => {
+      test(`${path} @ ${vp.name}: H1 renders the exact spec-fixed headline and line break`, async ({ page }) => {
         await page.setViewportSize({ width: vp.width, height: vp.height });
         await page.goto(path);
         const h1 = page.locator('h1');
         const whiteSpace = await h1.evaluate((el) => getComputedStyle(el).whiteSpace);
         expect(whiteSpace).toBe('pre-line');
         const text = await h1.textContent();
-        expect(text).toContain('\n');
+        expect(text, `H1 text must exactly match the canonical spec-fixed headline (including newline position) on ${path} @ ${vp.name}`).toBe(CANONICAL_HEADLINE[locale]);
       });
     }
+  }
+
+  /**
+   * 320px orphan requirement (spec §5: "the final word/character must
+   * never be isolated alone on its own line at any supported viewport
+   * including 320px"). This is about CSS reflow wrapping additional to the
+   * one spec-fixed `\n` — not something a fixed numeric assertion can
+   * derive from the spec text alone, so it's checked as rendered geometry:
+   * the last line's rendered width must be more than a single
+   * glyph/space's width, which would indicate exactly one orphaned
+   * character/short word alone on the final visual line.
+   */
+  for (const { path, locale } of ROUTES) {
+    test(`${path} @ 320x800: H1 has no orphaned final word/character (spec §5)`, async ({ page }) => {
+      await page.setViewportSize({ width: 320, height: 800 });
+      await page.goto(path);
+      const h1 = page.locator('h1');
+      const lineMetrics = await h1.evaluate((el) => {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const rects = Array.from(range.getClientRects());
+        const fontSize = parseFloat(getComputedStyle(el).fontSize);
+        const lines = new Map<number, { minLeft: number; maxRight: number }>();
+        for (const r of rects) {
+          const key = Math.round(r.top);
+          const existing = lines.get(key);
+          if (existing) {
+            existing.minLeft = Math.min(existing.minLeft, r.left);
+            existing.maxRight = Math.max(existing.maxRight, r.right);
+          } else {
+            lines.set(key, { minLeft: r.left, maxRight: r.right });
+          }
+        }
+        const widths = Array.from(lines.values()).map((l) => l.maxRight - l.minLeft);
+        return { lastLineWidth: widths[widths.length - 1] ?? 0, lineCount: widths.length, fontSize };
+      });
+      expect(lineMetrics.lineCount, `${path}: expected the canonical headline to render as multiple lines at 320px`).toBeGreaterThan(1);
+      expect(
+        lineMetrics.lastLineWidth,
+        `${path}: final H1 line renders only ${lineMetrics.lastLineWidth}px wide at 320px (font-size ${lineMetrics.fontSize}px) — looks like an orphaned single word/character, violating spec §5's "final word/character must never be isolated alone" rule`
+      ).toBeGreaterThan(lineMetrics.fontSize * 2);
+      void locale;
+    });
   }
 });
 
@@ -204,6 +260,83 @@ test.describe('CC-02I-04 Hero: grid column placement at eight fixed breakpoints'
         }
       });
     }
+  }
+});
+
+/**
+ * CC-02I-04 HIGH-01 remediation: hardens the previous false positive, which
+ * only checked that the Hero root resolves 12 grid columns but never proved
+ * the Secondary Visual actually occupies a compact grid placement distinct
+ * from the Primary Visual. The original defect (fixed here) was an Astro
+ * cross-component scoped-style boundary: a class passed into
+ * PrecisionSystemVisual never actually matched its rendered <figure>
+ * (different component = different data-astro-cid-* scope attribute), so
+ * the Secondary Visual silently fell back to full width — rendering as a
+ * second, full-size visual stacked on the Primary Visual (real production
+ * evidence: Primary ~811x608, Secondary ~811x811 at 1440px). These
+ * assertions read actual rendered bounding boxes and resolved grid-column
+ * placement, so a regression back to that state fails here even though
+ * "12 columns exist" and "no horizontal overflow" both still pass.
+ */
+test.describe('CC-02I-04 Hero: Secondary Visual composition (HIGH-01 remediation)', () => {
+  const DESKTOP_VIEWPORTS = [
+    { name: '1024x768', width: 1024, height: 768 },
+    { name: '1280x800', width: 1280, height: 800 },
+    { name: '1440x900', width: 1440, height: 900 },
+    { name: '1920x1080', width: 1920, height: 1080 },
+  ];
+
+  for (const { path } of ROUTES) {
+    for (const vp of DESKTOP_VIEWPORTS) {
+      test(`${path} @ ${vp.name}: Secondary Visual resolves to Hero-owned grid columns 10-13, not the full grid width`, async ({ page }) => {
+        await page.setViewportSize({ width: vp.width, height: vp.height });
+        await page.goto(path);
+        const secondary = page.locator('.hero-root__visual-secondary');
+        await expect(secondary).toHaveCSS('grid-column-start', '10');
+        await expect(secondary).toHaveCSS('grid-column-end', '13');
+      });
+
+      test(`${path} @ ${vp.name}: Secondary Visual rendered width is a compact fragment, never full-size like the Primary Visual`, async ({ page }) => {
+        await page.setViewportSize({ width: vp.width, height: vp.height });
+        await page.goto(path);
+        const primaryBox = await page.locator('.hero-root__visual').boundingBox();
+        const secondaryBox = await page.locator('.hero-root__visual-secondary').boundingBox();
+        expect(primaryBox, `${path} @ ${vp.name}: Primary Visual must have a bounding box`).not.toBeNull();
+        expect(secondaryBox, `${path} @ ${vp.name}: Secondary Visual must have a bounding box`).not.toBeNull();
+        const primaryWidth = primaryBox!.width;
+        const secondaryWidth = secondaryBox!.width;
+        // Reproduces the original defect as a failing assertion: the
+        // regression rendered Secondary at ~100% of Primary's width
+        // (811 vs 811 at 1440px). A real compact fragment must render
+        // materially smaller — well under half the Primary's width.
+        expect(
+          secondaryWidth,
+          `${path} @ ${vp.name}: Secondary Visual width (${secondaryWidth}px) is not materially smaller than Primary Visual width (${primaryWidth}px) — this is the exact full-size-duplicate regression this test exists to catch`
+        ).toBeLessThan(primaryWidth * 0.5);
+        // Positive invariant tied to this file's own grid contract
+        // (`max-width: 220px` on .hero-root__visual-secondary, spec §5's
+        // "smaller secondary fragment"), not an arbitrary screenshot ratio.
+        expect(secondaryWidth).toBeLessThanOrEqual(225);
+      });
+
+      test(`${path} @ ${vp.name}: Primary Visual remains materially dominant over Secondary Visual (visual hierarchy)`, async ({ page }) => {
+        await page.setViewportSize({ width: vp.width, height: vp.height });
+        await page.goto(path);
+        const primaryBox = await page.locator('.hero-root__visual').boundingBox();
+        const secondaryBox = await page.locator('.hero-root__visual-secondary').boundingBox();
+        const primaryArea = primaryBox!.width * primaryBox!.height;
+        const secondaryArea = secondaryBox!.width * secondaryBox!.height;
+        expect(primaryArea, `${path} @ ${vp.name}: Primary Visual area must be substantially larger than Secondary Visual area`).toBeGreaterThan(secondaryArea * 3);
+      });
+    }
+
+    test(`${path} @ 768x1024 (tablet): Secondary Visual is not a duplicate full-size visual stack`, async ({ page }) => {
+      await page.setViewportSize({ width: 768, height: 1024 });
+      await page.goto(path);
+      const primaryBox = await page.locator('.hero-root__visual').boundingBox();
+      const secondaryBox = await page.locator('.hero-root__visual-secondary').boundingBox();
+      expect(secondaryBox!.width, `${path} @ 768x1024: Secondary Visual must stay a smaller fragment relative to Primary Visual per spec §5's tablet reflow rule`).toBeLessThanOrEqual(primaryBox!.width);
+    });
   }
 });
 

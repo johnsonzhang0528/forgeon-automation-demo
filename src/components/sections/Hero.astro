@@ -17,10 +17,14 @@
  * `grid-column`/`grid-row` on each child individually — it never nests a
  * sub-container that would let a later child's markup precede an earlier
  * child's in the DOM. The Secondary System Visual is not its own fixed-
- * order slot (absent from the ticket's nine-item list); it renders
- * immediately after the Primary Visual, both sharing the "Primary System
- * Visual" DOM position, matching §5's desktop grid description ("Secondary
- * Visual cols 10-13") without inventing a tenth DOM-order item.
+ * order slot (absent from the ticket's nine-item list); it is a flat
+ * sibling of the Primary Visual wrapper, immediately after it in DOM order,
+ * both sharing the "Primary System Visual" DOM position, matching §5's
+ * desktop grid description ("Secondary Visual cols 10-13") without
+ * inventing a tenth DOM-order item. It is a sibling — not nested inside
+ * the Primary Visual's wrapper — so its Hero-owned grid placement/sizing
+ * selector is a real, independent grid item (see HIGH-01 remediation note
+ * at the Secondary Visual's markup below).
  *
  * Motion root (R2-02): the root element carries both
  * `data-hero-motion-root` and `data-motion-state="settled"`. The Motion
@@ -101,26 +105,39 @@ const processSteps: [string, string, string, string] = [
       animated
       alt={hero.visualAlt}
     />
-    {/*
-      FLAGGED DEVIATION (see completion report / Stage Gate): the ticket/
-      spec's uid contract ("Hero.astro always passes the literal string
-      'homepage-hero-system'") was written for a single PrecisionSystemVisual
-      instance. Hero.astro renders two simultaneous instances (primary +
-      secondary), and passing the identical literal to both produces
-      duplicate SVG gradient/mask/clipPath ids in the same document (a real
-      HTML-validity defect, confirmed via this ticket's own test suite).
-      Every id PrecisionSystemVisual emits is a deterministic, pure-function
-      derivation of `uid` (R1-04's actual requirement: no Math.random(), no
-      runtime-generated value) — appending a fixed "-secondary" suffix stays
-      fully deterministic/reproducible and satisfies that requirement while
-      resolving the duplicate-id defect. Not a unilateral redesign of the
-      uid contract: PrecisionSystemVisual.astro itself is unmodified.
-    */}
+  </div>
+
+  {/*
+    FLAGGED DEVIATION (see completion report / Stage Gate): the ticket/
+    spec's uid contract ("Hero.astro always passes the literal string
+    'homepage-hero-system'") was written for a single PrecisionSystemVisual
+    instance. Hero.astro renders two simultaneous instances (primary +
+    secondary), and passing the identical literal to both produces
+    duplicate SVG gradient/mask/clipPath ids in the same document (a real
+    HTML-validity defect, confirmed via this ticket's own test suite).
+    Every id PrecisionSystemVisual emits is a deterministic, pure-function
+    derivation of `uid` (R1-04's actual requirement: no Math.random(), no
+    runtime-generated value) — appending a fixed "-secondary" suffix stays
+    fully deterministic/reproducible and satisfies that requirement while
+    resolving the duplicate-id defect. Not a unilateral redesign of the
+    uid contract: PrecisionSystemVisual.astro itself is unmodified.
+
+    Composition (HIGH-01 remediation): this wrapper, not a class passed
+    into the child, is the real grid item. An Astro scoped-style selector
+    written in this file only ever matches elements that carry *this*
+    component's own `data-astro-cid-*` scope attribute — PrecisionSystemVisual's
+    rendered <figure> carries its own, different scope attribute instead, so
+    a Hero-scoped class placed directly on the child never actually applied
+    (confirmed via built output: the class was present in the DOM but the
+    scoped CSS rule targeting it could not match). Sizing/placement now live
+    entirely on `.hero-root__visual-secondary`, an element Hero itself owns
+    and renders, so the scoped selector always resolves.
+  */}
+  <div class="hero-root__visual-secondary">
     <PrecisionSystemVisual
       uid="homepage-hero-system-secondary"
       variant="secondary"
       alt={hero.secondaryVisualAlt}
-      class="hero-root__visual-secondary"
     />
   </div>
 
@@ -223,9 +240,19 @@ const processSteps: [string, string, string, string] = [
     max-width: 100%;
     min-width: 0;
   }
+  /*
+   * Mobile/tablet: a real flow sibling below the Primary Visual, not
+   * overlaid — kept intentionally compact (spec §5's "smaller secondary
+   * fragment") rather than matching the Primary Visual's width.
+   */
   .hero-root__visual-secondary {
     margin-top: var(--space-8);
     width: min(70%, 320px);
+    min-width: 0;
+  }
+  .hero-root__visual-secondary :global(.precision-visual) {
+    max-width: 100%;
+    min-width: 0;
   }
 
   .hero-root__ledger :global(.eval-ledger) {
@@ -284,13 +311,37 @@ const processSteps: [string, string, string, string] = [
       grid-row: 1 / 6;
       margin-inline-end: -24px;
     }
+    /*
+     * HIGH-01 remediation: a real grid item (spec §5, "Secondary Visual
+     * spans columns 10-13") on this Hero-owned wrapper, not a class handed
+     * to PrecisionSystemVisual's own root — Astro scopes `<style>` per
+     * component, so a selector written here can only ever match elements
+     * that carry *this* file's scope attribute. The wrapper does; the
+     * child component's internal <figure> does not.
+     *
+     * `grid-column: 10 / 13` stays within the Hero's 12 explicit tracks
+     * (line 13 is the grid's own last explicit boundary) so this element
+     * never forces an implicit 13th column into `grid-template-columns` —
+     * verified by tests/e2e/cc02i-hero.spec.ts's existing "exactly 12
+     * columns at desktop" assertion. The additional bleed spec §5/§3 allows
+     * ("may exceed the 12-column grid by design, but never the viewport")
+     * comes from `margin-inline-end`, the same bleed technique the Primary
+     * Visual already uses two rules above, not from widening the grid
+     * itself. Anchored to the bottom-right of the Primary Visual's row
+     * span so the two read as one connected system, smaller fragment
+     * layered forward.
+     */
     .hero-root__visual-secondary {
-      position: absolute;
-      right: 0;
-      bottom: 0;
-      transform: translate(2%, 38%);
-      width: clamp(200px, 20vw, 280px);
+      grid-column: 10 / 13;
+      grid-row: 4 / 6;
+      align-self: end;
+      justify-self: end;
+      width: 100%;
+      max-width: 220px;
       margin-top: 0;
+      margin-inline-end: -32px;
+      position: relative;
+      z-index: 1;
     }
     .hero-root__ledger {
       grid-column: 1 / 6;
