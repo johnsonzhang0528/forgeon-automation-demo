@@ -15,7 +15,10 @@
  * Motion Orchestrator contract (R1-06, selector fixed R2-02): creates no
  * `IntersectionObserver` of its own — same contract as
  * PrecisionSystemVisual. AssemblySpine's own reveal behavior (if any) is
- * left static/non-interactive under Hero usage.
+ * left static/non-interactive under Hero usage. The five-step narrative's
+ * final beat ("rail completes") is a CSS-only accent-line reveal on this
+ * wrapper, driven purely by the ancestor Hero root's
+ * [data-hero-motion-root][data-motion-state] — no JS, no own observer.
  */
 import AssemblySpine from '../brand/AssemblySpine.astro';
 
@@ -35,6 +38,7 @@ const nodes = steps.map((label, i) => ({
 ---
 
 <div class:list={['process-rail', className]} role="group" aria-label={railLabel} tabindex="0">
+  <span class="process-rail__complete-accent" aria-hidden="true"></span>
   <AssemblySpine orientation="horizontal" nodes={nodes} stateLabels={stateLabels} />
 </div>
 
@@ -47,11 +51,50 @@ const nodes = steps.map((label, i) => ({
    * breakpoint.
    */
   .process-rail {
+    position: relative;
     width: 100%;
   }
   .process-rail:focus-visible {
     outline: 2px solid var(--color-focus);
     outline-offset: 4px;
     border-radius: var(--radius-xs);
+  }
+
+  /*
+   * Narrative step 5 ("rail completes", spec §10/§3): a decorative
+   * accent underline that draws in only once the Motion Orchestrator
+   * reaches `running`, finishing at `complete`. Purely CSS-reactive to
+   * the Hero root's [data-hero-motion-root][data-motion-state] — this
+   * component owns no observer and reads no state locally (R1-06/R2-02).
+   * `settled`/`armed` (and any state before the ancestor sets an explicit
+   * value) render the fully-drawn end state — never a "not yet drawn"
+   * flash.
+   */
+  .process-rail__complete-accent {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: var(--color-copper-500);
+    transform: scaleX(1);
+    transform-origin: left;
+    pointer-events: none;
+  }
+  [data-hero-motion-root][data-motion-state='armed'] .process-rail__complete-accent {
+    transform: scaleX(0);
+  }
+  [data-hero-motion-root][data-motion-state='running'] .process-rail__complete-accent,
+  [data-hero-motion-root][data-motion-state='complete'] .process-rail__complete-accent {
+    transform: scaleX(1);
+    transition: transform var(--duration-section) var(--ease-standard);
+    transition-delay: 520ms;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .process-rail__complete-accent {
+      transition: none;
+      transform: scaleX(1);
+    }
   }
 </style>

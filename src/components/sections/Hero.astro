@@ -28,10 +28,17 @@
  *
  * Motion root (R2-02): the root element carries both
  * `data-hero-motion-root` and `data-motion-state="settled"`. The Motion
- * Bootstrap <script> mount point sits immediately after the root's opening
- * tag, before the Primary Visual markup, so CC-02I-06 can add the real
- * bootstrap script without restructuring this DOM. This ticket does not
- * implement the bootstrap logic itself.
+ * Bootstrap <script> (CC-02I-06) sits immediately after the root's opening
+ * tag, before the Primary Visual markup, per CC-02I-04's reserved mount
+ * point — this DOM position is not restructured here.
+ *
+ * Motion Orchestrator (CC-02I-06, spec §10 / ticket §8): a single,
+ * synchronous, non-deferred, non-module inline <script> owns the Hero's
+ * four-state machine (settled/armed/running/complete) via
+ * data-motion-state on the root. It is the only IntersectionObserver in
+ * the Hero subtree — PrecisionSystemVisual and ProcessRail react to the
+ * root's state purely through [data-hero-motion-root]-scoped CSS and
+ * create no observer of their own.
  */
 import { getDictionary } from '../../utils/i18n';
 import type { Locale } from '../../config/site';
@@ -64,7 +71,37 @@ const processSteps: [string, string, string, string] = [
 ---
 
 <section class="hero-root" data-hero-motion-root data-motion-state="settled">
-  <!-- Motion Bootstrap mount point (CC-02I-06 scope; not implemented here). -->
+  <!-- Motion Bootstrap mount point (CC-02I-06): synchronous, non-deferred, non-module inline script below. -->
+  <script is:inline>
+    (function () {
+      var root = document.currentScript.closest('[data-hero-motion-root]');
+      if (!root) return;
+      var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var hasIO = typeof IntersectionObserver === 'function';
+      if (reduced || !hasIO) {
+        root.setAttribute('data-motion-state', 'settled');
+        return;
+      }
+      root.setAttribute('data-motion-state', 'armed');
+      var NARRATIVE_MS = 1000;
+      var io = new IntersectionObserver(
+        function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting) {
+              root.setAttribute('data-motion-state', 'running');
+              window.setTimeout(function () {
+                root.setAttribute('data-motion-state', 'complete');
+              }, NARRATIVE_MS);
+              io.disconnect();
+              break;
+            }
+          }
+        },
+        { threshold: 0.15 }
+      );
+      io.observe(root);
+    })();
+  </script>
 
   <div class="hero-root__origin">
     <DatumOrigin size={40} orientation="both" label="0,0" />
