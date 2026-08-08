@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionHeading from '../../components/ui/SectionHeading.astro';
 import Button from '../../components/ui/Button.astro';
-import HeroIllustration from '../../components/ui/HeroIllustration.astro';
+import Hero from '../../components/sections/Hero.astro';
 import SolutionCard from '../../components/ui/SolutionCard.astro';
 import ProductCard from '../../components/ui/ProductCard.astro';
 import IndustryCard from '../../components/ui/IndustryCard.astro';
@@ -40,27 +40,7 @@ const whyReasons = [
   description="鋒岳自動化提供精密線性模組、視覺定位檢測與自動化組裝整合方案，協助半導體、汽車零組件、金屬加工與包裝物流產業處理定位、檢測與組裝挑戰。"
 >
   <!-- Hero -->
-  <section class="hero section">
-    <div class="container hero__grid">
-      <div class="hero__copy">
-        <p class="hero__eyebrow">工業自動化 · 精密運動與視覺整合</p>
-        <h1 class="hero__title">精準驅動，更有效率的生產流程。</h1>
-        <p class="hero__desc measure">
-          鋒岳自動化整合精密線性模組、視覺定位檢測與組裝工作站，協助工廠處理定位、
-          檢測與重複組裝流程中的精度與效率挑戰。從單一站點升級到完整產線整合，
-          依製程條件提出可評估、可導入的自動化方案。
-        </p>
-        <div class="hero__actions">
-          <Button href="/zh-tw/contact/?intent=project" size="lg" trackEvent="cta_click" data-intent="project" data-source="home-hero">提交專案需求</Button>
-          <Button href="/zh-tw/contact/?intent=technical-advice" variant="secondary" size="lg" trackEvent="cta_click" data-intent="technical-advice" data-source="home-hero">索取技術建議</Button>
-        </div>
-        <p class="hero__note">本網站為作品集概念案例，公司與產品為虛構內容。</p>
-      </div>
-      <div class="hero__visual">
-        <HeroIllustration />
-      </div>
-    </div>
-  </section>
+  <Hero locale={locale} />
 
   <!-- Capability overview -->
   <section class="section section--tight">
@@ -262,51 +242,6 @@ const whyReasons = [
 </BaseLayout>
 
 <style>
-  .hero {
-    background:
-      radial-gradient(ellipse at top right, color-mix(in srgb, var(--color-accent) 6%, transparent), transparent 60%),
-      var(--color-surface);
-    border-bottom: 1px solid var(--color-border);
-    padding-top: var(--space-2xl);
-  }
-  .hero__grid {
-    display: grid;
-    gap: var(--space-2xl);
-    align-items: center;
-  }
-  .hero__eyebrow {
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--color-accent);
-    font-weight: 600;
-    margin: 0 0 var(--space-sm);
-  }
-  .hero__title {
-    margin: 0 0 var(--space-md);
-  }
-  .hero__desc {
-    color: var(--color-muted);
-    font-size: var(--fs-md);
-    margin: 0 0 var(--space-lg);
-  }
-  .hero__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-sm);
-    margin-bottom: var(--space-md);
-  }
-  .hero__note {
-    font-size: var(--fs-xs);
-    color: var(--color-muted-soft);
-    margin: 0;
-  }
-  .hero__visual {
-    display: flex;
-    justify-content: center;
-  }
-
   .section--alt {
     background: var(--color-surface-alt);
   }
@@ -451,9 +386,6 @@ const whyReasons = [
     }
   }
   @media (min-width: 960px) {
-    .hero__grid {
-      grid-template-columns: 1.1fr 0.9fr;
-    }
     .capability-grid {
       grid-template-columns: repeat(4, 1fr);
     }

@@ -1,0 +1,318 @@
+---
+/**
+ * Hero — production homepage Hero (CC-02I-04), 12-column editorial grid,
+ * assembled from CC-02I-05's already-finished production visual components
+ * (PrecisionSystemVisual, ProcessRail, EvaluationLedger). Rebuilt against
+ * production contracts from CC-02F's reviewed FinalEditorialHero prototype
+ * design (src/components/prototypes/cc02-final/FinalEditorialHero.astro,
+ * read-only reference, never imported) — not a copy, not a shared-import
+ * refactor.
+ *
+ * Fixed DOM order (ticket §8, mandatory at every viewport):
+ *   Datum Origin -> Eyebrow -> H1 -> Supporting Copy -> Primary CTA ->
+ *   Secondary CTA -> Primary System Visual -> Evaluation Ledger ->
+ *   Process Rail
+ * Every element above is a flat, direct child of the Hero root in exactly
+ * this source order. Desktop CSS Grid repositions elements visually via
+ * `grid-column`/`grid-row` on each child individually — it never nests a
+ * sub-container that would let a later child's markup precede an earlier
+ * child's in the DOM. The Secondary System Visual is not its own fixed-
+ * order slot (absent from the ticket's nine-item list); it renders
+ * immediately after the Primary Visual, both sharing the "Primary System
+ * Visual" DOM position, matching §5's desktop grid description ("Secondary
+ * Visual cols 10-13") without inventing a tenth DOM-order item.
+ *
+ * Motion root (R2-02): the root element carries both
+ * `data-hero-motion-root` and `data-motion-state="settled"`. The Motion
+ * Bootstrap <script> mount point sits immediately after the root's opening
+ * tag, before the Primary Visual markup, so CC-02I-06 can add the real
+ * bootstrap script without restructuring this DOM. This ticket does not
+ * implement the bootstrap logic itself.
+ */
+import { getDictionary } from '../../utils/i18n';
+import type { Locale } from '../../config/site';
+import Button from '../ui/Button.astro';
+import DatumOrigin from '../brand/DatumOrigin.astro';
+import PrecisionSystemVisual from './PrecisionSystemVisual.astro';
+import ProcessRail from './ProcessRail.astro';
+import EvaluationLedger from './EvaluationLedger.astro';
+
+export interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const dict = getDictionary(locale);
+const hero = dict.hero;
+
+const ledgerGroups: [
+  { heading: string; detail: string },
+  { heading: string; detail: string },
+  { heading: string; detail: string },
+] = [hero.ledger.input, hero.ledger.evaluation, hero.ledger.output];
+
+const processSteps: [string, string, string, string] = [
+  hero.processRail.step1,
+  hero.processRail.step2,
+  hero.processRail.step3,
+  hero.processRail.step4,
+];
+---
+
+<section class="hero-root" data-hero-motion-root data-motion-state="settled">
+  <!-- Motion Bootstrap mount point (CC-02I-06 scope; not implemented here). -->
+
+  <div class="hero-root__origin">
+    <DatumOrigin size={40} orientation="both" label="0,0" />
+  </div>
+
+  <p class="hero-root__eyebrow mono">{hero.eyebrow}</p>
+
+  <h1 class="hero-root__headline">{hero.headline}</h1>
+
+  <p class="hero-root__body">{hero.body}</p>
+
+  <div class="hero-root__ctas">
+    <Button
+      href={`/${locale}/contact/?intent=project`}
+      size="lg"
+      trackEvent="cta_click"
+      data-intent="project"
+      data-source="home-hero"
+    >
+      {hero.ctaPrimary}
+    </Button>
+    <Button
+      href={`/${locale}/contact/?intent=technical-advice`}
+      variant="secondary"
+      size="lg"
+      trackEvent="cta_click"
+      data-intent="technical-advice"
+      data-source="home-hero"
+    >
+      {hero.ctaSecondary}
+    </Button>
+  </div>
+
+  <div class="hero-root__visual">
+    <PrecisionSystemVisual
+      uid="homepage-hero-system"
+      variant="primary"
+      animated
+      alt={hero.visualAlt}
+    />
+    {/*
+      FLAGGED DEVIATION (see completion report / Stage Gate): the ticket/
+      spec's uid contract ("Hero.astro always passes the literal string
+      'homepage-hero-system'") was written for a single PrecisionSystemVisual
+      instance. Hero.astro renders two simultaneous instances (primary +
+      secondary), and passing the identical literal to both produces
+      duplicate SVG gradient/mask/clipPath ids in the same document (a real
+      HTML-validity defect, confirmed via this ticket's own test suite).
+      Every id PrecisionSystemVisual emits is a deterministic, pure-function
+      derivation of `uid` (R1-04's actual requirement: no Math.random(), no
+      runtime-generated value) — appending a fixed "-secondary" suffix stays
+      fully deterministic/reproducible and satisfies that requirement while
+      resolving the duplicate-id defect. Not a unilateral redesign of the
+      uid contract: PrecisionSystemVisual.astro itself is unmodified.
+    */}
+    <PrecisionSystemVisual
+      uid="homepage-hero-system-secondary"
+      variant="secondary"
+      alt={hero.secondaryVisualAlt}
+      class="hero-root__visual-secondary"
+    />
+  </div>
+
+  <div class="hero-root__ledger">
+    <EvaluationLedger groups={ledgerGroups} />
+  </div>
+
+  <div class="hero-root__rail">
+    <ProcessRail
+      steps={processSteps}
+      railLabel={hero.processRail.railLabel}
+      stateLabels={hero.processRail.stateLabels}
+    />
+  </div>
+</section>
+
+<style>
+  .hero-root {
+    position: relative;
+    max-width: var(--container-wide);
+    margin-inline: auto;
+    padding: var(--space-6) var(--page-gutter-mobile) var(--space-16);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+  }
+  @media (min-width: 768px) {
+    .hero-root {
+      padding-inline: var(--page-gutter-tablet);
+    }
+  }
+  @media (min-width: 1024px) {
+    .hero-root {
+      padding: var(--space-12) var(--page-gutter-desktop) var(--space-16);
+    }
+  }
+
+  /* ---- Mobile / tablet: fixed DOM order reads as one visual column ---- */
+  .hero-root__origin {
+    margin-bottom: calc(-1 * var(--space-5));
+  }
+  .hero-root__eyebrow {
+    color: var(--color-action-primary);
+    font-size: var(--fs-technical);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+  .hero-root__headline {
+    font-family: var(--font-display);
+    font-size: var(--fs-h1-mobile, clamp(2.35rem, 10.5vw, 3rem));
+    line-height: 1.04;
+    letter-spacing: var(--ls-h1);
+    margin: 0;
+    white-space: pre-line;
+    max-width: 720px;
+  }
+  :lang(zh-Hant-TW) .hero-root__headline {
+    font-family: 'Noto Sans TC', var(--font-display);
+    letter-spacing: 0;
+  }
+  :lang(en) .hero-root__headline {
+    font-size: clamp(1.6rem, 7.4vw, 2.35rem);
+  }
+  .hero-root__body {
+    color: var(--color-steel-700);
+    font-size: var(--fs-small);
+    line-height: var(--lh-body, 1.6);
+    max-width: var(--measure-zh);
+    white-space: pre-line;
+    margin: 0;
+  }
+  .hero-root__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+  /*
+   * Ticket §5/spec §5: at 360px and 320px, the English CTA text must wrap
+   * to a second line rather than shrinking below its specified size or
+   * forcing viewport overflow. Button.astro (forbidden file, sitewide
+   * shared component) sets `white-space: nowrap` on .btn by default; this
+   * scoped override only applies inside the Hero's CTA row, only below
+   * 400px, and only changes wrapping behavior — no Button.astro token,
+   * color, or default-variant output is touched.
+   */
+  @media (max-width: 400px) {
+    .hero-root__ctas :global(.btn) {
+      white-space: normal;
+      text-align: center;
+      flex: 1 1 100%;
+    }
+  }
+
+  .hero-root__visual {
+    position: relative;
+    min-width: 0;
+  }
+  .hero-root__visual :global(.precision-visual) {
+    max-width: 100%;
+    min-width: 0;
+  }
+  .hero-root__visual-secondary {
+    margin-top: var(--space-8);
+    width: min(70%, 320px);
+  }
+
+  .hero-root__ledger :global(.eval-ledger) {
+    max-width: var(--measure-zh);
+  }
+
+  .hero-root__rail {
+    margin-top: var(--space-8);
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--color-steel-600);
+  }
+
+  /* ---- Desktop: 12-column editorial grid (ticket §8/spec §5) ---- */
+  @media (min-width: 1024px) {
+    .hero-root {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--space-6);
+      row-gap: 0;
+      align-items: start;
+    }
+
+    .hero-root__origin {
+      grid-column: 1 / 2;
+      grid-row: 1;
+      margin-bottom: var(--space-4);
+    }
+    .hero-root__eyebrow {
+      grid-column: 1 / 6;
+      grid-row: 2;
+      margin-bottom: var(--space-3);
+    }
+    .hero-root__headline {
+      grid-column: 1 / 10;
+      grid-row: 3;
+      font-size: var(--fs-h1);
+      max-width: none;
+      margin-bottom: var(--space-6);
+    }
+    :lang(en) .hero-root__headline {
+      font-size: clamp(2.75rem, 3.6vw, 3.75rem);
+    }
+    .hero-root__body {
+      grid-column: 1 / 6;
+      grid-row: 4;
+      font-size: var(--fs-body);
+      margin-bottom: var(--space-6);
+    }
+    .hero-root__ctas {
+      grid-column: 1 / 6;
+      grid-row: 5;
+      margin-bottom: 0;
+    }
+    .hero-root__visual {
+      position: relative;
+      grid-column: 5 / 12;
+      grid-row: 1 / 6;
+      margin-inline-end: -24px;
+    }
+    .hero-root__visual-secondary {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      transform: translate(2%, 38%);
+      width: clamp(200px, 20vw, 280px);
+      margin-top: 0;
+    }
+    .hero-root__ledger {
+      grid-column: 1 / 6;
+      grid-row: 6;
+      margin-top: var(--space-8);
+    }
+    .hero-root__rail {
+      grid-column: 1 / 13;
+      grid-row: 7;
+      margin-top: var(--space-12);
+    }
+  }
+  @media (min-width: 1280px) {
+    .hero-root__visual {
+      margin-inline-end: -48px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-root * {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>

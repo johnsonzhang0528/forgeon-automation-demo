@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionHeading from '../../components/ui/SectionHeading.astro';
 import Button from '../../components/ui/Button.astro';
-import HeroIllustration from '../../components/ui/HeroIllustration.astro';
+import Hero from '../../components/sections/Hero.astro';
 import SolutionCard from '../../components/ui/SolutionCard.astro';
 import ProductCard from '../../components/ui/ProductCard.astro';
 import IndustryCard from '../../components/ui/IndustryCard.astro';
@@ -40,28 +40,7 @@ const whyReasons = [
   description="FORGEON AUTOMATION provides precision linear modules, vision-guided inspection, and automated assembly integration for semiconductor, automotive, metal machining, and packaging & logistics production lines."
 >
   <!-- Hero -->
-  <section class="hero section">
-    <div class="container hero__grid">
-      <div class="hero__copy">
-        <p class="hero__eyebrow">Industrial Automation · Precision Motion &amp; Vision Integration</p>
-        <h1 class="hero__title">Precision in motion. Efficiency in production.</h1>
-        <p class="hero__desc measure">
-          FORGEON AUTOMATION integrates precision linear modules, vision-guided inspection, and
-          assembly work cells to help factories address positioning, inspection, and repetitive
-          assembly challenges. From single-station upgrades to full line integration, every
-          proposal is built from your actual process conditions.
-        </p>
-        <div class="hero__actions">
-          <Button href="/en/contact/?intent=project" size="lg" trackEvent="cta_click" data-intent="project" data-source="home-hero">Discuss Your Project</Button>
-          <Button href="/en/contact/?intent=technical-advice" variant="secondary" size="lg" trackEvent="cta_click" data-intent="technical-advice" data-source="home-hero">Request Technical Advice</Button>
-        </div>
-        <p class="hero__note">Portfolio concept site. Company and products are fictional.</p>
-      </div>
-      <div class="hero__visual">
-        <HeroIllustration />
-      </div>
-    </div>
-  </section>
+  <Hero locale={locale} />
 
   <!-- Capability overview -->
   <section class="section section--tight">
@@ -263,51 +242,6 @@ const whyReasons = [
 </BaseLayout>
 
 <style>
-  .hero {
-    background:
-      radial-gradient(ellipse at top right, color-mix(in srgb, var(--color-accent) 6%, transparent), transparent 60%),
-      var(--color-surface);
-    border-bottom: 1px solid var(--color-border);
-    padding-top: var(--space-2xl);
-  }
-  .hero__grid {
-    display: grid;
-    gap: var(--space-2xl);
-    align-items: center;
-  }
-  .hero__eyebrow {
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--color-accent);
-    font-weight: 600;
-    margin: 0 0 var(--space-sm);
-  }
-  .hero__title {
-    margin: 0 0 var(--space-md);
-  }
-  .hero__desc {
-    color: var(--color-muted);
-    font-size: var(--fs-md);
-    margin: 0 0 var(--space-lg);
-  }
-  .hero__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-sm);
-    margin-bottom: var(--space-md);
-  }
-  .hero__note {
-    font-size: var(--fs-xs);
-    color: var(--color-muted-soft);
-    margin: 0;
-  }
-  .hero__visual {
-    display: flex;
-    justify-content: center;
-  }
-
   .section--alt {
     background: var(--color-surface-alt);
   }
@@ -452,9 +386,6 @@ const whyReasons = [
     }
   }
   @media (min-width: 960px) {
-    .hero__grid {
-      grid-template-columns: 1.1fr 0.9fr;
-    }
     .capability-grid {
       grid-template-columns: repeat(4, 1fr);
     }
