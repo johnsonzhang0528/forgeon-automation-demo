@@ -557,6 +557,61 @@ test.describe('CC-02I-07: real 200% browser zoom (CDP deviceMetrics)', () => {
   }
 });
 
+/**
+ * CC-02I-07 narrow remediation: 100% desktop text/visual overlap. Human
+ * review found the Primary Visual overlapping the H1/body/CTA text column
+ * at normal (non-zoomed) desktop viewports — a real grid-track defect, two
+ * layered issues both needed for the full fix:
+ *   1) `.hero-root__headline` was `grid-column: 1 / 10` while every sibling
+ *      text element (eyebrow/body/ctas/ledger) used the narrower `1 / 6` —
+ *      the headline's own track let it render far wider than its siblings.
+ *   2) `.hero-root__visual` was `grid-column: 5 / 12`, sharing grid track 5
+ *      with the text column's `1 / 6` (line 6 is the text's end, line 5 is
+ *      where 1/6 ends its last track) — a literal one-track overlap between
+ *      the text and visual grid areas regardless of content width.
+ * Fixed by narrowing the headline to `1 / 6` (matching siblings) AND moving
+ * the visual to `6 / 12` (flush after the text column, using the grid's own
+ * column-gap as breathing room). Verified against real rendered bounding-box
+ * geometry (measured overlap of 76-538px pre-fix, 0 post-fix) and a rebuilt
+ * static preview, not just source inspection. Locators are scoped to
+ * `[data-hero-motion-root]` — a bare `page.locator('h1')`/`.hero-root__visual`
+ * can resolve to unrelated elements injected by Astro's dev toolbar when a
+ * stray `astro dev` process is reused as the Playwright webServer, which
+ * produced several confusing false failures during this investigation.
+ * These assertions are the permanent regression guard, checking actual
+ * rendered geometry (not just "no page-level horizontal overflow", which
+ * the original defect never triggered).
+ */
+test.describe('CC-02I-07: Hero text column does not overlap Primary Visual at desktop', () => {
+  const DESKTOP_VIEWPORTS = [
+    { name: '1280x800', width: 1280, height: 800 },
+    { name: '1440x900', width: 1440, height: 900 },
+    { name: '1920x1080', width: 1920, height: 1080 },
+  ];
+  for (const { path } of ROUTES) {
+    for (const vp of DESKTOP_VIEWPORTS) {
+      test(`${path} @ ${vp.name}: H1/body/CTA right edge stays left of Primary Visual's left edge`, async ({ page }) => {
+        await page.setViewportSize({ width: vp.width, height: vp.height });
+        await page.goto(path);
+        const heroRoot = page.locator('[data-hero-motion-root]');
+        const visualBox = await heroRoot.locator('.hero-root__visual').boundingBox();
+        expect(visualBox, `${path} @ ${vp.name}: Primary Visual must have a bounding box`).not.toBeNull();
+        const visualLeft = visualBox!.x;
+
+        for (const selector of ['h1', '.hero-root__body', '.hero-root__ctas']) {
+          const box = await heroRoot.locator(selector).boundingBox();
+          expect(box, `${path} @ ${vp.name}: ${selector} must have a bounding box`).not.toBeNull();
+          const right = box!.x + box!.width;
+          expect(
+            right,
+            `${path} @ ${vp.name}: ${selector} right edge (${right}px) overlaps Primary Visual left edge (${visualLeft}px) by ${right - visualLeft}px`
+          ).toBeLessThan(visualLeft);
+        }
+      });
+    }
+  }
+});
+
 test.describe('CC-02I-04 Hero: axe accessibility (0 Critical, 0 Serious)', () => {
   for (const { path } of ROUTES) {
     test(`${path} desktop`, async ({ page }) => {
