@@ -409,6 +409,154 @@ test.describe('CC-02I-04 Hero: CC-02I-05 primitive integration (CC-02I-R2-FIX-01
   }
 });
 
+/**
+ * CC-02I-07 §8: full keyboard walkthrough over the assembled Header+Hero —
+ * Skip link -> Header (logo, nav x6, language switch, CTA) -> Hero (Primary
+ * CTA, Secondary CTA, Process Rail scroll container) -> rest of page, tab
+ * order matching CC-02I-04's fixed DOM order (R1-05), no keyboard trap
+ * outside the intentional mobile-drawer trap (covered separately in
+ * mobile-nav.spec.ts). Desktop viewport only — the mobile drawer's own
+ * focus-trapped tab order is a distinct, already-covered contract.
+ */
+test.describe('CC-02I-07: full keyboard walkthrough (Skip link -> Header -> Hero)', () => {
+  for (const { path } of ROUTES) {
+    test(`${path} tab order matches Skip link -> Header -> Hero DOM order, no trap`, async ({ page }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await page.goto(path);
+
+      // Walk focus forward from the top of the document and record which
+      // named landmark each Tab stop belongs to, stopping once we reach
+      // the Process Rail (Hero's last focusable landmark per DOM order).
+      const landmarks: Array<{ selector: string; name: string }> = [
+        { selector: '.skip-link', name: 'skip-link' },
+        { selector: '.site-header__brand a.logo', name: 'header-logo' },
+        { selector: '.desktop-nav__link', name: 'header-nav' },
+        { selector: '.site-header__lang a.lang-switch', name: 'header-lang-switch' },
+        { selector: '.site-header__cta a.btn', name: 'header-cta' },
+        { selector: '.hero-root__ctas a.btn--primary', name: 'hero-cta-primary' },
+        { selector: '.hero-root__ctas a.btn--secondary', name: 'hero-cta-secondary' },
+        { selector: '.hero-root__rail .process-rail', name: 'hero-process-rail' },
+      ];
+
+      const sequence: string[] = [];
+      // Start with no focus, then Tab repeatedly, classifying each stop.
+      for (let i = 0; i < 40; i++) {
+        await page.keyboard.press('Tab');
+        const info = await page.evaluate((defs) => {
+          const active = document.activeElement;
+          if (!active) return null;
+          for (const d of defs) {
+            const els = Array.from(document.querySelectorAll(d.selector));
+            if (els.includes(active)) return d.name;
+          }
+          return null;
+        }, landmarks);
+        if (info) sequence.push(info);
+        if (info === 'hero-process-rail') break;
+      }
+
+      // The five landmark groups must appear in this relative order (nav
+      // links collapse to one "header-nav" entry regardless of count, since
+      // their count is verified elsewhere — here we verify group ordering).
+      const collapsed: string[] = [];
+      for (const s of sequence) {
+        if (collapsed[collapsed.length - 1] !== s) collapsed.push(s);
+      }
+      const requiredRelativeOrder = [
+        'skip-link',
+        'header-logo',
+        'header-nav',
+        'header-lang-switch',
+        'header-cta',
+        'hero-cta-primary',
+        'hero-cta-secondary',
+        'hero-process-rail',
+      ];
+      const indices = requiredRelativeOrder.map((name) => collapsed.indexOf(name));
+      expect(indices, `expected all landmarks present in order; got sequence ${JSON.stringify(collapsed)}`).not.toContain(-1);
+      for (let i = 1; i < indices.length; i++) {
+        expect(indices[i], `${requiredRelativeOrder[i]} must come after ${requiredRelativeOrder[i - 1]} in tab order; got ${JSON.stringify(collapsed)}`).toBeGreaterThan(indices[i - 1]!);
+      }
+
+      // No keyboard trap: focus must have kept advancing (not stuck
+      // repeating the same element) through the whole walk.
+      expect(sequence.length, 'focus must advance through the page without getting stuck').toBeGreaterThan(requiredRelativeOrder.length - 1);
+    });
+  }
+});
+
+/**
+ * CC-02I-07 §8/§15: real 200% browser zoom via Chrome DevTools Protocol's
+ * Page.setDeviceMetricsOverride, which scales the actual layout viewport the
+ * way real browser-chrome zoom does (unlike the CSS `zoom` property or a
+ * font-size proxy — see header.spec.ts's documented automation-limitation
+ * note for why those are proxies, not real zoom). This closes that gap with
+ * genuine zoom emulation via CDP, satisfying the ticket's "do not substitute
+ * viewport resizing for browser zoom" requirement without manual-only
+ * evidence.
+ */
+test.describe('CC-02I-07: real 200% browser zoom (CDP deviceMetrics)', () => {
+  for (const { path, locale } of ROUTES) {
+    for (const vp of [
+      { name: 'desktop 1440x900', width: 1440, height: 900 },
+      { name: 'mobile 390x844', width: 390, height: 844 },
+    ]) {
+      test(`${path} @ ${vp.name}: 200% zoom shows no horizontal overflow, no clipped Header/Hero content`, async ({ page }) => {
+        const client = await page.context().newCDPSession(page);
+        await page.setViewportSize({ width: vp.width, height: vp.height });
+        await page.goto(path);
+        // Real 200% zoom: half the CSS pixel budget at 2x deviceScaleFactor,
+        // matching how Chrome's own Ctrl/Cmd+ zoom halves the effective
+        // layout viewport while keeping physical screen size constant.
+        await client.send('Emulation.setDeviceMetricsOverride', {
+          width: Math.round(vp.width / 2),
+          height: Math.round(vp.height / 2),
+          deviceScaleFactor: 2,
+          mobile: vp.width < 960,
+        });
+
+        const result = await page.evaluate(() => {
+          const doc = document.documentElement;
+          const header = document.querySelector('[data-header]') as HTMLElement | null;
+          const hero = document.querySelector('[data-hero-motion-root]') as HTMLElement | null;
+          const ctas = Array.from(document.querySelectorAll('.hero-root__ctas a.btn')) as HTMLElement[];
+          const h1 = document.querySelector('h1');
+          const clientWidth = doc.clientWidth;
+          const offScreen = ctas
+            .map((el) => ({ el, rect: el.getBoundingClientRect() }))
+            .filter(({ rect }) => !(rect.left < clientWidth && rect.right > 0))
+            .map(({ el }) => el.className);
+          // Scoped to Header+Hero's own right edge, not
+          // document.documentElement.scrollWidth — this ticket's allowed
+          // paths are Header/Hero only (§6 forbidden paths excludes every
+          // other page section), so a wide element further down the
+          // homepage (out of scope for CC-02I-07) must not fail this check.
+          const headerRight = header?.getBoundingClientRect().right ?? 0;
+          const heroRight = hero?.getBoundingClientRect().right ?? 0;
+          return {
+            headerRight,
+            heroRight,
+            clientWidth,
+            headerVisible: header ? getComputedStyle(header).display !== 'none' : false,
+            heroVisible: hero ? getComputedStyle(hero).display !== 'none' : false,
+            h1Text: h1?.textContent ?? null,
+            ctaOffScreen: offScreen,
+          };
+        });
+
+        await client.detach();
+
+        expect(result.headerRight, `${locale} @ ${vp.name}: Header's own right edge (${result.headerRight}) must not exceed clientWidth (${result.clientWidth}) at real 200% zoom`).toBeLessThanOrEqual(result.clientWidth + 1);
+        expect(result.heroRight, `${locale} @ ${vp.name}: Hero's own right edge (${result.heroRight}) must not exceed clientWidth (${result.clientWidth}) at real 200% zoom`).toBeLessThanOrEqual(result.clientWidth + 1);
+        expect(result.headerVisible, `${locale} @ ${vp.name}: Header must remain visible at 200% zoom`).toBe(true);
+        expect(result.heroVisible, `${locale} @ ${vp.name}: Hero must remain visible at 200% zoom`).toBe(true);
+        expect(result.h1Text, `${locale} @ ${vp.name}: H1 text must still be present at 200% zoom`).toBeTruthy();
+        expect(result.ctaOffScreen, `${locale} @ ${vp.name}: CTAs off-screen at 200% zoom: ${result.ctaOffScreen.join(', ')}`).toEqual([]);
+      });
+    }
+  }
+});
+
 test.describe('CC-02I-04 Hero: axe accessibility (0 Critical, 0 Serious)', () => {
   for (const { path } of ROUTES) {
     test(`${path} desktop`, async ({ page }) => {
