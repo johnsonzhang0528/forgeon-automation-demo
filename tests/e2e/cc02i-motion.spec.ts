@@ -24,7 +24,6 @@ declare global {
   interface Window {
     __ioSpyCount: number;
     __motionLog: Array<{ state: string | null; t: number }>;
-    __motionDurationLog: Array<{ state: string | null; t: number }>;
   }
 }
 
@@ -617,87 +616,107 @@ test.describe('CC-02I-06: no forbidden bare :root selector', () => {
 
 test.describe('CC-02I-06: executable five-step narrative order (Datum -> axis -> modules -> vision -> rail)', () => {
   for (const { path } of ROUTES) {
-    test(`${path} real rendered motion targets change in strict step order, timestamped via test-only rAF sampling`, async ({ page }) => {
-      // Proves the narrative order from ACTUAL rendered/computed
-      // properties sampled every animation frame during real runtime —
-      // not from CSS source text or declared transition-delay values
-      // (CC-02I-06 remediation §14). The production Hero/PrecisionSystem
-      // Visual/ProcessRail code gains no rAF polling — this sampling loop
-      // is injected only for this test via addInitScript/page.evaluate.
+    test(`${path} real rendered motion targets change in strict step order, timestamped via native transitionstart events`, async ({ page }) => {
+      // Proves the narrative order from ACTUAL browser-fired transition
+      // events during real runtime — not from CSS source text or declared
+      // transition-delay values (CC-02I-06 remediation §14). The
+      // production Hero/PrecisionSystemVisual/ProcessRail code gains no
+      // extra instrumentation — this listener is injected only for this
+      // test via addInitScript.
+      //
+      // CC-02I-06 final-evidence remediation (§2): the prior version of
+      // this test sampled computed styles on a requestAnimationFrame
+      // polling loop. Diagnosed root cause of the reported flake (both
+      // zh-tw and en, not en-only — reproduced under artificial 8-worker
+      // CPU contention: 12/20 runs failed, ALL as an exact tie where
+      // `Received` equals `Expected` to the fraction of a millisecond,
+      // never a genuine reversal). That is the signature of rAF-sampling
+      // granularity, not a production timing defect: under heavy
+      // scheduling pressure the page's rAF callback fires far less often,
+      // so several targets that started their transitions at genuinely
+      // different times (140ms/220ms/260ms/300ms apart per the source
+      // delays) get first observed as "departed" on the very same
+      // (late, coalesced) sampled frame and are recorded with an
+      // identical performance.now() reading — collapsing real order into
+      // a false tie. A single-worker run of the same test (15/15 across
+      // 3 repeats x 5 configurations) never reproduced a collapse or
+      // reversal, confirming the narrative itself times correctly; only
+      // the polling-based measurement was too coarse under contention.
+      //
+      // Fix: listen for the native `transitionstart` event on each
+      // target. Per the CSS Transitions spec, `transitionrun` fires the
+      // moment a transition is CREATED (i.e. immediately on the style
+      // change that qualifies it, before any transition-delay elapses —
+      // confirmed empirically: an earlier attempt using transitionrun
+      // recorded all five targets at one identical timestamp every run,
+      // because delay is not applied before that event). `transitionstart`
+      // fires only after transition-delay has elapsed, at the moment the
+      // animation actually begins — i.e. the true first-material-change
+      // moment this test needs. Both events are dispatched synchronously
+      // by the browser's style/timing engine itself, not sampled by page
+      // JS on any polling cadence, so genuinely different transition-delay
+      // values can never coalesce into one timestamp regardless of
+      // main-thread contention. `event.timeStamp` is the browser's own
+      // high-resolution capture time for the event.
       await page.addInitScript(() => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).__stepLog = {} as Record<string, number>;
-        const targets = {
-          datum: () => document.querySelector('.hero-root__origin .datum-origin__axis'),
-          axis: () => document.querySelector('.precision-visual__spine'),
-          modules: () => document.querySelector('.precision-visual__module[data-station="1"]'),
-          vision: () => document.querySelector('.precision-visual__vision-corners'),
-          rail: () => document.querySelector('.process-rail__complete-accent'),
+        const targetSelectors: Record<string, string> = {
+          datum: '.hero-root__origin .datum-origin__axis',
+          axis: '.precision-visual__spine',
+          modules: '.precision-visual__module[data-station="1"]',
+          vision: '.precision-visual__vision-corners',
+          rail: '.process-rail__complete-accent',
         };
-        // "First material visual change" per step, matching each step's
-        // own CSS start-state (see PrecisionSystemVisual.astro/Hero.astro
-        // narrative-timeline comments): datum/axis/vision animate
-        // stroke-dashoffset away from their dashed start value; modules
-        // animate opacity away from 0; rail animates transform away from
-        // scaleX(0). Each check fires on the first rAF tick where the
-        // live computed value has moved off its documented CSS start
-        // value — not merely "reached its end value" — so this is a true
-        // first-material-change timestamp, not a completion timestamp.
-        const departedStart: Record<string, () => boolean> = {
-          datum: () => {
-            const el = targets.datum();
-            if (!el) return false;
-            const v = parseFloat(getComputedStyle(el).strokeDashoffset);
-            return !Number.isNaN(v) && v < 1;
-          },
-          axis: () => {
-            const el = targets.axis();
-            if (!el) return false;
-            const v = parseFloat(getComputedStyle(el).strokeDashoffset);
-            return !Number.isNaN(v) && v < 1;
-          },
-          modules: () => {
-            const el = targets.modules();
-            if (!el) return false;
-            return parseFloat(getComputedStyle(el).opacity) > 0;
-          },
-          vision: () => {
-            const el = targets.vision();
-            if (!el) return false;
-            const v = parseFloat(getComputedStyle(el).strokeDashoffset);
-            return !Number.isNaN(v) && v < 20;
-          },
-          rail: () => {
-            const el = targets.rail();
-            if (!el) return false;
-            return getComputedStyle(el).transform !== 'matrix(0, 0, 0, 1, 0, 0)';
-          },
+        // Each step's relevant CSS property (see PrecisionSystemVisual.astro/
+        // Hero.astro/ProcessRail.astro narrative-timeline comments):
+        // datum/axis/vision transition stroke-dashoffset, modules
+        // transition opacity, rail transitions transform. Only the
+        // narrative-relevant property is recorded per step — a target
+        // with multiple transitioning properties (e.g. modules also
+        // transitions transform) would otherwise risk recording an
+        // unrelated property's transitionstart.
+        const targetProperty: Record<string, string> = {
+          datum: 'stroke-dashoffset',
+          axis: 'stroke-dashoffset',
+          modules: 'opacity',
+          vision: 'stroke-dashoffset',
+          rail: 'transform',
         };
         const start = performance.now();
-        const sample = () => {
-          // Only start recording once the Hero root has actually reached
-          // 'armed' (or later) — before that, every target legitimately
-          // renders its settled/fully-drawn default appearance (the "no
-          // data-motion-state ancestor yet" CSS fallback), which would
-          // otherwise read as a spurious same-frame "departure" for every
-          // step at t=0 and defeat the ordering assertion entirely.
-          const root = document.querySelector('[data-hero-motion-root]');
-          const state = root?.getAttribute('data-motion-state');
-          if (state === 'armed' || state === 'running' || state === 'complete') {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const log = (window as any).__stepLog as Record<string, number>;
-            for (const name of Object.keys(departedStart)) {
-              if (log[name] === undefined && departedStart[name]()) {
-                log[name] = performance.now() - start;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const log = (window as any).__stepLog as Record<string, number>;
+        const attachListener = (name: string) => {
+          const el = document.querySelector(targetSelectors[name]);
+          if (!el) return false;
+          el.addEventListener(
+            'transitionstart',
+            (e) => {
+              const te = e as TransitionEvent;
+              if (te.propertyName !== targetProperty[name]) return;
+              if (log[name] === undefined) {
+                log[name] = te.timeStamp - start;
               }
-            }
-            if (Object.keys(log).length >= Object.keys(departedStart).length) {
-              return;
-            }
-          }
-          requestAnimationFrame(sample);
+            },
+            { once: false }
+          );
+          return true;
         };
-        requestAnimationFrame(sample);
+        // Targets are all server-rendered as part of the initial HTML
+        // (not client-inserted), but addInitScript runs at document-start
+        // before the parser has created them — poll via setTimeout (which
+        // yields to the macrotask queue, unlike queueMicrotask) until each
+        // selector resolves, then attach its listener once.
+        const attached = new Set<string>();
+        const pollAttach = () => {
+          for (const name of Object.keys(targetSelectors)) {
+            if (!attached.has(name) && attachListener(name)) attached.add(name);
+          }
+          if (attached.size < Object.keys(targetSelectors).length) {
+            setTimeout(pollAttach, 0);
+          }
+        };
+        pollAttach();
       });
 
       await page.goto(path);
@@ -705,18 +724,20 @@ test.describe('CC-02I-06: executable five-step narrative order (Datum -> axis ->
         const r = document.querySelector('[data-hero-motion-root]');
         return r?.getAttribute('data-motion-state') === 'complete';
       }, { timeout: 3000 });
-      // Give the rAF sampler a little extra time to catch the final
-      // (rail) step, which departs its start state near the end of the
-      // narrative window.
+      // A small settle window after 'complete' fires: rail's own
+      // transition (660ms delay) fires its transitionstart at 660ms,
+      // strictly before 'complete' itself fires (~1000ms after
+      // 'running'), so rail's timestamp is already recorded by the time
+      // this wait begins — this is generous slack, not a race.
       await page.waitForTimeout(200);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const log = await page.evaluate(() => (window as any).__stepLog as Record<string, number>);
       // eslint-disable-next-line no-console
-      console.log(`[cc02i-motion] ${path} step-order rAF timestamps (ms):`, log);
+      console.log(`[cc02i-motion] ${path} step-order transitionstart timestamps (ms):`, log);
 
       for (const name of ['datum', 'axis', 'modules', 'vision', 'rail']) {
-        expect(log[name], `step '${name}' never observed departing its start state via rAF sampling`).toBeDefined();
+        expect(log[name], `step '${name}' never observed a transitionstart event for its narrative property`).toBeDefined();
       }
 
       expect(log.datum, 'Datum must start before axis').toBeLessThan(log.axis);
@@ -727,71 +748,258 @@ test.describe('CC-02I-06: executable five-step narrative order (Datum -> axis ->
   }
 });
 
-test.describe('CC-02I-06: measured narrative duration (750-1150ms)', () => {
+test.describe('CC-02I-06: module 1/2/3 stagger is a real runtime stagger, not just declared CSS delay', () => {
   for (const { path } of ROUTES) {
-    test(`${path} measured running -> complete duration falls within 750-1150ms`, async ({ page }) => {
-      // Measures using in-page performance.now() timestamps captured by a
-      // MutationObserver at the exact moment each attribute change is
-      // observed by the browser — not Date.now() calls straddling
-      // Playwright's own polling loop, which understates the true
-      // duration by the poll interval and produced a flaky ~742ms
-      // reading in manual repeat-run testing (real timer is exactly
-      // 1000ms; the flake was a measurement artifact, not a narrative
-      // defect). This is still genuine runtime evidence, not a fabricated
-      // or rounded number.
+    test(`${path} module1_start < module2_start < module3_start via native transitionstart events`, async ({ page }) => {
+      // CC-02I-06 final-evidence remediation (§3): the narrative-order
+      // test above only ever samples station 1 as the representative
+      // "modules" step. It never proved that stations 1/2/3 individually
+      // stagger relative to EACH OTHER — three stations starting
+      // simultaneously (a collapsed-stagger regression) would still pass
+      // every existing assertion. This test closes that gap with its own
+      // dedicated runtime measurement, independent of the step-order test
+      // above.
+      //
+      // Same instrumentation approach as the narrative-order test:
+      // `transitionstart` fires natively, synchronously, only after each
+      // station's own transition-delay (220/260/300ms respectively, see
+      // PrecisionSystemVisual.astro) has actually elapsed — not sampled by
+      // page JS on any polling cadence, so it reflects genuine
+      // browser-timed stagger rather than source-declared delay values.
       await page.addInitScript(() => {
-        window.__motionDurationLog = [];
-        const push = (state: string | null) => {
-          window.__motionDurationLog.push({ state, t: performance.now() });
-        };
-        const bind = (root: Element) => {
-          push(root.getAttribute('data-motion-state'));
-          new MutationObserver(() => push(root.getAttribute('data-motion-state'))).observe(root, {
-            attributes: true,
-            attributeFilter: ['data-motion-state'],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).__moduleStaggerLog = {} as Record<string, number>;
+        const start = performance.now();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const log = (window as any).__moduleStaggerLog as Record<string, number>;
+        const attachListener = (station: '1' | '2' | '3') => {
+          const el = document.querySelector(`.precision-visual__module[data-station="${station}"]`);
+          if (!el) return false;
+          el.addEventListener('transitionstart', (e) => {
+            const te = e as TransitionEvent;
+            if (te.propertyName !== 'opacity') return;
+            if (log[station] === undefined) {
+              log[station] = te.timeStamp - start;
+            }
           });
+          return true;
         };
-        let bound = false;
-        const tryBind = () => {
-          if (bound) return true;
-          const el = document.querySelector('[data-hero-motion-root]');
-          if (el) {
-            bound = true;
-            bind(el);
-            return true;
+        const attached = new Set<string>();
+        const stations: Array<'1' | '2' | '3'> = ['1', '2', '3'];
+        const pollAttach = () => {
+          for (const s of stations) {
+            if (!attached.has(s) && attachListener(s)) attached.add(s);
           }
-          return false;
+          if (attached.size < stations.length) setTimeout(pollAttach, 0);
         };
-        // addInitScript runs at document-start, before document.documentElement
-        // is guaranteed to exist yet. The Hero root is server-rendered (part
-        // of the initial HTML response, not client-inserted), so a 0ms
-        // setTimeout poll picks it up as soon as the parser creates it —
-        // well before the Motion Bootstrap's own inline <script> executes.
-        // (A queueMicrotask-based poll starves the HTML parser/renderer
-        // entirely — microtasks run to exhaustion before yielding — so
-        // setTimeout, which properly yields to the macrotask queue, is
-        // required here, not just a style preference.)
-        const poll = () => {
-          if (!tryBind()) setTimeout(poll, 0);
-        };
-        poll();
-        document.addEventListener('DOMContentLoaded', () => tryBind(), { once: true });
+        pollAttach();
       });
+
       await page.goto(path);
       await page.waitForFunction(() => {
         const r = document.querySelector('[data-hero-motion-root]');
         return r?.getAttribute('data-motion-state') === 'complete';
       }, { timeout: 3000 });
-      const log = await page.evaluate(() => window.__motionDurationLog);
-      const runningEntry = log.find((e) => e.state === 'running');
-      const completeEntry = log.find((e) => e.state === 'complete');
-      expect(runningEntry, 'expected a recorded running-state timestamp').toBeTruthy();
-      expect(completeEntry, 'expected a recorded complete-state timestamp').toBeTruthy();
-      const duration = completeEntry!.t - runningEntry!.t;
+      await page.waitForTimeout(100);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const log = await page.evaluate(() => (window as any).__moduleStaggerLog as Record<string, number>);
       // eslint-disable-next-line no-console
-      console.log(`[cc02i-motion] ${path} measured narrative duration: ${duration.toFixed(1)}ms`);
-      expect(duration, `measured narrative duration ${duration.toFixed(1)}ms`).toBeGreaterThanOrEqual(750);
-      expect(duration, `measured narrative duration ${duration.toFixed(1)}ms`).toBeLessThanOrEqual(1150);
+      console.log(`[cc02i-motion] ${path} module stagger transitionstart timestamps (ms):`, log);
+
+      for (const station of ['1', '2', '3']) {
+        expect(log[station], `module station ${station} never observed a transitionstart event for opacity`).toBeDefined();
+      }
+
+      // Declared source delays are 220/260/300ms — a genuine 40ms gap
+      // between adjacent stations. A MIN_GAP_MS floor well under that
+      // (but well above 0) still fails a real collapsed-stagger defect
+      // (which reproduces as an exact 0ms tie across all three stations,
+      // per the false-positive proof recorded in this ticket's completion
+      // report) while tolerating single-digit-millisecond browser
+      // scheduling jitter observed under host CPU contention in manual
+      // repeat-run testing (a genuine coalescing of two style-recalc
+      // passes on a loaded host, not a narrative defect).
+      const MIN_GAP_MS = 10;
+      expect(log['2'] - log['1'], 'module1 must start before module2 by more than scheduling jitter').toBeGreaterThan(MIN_GAP_MS);
+      expect(log['3'] - log['2'], 'module2 must start before module3 by more than scheduling jitter').toBeGreaterThan(MIN_GAP_MS);
+    });
+  }
+});
+
+test.describe('CC-02I-06: true visual narrative duration (750-1150ms)', () => {
+  for (const { path } of ROUTES) {
+    test(`${path} first narrative visual change -> last (Rail) visual completion falls within 750-1150ms`, async ({ page }) => {
+      // CC-02I-06 final-evidence remediation (§4): the prior version of
+      // this test measured the root's running->complete data-motion-state
+      // attribute timer — that only proves the bootstrap's
+      // setTimeout(NARRATIVE_MS) constant fires on schedule, not that the
+      // VISUAL narrative (what a real viewer actually sees change on
+      // screen) starts and ends within that window. A production defect
+      // where e.g. Rail's own transition-delay drifted past 1150ms while
+      // the root timer still said "complete" at 1000ms would pass the old
+      // test and fail this one.
+      //
+      // Start: the first transitionstart across every element/property
+      // this narrative animates (same events used by the narrative-order
+      // and module-stagger tests above) — expected to be Datum's
+      // stroke-dashoffset transition, the documented first step.
+      // End: the LAST of those elements' transitionend — the true moment
+      // the final visual (Rail's accent underline reaching scaleX(1)) has
+      // actually finished animating on screen, not when a JS timer fired.
+      // Both events are dispatched natively by the browser's style/timing
+      // engine at the actual moments transitions begin/end — not sampled
+      // by page JS on any polling cadence.
+      await page.addInitScript(() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).__visualDurationLog = { starts: [] as number[], ends: [] as number[], railEnded: false };
+        const targets: Array<{ selector: string; property: string }> = [
+          { selector: '.hero-root__origin .datum-origin__axis', property: 'stroke-dashoffset' },
+          { selector: '.hero-root__origin .datum-origin__point', property: 'opacity' },
+          { selector: '.hero-root__origin .datum-origin__ring', property: 'opacity' },
+          { selector: '.hero-root__origin .datum-origin__label', property: 'opacity' },
+          { selector: '.precision-visual__spine', property: 'stroke-dashoffset' },
+          { selector: '.precision-visual__module[data-station="1"]', property: 'opacity' },
+          { selector: '.precision-visual__module[data-station="2"]', property: 'opacity' },
+          { selector: '.precision-visual__module[data-station="3"]', property: 'opacity' },
+          { selector: '.precision-visual__node[data-node="1"]', property: 'opacity' },
+          { selector: '.precision-visual__node[data-node="2"]', property: 'opacity' },
+          { selector: '.precision-visual__node[data-node="3"]', property: 'opacity' },
+          { selector: '.precision-visual__vision-corners', property: 'stroke-dashoffset' },
+          { selector: '.precision-visual__spine-flow', property: 'opacity' },
+          { selector: '.process-rail__complete-accent', property: 'transform' },
+        ];
+        const start = performance.now();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const log = (window as any).__visualDurationLog as { starts: number[]; ends: number[]; railEnded: boolean };
+        const attachListener = (t: { selector: string; property: string }) => {
+          const el = document.querySelector(t.selector);
+          if (!el) return false;
+          const isRail = t.selector === '.process-rail__complete-accent';
+          el.addEventListener('transitionstart', (e) => {
+            const te = e as TransitionEvent;
+            if (te.propertyName !== t.property) return;
+            log.starts.push(te.timeStamp - start);
+          });
+          el.addEventListener('transitionend', (e) => {
+            const te = e as TransitionEvent;
+            if (te.propertyName !== t.property) return;
+            log.ends.push(te.timeStamp - start);
+            if (isRail) log.railEnded = true;
+          });
+          return true;
+        };
+        const attached = new Set<string>();
+        const pollAttach = () => {
+          for (const t of targets) {
+            const key = `${t.selector}|${t.property}`;
+            if (!attached.has(key) && attachListener(t)) attached.add(key);
+          }
+          if (attached.size < targets.length) setTimeout(pollAttach, 0);
+        };
+        pollAttach();
+      });
+
+      await page.goto(path);
+      // Wait for the Rail's OWN transitionend — the ticket's documented
+      // final narrative visual — rather than a fixed buffer after the
+      // root's 'complete' attribute. This is deliberate: the root timer
+      // (setTimeout(NARRATIVE_MS)) and the real Rail transition are two
+      // independent clocks; a defect that desyncs them (e.g. a delay
+      // value drifting past the timer) must not be masked by racing a
+      // fixed wait against the wrong clock — confirmed necessary via this
+      // ticket's own false-positive proof (see completion report): an
+      // earlier version of this wait (fixed 200ms after root 'complete')
+      // still PASSED when Rail's delay was deliberately pushed to
+      // 1200ms, because it stopped listening before Rail's transitionend
+      // had fired at all — a false negative this explicit wait closes.
+      // Timeout (2000ms) is generously above the 1150ms acceptance
+      // ceiling so a genuine out-of-window defect is still fully
+      // captured as failing evidence, not masked by a premature timeout.
+      const railEndedInTime = await page
+        .waitForFunction(
+          () => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const log = (window as any).__visualDurationLog as { railEnded: boolean } | undefined;
+            return !!log?.railEnded;
+          },
+          { timeout: 2000 }
+        )
+        .then(() => true)
+        .catch(() => false);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const log = await page.evaluate(() => (window as any).__visualDurationLog as { starts: number[]; ends: number[] });
+      expect(railEndedInTime, "Rail's transitionend never observed within 2000ms of navigation").toBe(true);
+      expect(log.starts.length, 'expected at least one narrative transitionstart event').toBeGreaterThan(0);
+      expect(log.ends.length, 'expected at least one narrative transitionend event').toBeGreaterThan(0);
+
+      const firstStart = Math.min(...log.starts);
+      const lastEnd = Math.max(...log.ends);
+      const duration = lastEnd - firstStart;
+      // eslint-disable-next-line no-console
+      console.log(
+        `[cc02i-motion] ${path} true visual narrative duration: start evidence=${firstStart.toFixed(1)}ms (earliest transitionstart) end evidence=${lastEnd.toFixed(1)}ms (latest transitionend) duration=${duration.toFixed(1)}ms`
+      );
+      expect(duration, `true visual narrative duration ${duration.toFixed(1)}ms`).toBeGreaterThanOrEqual(750);
+      expect(duration, `true visual narrative duration ${duration.toFixed(1)}ms`).toBeLessThanOrEqual(1150);
+    });
+  }
+});
+
+test.describe('CC-02I-06: narrative terminal state (no replay, no continuous animation)', () => {
+  for (const { path } of ROUTES) {
+    test(`${path} no further transitionstart fires on any narrative target after 'complete', including across scroll-away/back`, async ({ page }) => {
+      // Complements the existing Case 5 "complete is terminal" test
+      // (root attribute + full computed-style inventory) with direct
+      // proof against the true visual duration test's own event source:
+      // once every narrative transitionend has fired, no further
+      // transitionstart is ever observed on the same targets — i.e. the
+      // rendered motion genuinely stops, it does not loop or replay.
+      await page.addInitScript(() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).__replayLog = [] as number[];
+        const selectors = [
+          '.hero-root__origin .datum-origin__axis',
+          '.precision-visual__spine',
+          '.precision-visual__module[data-station="1"]',
+          '.precision-visual__vision-corners',
+          '.process-rail__complete-accent',
+        ];
+        const start = performance.now();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const log = (window as any).__replayLog as number[];
+        const attached = new Set<string>();
+        const pollAttach = () => {
+          for (const sel of selectors) {
+            if (attached.has(sel)) continue;
+            const el = document.querySelector(sel);
+            if (!el) continue;
+            el.addEventListener('transitionstart', () => log.push(performance.now() - start));
+            attached.add(sel);
+          }
+          if (attached.size < selectors.length) setTimeout(pollAttach, 0);
+        };
+        pollAttach();
+      });
+
+      await page.goto(path);
+      await page.waitForFunction(() => {
+        const r = document.querySelector('[data-hero-motion-root]');
+        return r?.getAttribute('data-motion-state') === 'complete';
+      }, { timeout: 3000 });
+      await page.waitForTimeout(200);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const eventsAtComplete = await page.evaluate(() => ((window as any).__replayLog as number[]).length);
+
+      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+      await page.waitForTimeout(200);
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.waitForTimeout(500);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const eventsAfterScroll = await page.evaluate(() => ((window as any).__replayLog as number[]).length);
+      expect(eventsAfterScroll, 'no new transitionstart should fire on any narrative target after complete, even after scroll-away/back').toBe(eventsAtComplete);
     });
   }
 });
