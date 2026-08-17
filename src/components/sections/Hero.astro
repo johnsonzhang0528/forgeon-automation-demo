@@ -1,62 +1,20 @@
 ---
 /**
- * Hero — production homepage Hero (CC-02I-04), 12-column editorial grid,
- * assembled from CC-02I-05's already-finished production visual components
- * (PrecisionSystemVisual, ProcessRail, EvaluationLedger). Rebuilt against
- * production contracts from CC-02F's reviewed FinalEditorialHero prototype
- * design (src/components/prototypes/cc02-final/FinalEditorialHero.astro,
- * read-only reference, never imported) — not a copy, not a shared-import
- * refactor.
+ * Homepage Hero — Engineering Editorial Sheet with a photographic focal
+ * point. Copy remains semantic HTML so it stays selectable, translatable,
+ * accessible and independent from the image asset.
  *
- * Fixed DOM order (ticket §8, mandatory at every viewport):
- *   Datum Origin -> Eyebrow -> H1 -> Supporting Copy -> Primary CTA ->
- *   Secondary CTA -> Primary System Visual -> Evaluation Ledger ->
- *   Process Rail
- * Every element above is a flat, direct child of the Hero root in exactly
- * this source order. Desktop CSS Grid repositions elements visually via
- * `grid-column`/`grid-row` on each child individually — it never nests a
- * sub-container that would let a later child's markup precede an earlier
- * child's in the DOM. The Secondary System Visual is not its own fixed-
- * order slot (absent from the ticket's nine-item list); it is a flat
- * sibling of the Primary Visual wrapper, immediately after it in DOM order,
- * both sharing the "Primary System Visual" DOM position, matching §5's
- * desktop grid description ("Secondary Visual cols 10-13") without
- * inventing a tenth DOM-order item. It is a sibling — not nested inside
- * the Primary Visual's wrapper — so its Hero-owned grid placement/sizing
- * selector is a real, independent grid item (see HIGH-01 remediation note
- * at the Secondary Visual's markup below).
- *
- * Motion root (R2-02): the root element carries both
- * `data-hero-motion-root` and `data-motion-state="settled"`. The Motion
- * Bootstrap <script> (CC-02I-06) sits immediately after the root's opening
- * tag, before the Primary Visual markup, per CC-02I-04's reserved mount
- * point — this DOM position is not restructured here.
- *
- * Motion Orchestrator (CC-02I-06, spec §10 / ticket §8): a single,
- * synchronous, non-deferred, non-module inline <script> owns the Hero's
- * four-state machine (settled/armed/running/complete) via
- * data-motion-state on the root. It is the only IntersectionObserver in
- * the Hero subtree — PrecisionSystemVisual and ProcessRail react to the
- * root's state purely through [data-hero-motion-root]-scoped CSS and
- * create no observer of their own.
- *
- * Five-step visual narrative (CC-02I-06 remediation, ticket §3/§8 —
- * "Datum Origin -> axis -> modules align -> vision lock -> rail
- * completes"): step 1 (Datum Origin) is wired here via this file's own
- * <style> reacting to DatumOrigin's rendered sub-elements (see the
- * dedicated rule block below `.hero-root__origin`); steps 2-5 (axis,
- * modules align, vision lock, rail completes) live in
- * PrecisionSystemVisual.astro and ProcessRail.astro's own CSS, each
- * reacting to this root's [data-hero-motion-root][data-motion-state] —
- * see those files' own narrative-timeline comments for the full ordered
- * timing budget. All five steps' transitions finish before the ~1000ms
- * NARRATIVE_MS timer below fires `complete`.
+ * The Final Master is imported through Astro's asset pipeline. This keeps
+ * its intrinsic dimensions in the markup and produces responsive AVIF/WebP
+ * derivatives at build time. Desktop uses an editorial overlay; smaller
+ * viewports keep the same DOM order and place copy above the image.
  */
+import { Picture } from 'astro:assets';
+import heroImage from '../../assets/images/home/forgeon-automation-hero-final-master.png';
 import { getDictionary } from '../../utils/i18n';
 import type { Locale } from '../../config/site';
 import Button from '../ui/Button.astro';
 import DatumOrigin from '../brand/DatumOrigin.astro';
-import PrecisionSystemVisual from './PrecisionSystemVisual.astro';
 import ProcessRail from './ProcessRail.astro';
 import EvaluationLedger from './EvaluationLedger.astro';
 
@@ -65,8 +23,7 @@ export interface Props {
 }
 
 const { locale } = Astro.props;
-const dict = getDictionary(locale);
-const hero = dict.hero;
+const hero = getDictionary(locale).hero;
 
 const ledgerGroups: [
   { heading: string; detail: string },
@@ -83,60 +40,9 @@ const processSteps: [string, string, string, string] = [
 ---
 
 <section class="hero-root" data-hero-motion-root data-motion-state="settled">
-  <!-- Motion Bootstrap mount point (CC-02I-06): synchronous, non-deferred, non-module inline script below. -->
-  <script is:inline>
-    (function () {
-      var root = document.currentScript.closest('[data-hero-motion-root]');
-      if (!root) return;
-      var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      var hasIO = typeof IntersectionObserver === 'function';
-      if (reduced || !hasIO) {
-        root.setAttribute('data-motion-state', 'settled');
-        return;
-      }
-      root.setAttribute('data-motion-state', 'armed');
-      var NARRATIVE_MS = 1000;
-      var io = new IntersectionObserver(
-        function (entries) {
-          for (var i = 0; i < entries.length; i++) {
-            if (entries[i].isIntersecting) {
-              root.setAttribute('data-motion-state', 'running');
-              window.setTimeout(function () {
-                root.setAttribute('data-motion-state', 'complete');
-              }, NARRATIVE_MS);
-              io.disconnect();
-              break;
-            }
-          }
-        },
-        { threshold: 0.15 }
-      );
-      io.observe(root);
-    })();
-  </script>
-
   <div class="hero-root__origin">
     <DatumOrigin size={40} orientation="both" label="0,0" />
   </div>
-
-  {/*
-    Five-step narrative, step 1 (CC-02I-06 remediation, MEDIUM/HIGH-01):
-    DatumOrigin.astro is a forbidden path for this ticket (brand primitive),
-    so its own `animated` prop (which autoplays on mount, independent of
-    the Motion Orchestrator) is intentionally left unset above. Instead
-    this Hero-owned <style> block below reacts to the ancestor root's
-    [data-hero-motion-root][data-motion-state] and drives DatumOrigin's
-    *own* already-rendered classes (.datum-origin__axis/__point/__ring/
-    __label) directly, entirely from Hero's side. This is not a Hero-
-    scoped selector reaching across an Astro component boundary in the
-    HIGH-01 sense (a class Hero hands to the child's root element) — it is
-    a plain global descendant-combinator rule, `:global(...)`, which
-    Astro's scoping never rewrites, so it matches DatumOrigin's rendered
-    DOM regardless of which component's data-astro-cid scope attribute
-    is present on those elements. Verified against compiled output (see
-    completion report's Compiled CSS Verification section).
-  */}
-
 
   <p class="hero-root__eyebrow mono">{hero.eyebrow}</p>
 
@@ -166,48 +72,20 @@ const processSteps: [string, string, string, string] = [
     </Button>
   </div>
 
-  <div class="hero-root__visual">
-    <PrecisionSystemVisual
-      uid="homepage-hero-system"
-      variant="primary"
-      animated
-      alt={hero.visualAlt}
+  <figure class="hero-root__media" data-hero-image="final-master">
+    <Picture
+      src={heroImage}
+      formats={['avif', 'webp']}
+      widths={[480, 768, 1024, 1448]}
+      sizes="(min-width: 1024px) min(100vw - 64px, 1440px), (min-width: 768px) calc(100vw - 48px), calc(100vw - 32px)"
+      alt={hero.imageAlt}
+      loading="eager"
+      fetchpriority="high"
+      decoding="async"
+      quality={82}
     />
-  </div>
-
-  {/*
-    FLAGGED DEVIATION (see completion report / Stage Gate): the ticket/
-    spec's uid contract ("Hero.astro always passes the literal string
-    'homepage-hero-system'") was written for a single PrecisionSystemVisual
-    instance. Hero.astro renders two simultaneous instances (primary +
-    secondary), and passing the identical literal to both produces
-    duplicate SVG gradient/mask/clipPath ids in the same document (a real
-    HTML-validity defect, confirmed via this ticket's own test suite).
-    Every id PrecisionSystemVisual emits is a deterministic, pure-function
-    derivation of `uid` (R1-04's actual requirement: no Math.random(), no
-    runtime-generated value) — appending a fixed "-secondary" suffix stays
-    fully deterministic/reproducible and satisfies that requirement while
-    resolving the duplicate-id defect. Not a unilateral redesign of the
-    uid contract: PrecisionSystemVisual.astro itself is unmodified.
-
-    Composition (HIGH-01 remediation): this wrapper, not a class passed
-    into the child, is the real grid item. An Astro scoped-style selector
-    written in this file only ever matches elements that carry *this*
-    component's own `data-astro-cid-*` scope attribute — PrecisionSystemVisual's
-    rendered <figure> carries its own, different scope attribute instead, so
-    a Hero-scoped class placed directly on the child never actually applied
-    (confirmed via built output: the class was present in the DOM but the
-    scoped CSS rule targeting it could not match). Sizing/placement now live
-    entirely on `.hero-root__visual-secondary`, an element Hero itself owns
-    and renders, so the scoped selector always resolves.
-  */}
-  <div class="hero-root__visual-secondary">
-    <PrecisionSystemVisual
-      uid="homepage-hero-system-secondary"
-      variant="secondary"
-      alt={hero.secondaryVisualAlt}
-    />
-  </div>
+    <figcaption class="hero-root__disclosure mono">{hero.imageDisclosure}</figcaption>
+  </figure>
 
   <div class="hero-root__ledger">
     <EvaluationLedger groups={ledgerGroups} />
@@ -225,102 +103,96 @@ const processSteps: [string, string, string, string] = [
 <style>
   .hero-root {
     position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-7, 1.75rem);
     max-width: var(--container-wide);
     margin-inline: auto;
     padding: var(--space-6) var(--page-gutter-mobile) var(--space-16);
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-8);
-  }
-  @media (min-width: 768px) {
-    .hero-root {
-      padding-inline: var(--page-gutter-tablet);
-    }
-  }
-  @media (min-width: 1024px) {
-    .hero-root {
-      padding: var(--space-12) var(--page-gutter-desktop) var(--space-16);
-    }
   }
 
-  /* ---- Mobile / tablet: fixed DOM order reads as one visual column ---- */
   .hero-root__origin {
-    margin-bottom: calc(-1 * var(--space-5));
+    margin-bottom: calc(-1 * var(--space-4));
   }
+
   .hero-root__eyebrow {
+    margin: 0;
     color: var(--color-action-primary);
     font-size: var(--fs-technical);
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    margin: 0;
   }
+
   .hero-root__headline {
+    max-width: 720px;
+    margin: 0;
     font-family: var(--font-display);
     font-size: var(--fs-h1-mobile, clamp(2.35rem, 10.5vw, 3rem));
     line-height: 1.04;
     letter-spacing: var(--ls-h1);
-    margin: 0;
     white-space: pre-line;
-    max-width: 720px;
+    text-wrap: balance;
   }
+
   :lang(zh-Hant-TW) .hero-root__headline {
     font-family: 'Noto Sans TC', var(--font-display);
     letter-spacing: 0;
   }
+
   :lang(en) .hero-root__headline {
     font-size: clamp(1.6rem, 7.4vw, 2.35rem);
   }
+
   .hero-root__body {
+    max-width: var(--measure-zh);
+    margin: 0;
     color: var(--color-steel-700);
     font-size: var(--fs-small);
     line-height: var(--lh-body, 1.6);
-    max-width: var(--measure-zh);
     white-space: pre-line;
-    margin: 0;
   }
+
   .hero-root__ctas {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-3);
   }
-  /*
-   * Ticket §5/spec §5: at 360px and 320px, the English CTA text must wrap
-   * to a second line rather than shrinking below its specified size or
-   * forcing viewport overflow. Button.astro (forbidden file, sitewide
-   * shared component) sets `white-space: nowrap` on .btn by default; this
-   * scoped override only applies inside the Hero's CTA row, only below
-   * 400px, and only changes wrapping behavior — no Button.astro token,
-   * color, or default-variant output is touched.
-   */
-  @media (max-width: 400px) {
-    .hero-root__ctas :global(.btn) {
-      white-space: normal;
-      text-align: center;
-      flex: 1 1 100%;
-    }
-  }
 
-  .hero-root__visual {
+  .hero-root__media {
     position: relative;
     min-width: 0;
+    margin: var(--space-2) 0 0;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--color-steel-600) 72%, transparent);
+    background: var(--color-steel-900);
+    aspect-ratio: 4 / 3;
   }
-  .hero-root__visual :global(.precision-visual) {
-    max-width: 100%;
-    min-width: 0;
+
+  .hero-root__media :global(picture) {
+    display: block;
+    width: 100%;
+    height: 100%;
   }
-  /*
-   * Mobile/tablet: a real flow sibling below the Primary Visual, not
-   * overlaid — kept intentionally compact (spec §5's "smaller secondary
-   * fragment") rather than matching the Primary Visual's width.
-   */
-  .hero-root__visual-secondary {
-    margin-top: var(--space-8);
-    width: min(70%, 320px);
-    min-width: 0;
+
+  .hero-root__media :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 66% 52%;
   }
-  .hero-root__visual-secondary :global(.precision-visual) {
-    max-width: 100%;
-    min-width: 0;
+
+  .hero-root__disclosure {
+    position: absolute;
+    inset-inline-end: var(--space-3);
+    inset-block-end: var(--space-3);
+    margin: 0;
+    padding: 0.3rem 0.45rem;
+    color: #fff;
+    background: rgb(10 16 20 / 78%);
+    font-size: 0.6875rem;
+    line-height: 1.25;
+    letter-spacing: 0.04em;
   }
 
   .hero-root__ledger :global(.eval-ledger) {
@@ -328,171 +200,137 @@ const processSteps: [string, string, string, string] = [
   }
 
   .hero-root__rail {
-    margin-top: var(--space-8);
+    margin-top: var(--space-5);
     padding-top: var(--space-8);
     border-top: 1px solid var(--color-steel-600);
   }
 
-  /* ---- Desktop: 12-column editorial grid (ticket §8/spec §5) ---- */
+  @media (max-width: 400px) {
+    .hero-root__ctas :global(.btn) {
+      flex: 1 1 100%;
+      white-space: normal;
+      text-align: center;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .hero-root {
+      padding-inline: var(--page-gutter-tablet);
+    }
+
+    .hero-root__media {
+      aspect-ratio: 16 / 9;
+    }
+
+    .hero-root__media :global(img) {
+      object-position: 64% 52%;
+    }
+  }
+
   @media (min-width: 1024px) {
     .hero-root {
       grid-template-columns: repeat(12, minmax(0, 1fr));
+      grid-template-rows: auto auto auto auto auto auto auto;
       column-gap: var(--space-6);
       row-gap: 0;
       align-items: start;
+      padding: var(--space-12) var(--page-gutter-desktop) var(--space-16);
+      isolation: isolate;
+    }
+
+    .hero-root__media {
+      grid-column: 1 / 13;
+      grid-row: 1 / 7;
+      align-self: stretch;
+      min-height: clamp(620px, 52vw, 720px);
+      margin: 0;
+      aspect-ratio: auto;
+      z-index: -1;
+    }
+
+    .hero-root__media::after {
+      position: absolute;
+      inset: 0;
+      content: '';
+      pointer-events: none;
+      background: linear-gradient(
+        90deg,
+        rgb(246 245 239 / 98%) 0%,
+        rgb(246 245 239 / 96%) 30%,
+        rgb(246 245 239 / 75%) 40%,
+        rgb(246 245 239 / 18%) 54%,
+        transparent 68%
+      );
+    }
+
+    .hero-root__media :global(img) {
+      object-position: 64% 52%;
+    }
+
+    .hero-root__origin,
+    .hero-root__eyebrow,
+    .hero-root__headline,
+    .hero-root__body,
+    .hero-root__ctas,
+    .hero-root__ledger {
+      position: relative;
+      z-index: 1;
+      grid-column: 1 / 6;
+      margin-inline-start: var(--space-6);
     }
 
     .hero-root__origin {
-      grid-column: 1 / 2;
       grid-row: 1;
+      margin-top: var(--space-8);
       margin-bottom: var(--space-4);
     }
+
     .hero-root__eyebrow {
-      grid-column: 1 / 6;
       grid-row: 2;
       margin-bottom: var(--space-3);
     }
+
     .hero-root__headline {
-      grid-column: 1 / 6;
       grid-row: 3;
-      font-size: var(--fs-h1);
       max-width: 100%;
       margin-bottom: var(--space-6);
+      font-size: var(--fs-h1);
     }
+
     :lang(en) .hero-root__headline {
-      font-size: clamp(2.75rem, 3.6vw, 3.75rem);
+      font-size: clamp(2.5rem, 3.25vw, 3.5rem);
     }
+
     .hero-root__body {
-      grid-column: 1 / 6;
       grid-row: 4;
-      font-size: var(--fs-body);
       margin-bottom: var(--space-6);
+      font-size: var(--fs-body);
     }
+
     .hero-root__ctas {
-      grid-column: 1 / 6;
       grid-row: 5;
-      margin-bottom: 0;
     }
-    .hero-root__visual {
-      position: relative;
-      grid-column: 6 / 12;
-      grid-row: 1 / 6;
-      margin-inline-end: -24px;
-    }
-    /*
-     * HIGH-01 remediation: a real grid item (spec §5, "Secondary Visual
-     * spans columns 10-13") on this Hero-owned wrapper, not a class handed
-     * to PrecisionSystemVisual's own root — Astro scopes `<style>` per
-     * component, so a selector written here can only ever match elements
-     * that carry *this* file's scope attribute. The wrapper does; the
-     * child component's internal <figure> does not.
-     *
-     * `grid-column: 10 / 13` stays within the Hero's 12 explicit tracks
-     * (line 13 is the grid's own last explicit boundary) so this element
-     * never forces an implicit 13th column into `grid-template-columns` —
-     * verified by tests/e2e/cc02i-hero.spec.ts's existing "exactly 12
-     * columns at desktop" assertion. The additional bleed spec §5/§3 allows
-     * ("may exceed the 12-column grid by design, but never the viewport")
-     * comes from `margin-inline-end`, the same bleed technique the Primary
-     * Visual already uses two rules above, not from widening the grid
-     * itself. Anchored to the bottom-right of the Primary Visual's row
-     * span so the two read as one connected system, smaller fragment
-     * layered forward.
-     */
-    .hero-root__visual-secondary {
-      grid-column: 10 / 13;
-      grid-row: 4 / 6;
-      align-self: end;
-      justify-self: end;
-      width: 100%;
-      max-width: 220px;
-      margin-top: 0;
-      margin-inline-end: -32px;
-      position: relative;
-      z-index: 1;
-    }
+
     .hero-root__ledger {
-      grid-column: 1 / 6;
       grid-row: 6;
+      align-self: end;
       margin-top: var(--space-8);
+      margin-bottom: var(--space-8);
     }
+
     .hero-root__rail {
       grid-column: 1 / 13;
       grid-row: 7;
-      margin-top: var(--space-12);
+      margin-top: var(--space-10);
     }
-  }
-  @media (min-width: 1280px) {
-    .hero-root__visual {
-      margin-inline-end: -48px;
-    }
-  }
-
-  /*
-   * Five-step narrative, step 1 (Datum Origin) — CC-02I-06 remediation.
-   * DatumOrigin.astro's own axes/point/ring/label are always rendered
-   * fully-drawn by default (no `animated` prop passed above); these rules
-   * drive that already-rendered markup directly from Hero's motion state
-   * instead. `armed`/no-state-yet start each element at its animation-
-   * start visual (axis undrawn, point/ring/label hidden) purely as a
-   * decorative sub-element start state — per R2-02 this must never touch
-   * H1/Body/CTA, and it does not: only DatumOrigin's own SVG sub-elements
-   * are targeted. `running`/`complete` draw the finished state in, timed
-   * to start first (0ms) so Datum Origin visibly leads the narrative
-   * before the axis step below.
-   */
-  [data-hero-motion-root][data-motion-state='armed'] .hero-root__origin :global(.datum-origin__axis) {
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-  }
-  [data-hero-motion-root][data-motion-state='armed'] .hero-root__origin :global(.datum-origin__point),
-  [data-hero-motion-root][data-motion-state='armed'] .hero-root__origin :global(.datum-origin__ring),
-  [data-hero-motion-root][data-motion-state='armed'] .hero-root__origin :global(.datum-origin__label) {
-    opacity: 0;
-    transform: scale(0.4);
-  }
-  .hero-root__origin :global(.datum-origin__axis) {
-    transition: stroke-dashoffset var(--duration-section) var(--ease-standard);
-    transition-delay: 0ms;
-  }
-  .hero-root__origin :global(.datum-origin__point),
-  .hero-root__origin :global(.datum-origin__ring) {
-    transform-origin: center;
-    transform-box: fill-box;
-    transition: opacity var(--duration-ui) var(--ease-standard),
-      transform var(--duration-ui) var(--ease-standard);
-    transition-delay: 60ms;
-  }
-  .hero-root__origin :global(.datum-origin__label) {
-    transition: opacity var(--duration-ui) var(--ease-standard);
-    transition-delay: 100ms;
-  }
-  [data-hero-motion-root][data-motion-state='running'] .hero-root__origin :global(.datum-origin__axis),
-  [data-hero-motion-root][data-motion-state='complete'] .hero-root__origin :global(.datum-origin__axis) {
-    stroke-dashoffset: 0;
-  }
-  [data-hero-motion-root][data-motion-state='running'] .hero-root__origin :global(.datum-origin__point),
-  [data-hero-motion-root][data-motion-state='running'] .hero-root__origin :global(.datum-origin__ring),
-  [data-hero-motion-root][data-motion-state='running'] .hero-root__origin :global(.datum-origin__label),
-  [data-hero-motion-root][data-motion-state='complete'] .hero-root__origin :global(.datum-origin__point),
-  [data-hero-motion-root][data-motion-state='complete'] .hero-root__origin :global(.datum-origin__ring),
-  [data-hero-motion-root][data-motion-state='complete'] .hero-root__origin :global(.datum-origin__label) {
-    opacity: 1;
-    transform: scale(1);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .hero-root * {
-      animation-duration: 0.01ms !important;
-      transition-duration: 0.01ms !important;
-    }
-    .hero-root__origin :global(.datum-origin__axis) {
-      stroke-dashoffset: 0 !important;
-    }
-    .hero-root__origin :global(.datum-origin__point),
-    .hero-root__origin :global(.datum-origin__ring),
-    .hero-root__origin :global(.datum-origin__label) {
-      opacity: 1 !important;
+    .hero-root__media,
+    .hero-root__media :global(picture),
+    .hero-root__media :global(img) {
+      animation: none !important;
+      transition: none !important;
       transform: none !important;
     }
   }

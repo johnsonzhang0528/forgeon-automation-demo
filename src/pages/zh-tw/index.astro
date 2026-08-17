@@ -3,6 +3,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionHeading from '../../components/ui/SectionHeading.astro';
 import Button from '../../components/ui/Button.astro';
 import Hero from '../../components/sections/Hero.astro';
+import AutomationIntegrationVisual from '../../components/sections/AutomationIntegrationVisual.astro';
+import FieldCommissioningVisual from '../../components/sections/FieldCommissioningVisual.astro';
 import SolutionCard from '../../components/ui/SolutionCard.astro';
 import ProductCard from '../../components/ui/ProductCard.astro';
 import IndustryCard from '../../components/ui/IndustryCard.astro';
@@ -50,6 +52,7 @@ const whyReasons = [
         title="從精密運動到系統整合"
         description="鋒岳自動化的能力涵蓋運動模組設計、視覺定位檢測與整廠整合工程，讓客戶可以依專案規模選擇單一模組或完整方案。"
       />
+      <AutomationIntegrationVisual locale={locale} presentation="wide" />
       <div class="capability-grid">
         <div class="capability-item">
           <span class="capability-item__index mono">01</span>
@@ -212,6 +215,7 @@ const whyReasons = [
         title="從需求釐清到現場驗收"
         description="五個階段的標準流程，確保每個專案都經過完整的技術評估。"
       />
+      <FieldCommissioningVisual locale={locale} presentation="wide" />
       <ProcessTimeline steps={processSteps} />
     </div>
   </section>

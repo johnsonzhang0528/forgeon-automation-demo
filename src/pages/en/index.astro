@@ -3,6 +3,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionHeading from '../../components/ui/SectionHeading.astro';
 import Button from '../../components/ui/Button.astro';
 import Hero from '../../components/sections/Hero.astro';
+import AutomationIntegrationVisual from '../../components/sections/AutomationIntegrationVisual.astro';
+import FieldCommissioningVisual from '../../components/sections/FieldCommissioningVisual.astro';
 import SolutionCard from '../../components/ui/SolutionCard.astro';
 import ProductCard from '../../components/ui/ProductCard.astro';
 import IndustryCard from '../../components/ui/IndustryCard.astro';
@@ -50,6 +52,7 @@ const whyReasons = [
         title="From Precision Motion to Full Integration"
         description="FORGEON AUTOMATION's capability spans motion module design, vision-guided inspection, and plant integration engineering, deployed as a single module or a complete solution."
       />
+      <AutomationIntegrationVisual locale={locale} presentation="wide" />
       <div class="capability-grid">
         <div class="capability-item">
           <span class="capability-item__index mono">01</span>
@@ -212,6 +215,7 @@ const whyReasons = [
         title="From Requirements to On-Site Acceptance"
         description="A five-stage standard process that ensures every project receives a complete technical evaluation."
       />
+      <FieldCommissioningVisual locale={locale} presentation="wide" />
       <ProcessTimeline steps={processSteps} />
     </div>
   </section>

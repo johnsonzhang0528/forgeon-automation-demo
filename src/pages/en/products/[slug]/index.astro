@@ -9,6 +9,8 @@ import Badge from '../../../../components/ui/Badge.astro';
 import Button from '../../../../components/ui/Button.astro';
 import SolutionCard from '../../../../components/ui/SolutionCard.astro';
 import CTABanner from '../../../../components/sections/CTABanner.astro';
+import MachineVisionInspectionVisual from '../../../../components/sections/MachineVisionInspectionVisual.astro';
+import PrecisionHandlingVisual from '../../../../components/sections/PrecisionHandlingVisual.astro';
 import StructuredData from '../../../../components/seo/StructuredData.astro';
 import { getSortedProducts, getSortedSolutions } from '../../../../utils/content';
 import { demoDataNoticeEn } from '../../../../config/site';
@@ -70,6 +72,12 @@ const otherLocalePath = `/zh-tw/products/${d.entrySlug}/`;
   <section class="section section--tight">
     <div class="container container--narrow">
       <SectionHeading eyebrow="Use Cases" title="Applicable Scenarios" />
+      {d.entrySlug === 'vision-x2' && (
+        <MachineVisionInspectionVisual locale={locale} presentation="master" />
+      )}
+      {d.entrySlug === 'axm-400' && (
+        <PrecisionHandlingVisual locale={locale} presentation="master" />
+      )}
       <FeatureList items={d.useCases.en} />
     </div>
   </section>

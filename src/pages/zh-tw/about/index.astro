@@ -4,6 +4,7 @@ import SectionHeading from '../../../components/ui/SectionHeading.astro';
 import Breadcrumb from '../../../components/navigation/Breadcrumb.astro';
 import FeatureList from '../../../components/ui/FeatureList.astro';
 import ProcessTimeline from '../../../components/ui/ProcessTimeline.astro';
+import ControlEngineeringVisual from '../../../components/sections/ControlEngineeringVisual.astro';
 import CTABanner from '../../../components/sections/CTABanner.astro';
 
 const locale = 'zh-tw' as const;
@@ -67,6 +68,7 @@ const capabilities = [
   <section class="section section--tight">
     <div class="container container--narrow">
       <SectionHeading eyebrow="合作方式" title="從需求到導入的標準流程" />
+      <ControlEngineeringVisual locale={locale} presentation="master" />
       <ProcessTimeline steps={qualitySteps} />
     </div>
   </section>

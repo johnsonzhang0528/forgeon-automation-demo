@@ -6,6 +6,9 @@ import FeatureList from '../../../../components/ui/FeatureList.astro';
 import ProcessTimeline from '../../../../components/ui/ProcessTimeline.astro';
 import FAQAccordion from '../../../../components/ui/FAQAccordion.astro';
 import CTABanner from '../../../../components/sections/CTABanner.astro';
+import MachineVisionInspectionVisual from '../../../../components/sections/MachineVisionInspectionVisual.astro';
+import PrecisionHandlingVisual from '../../../../components/sections/PrecisionHandlingVisual.astro';
+import FieldCommissioningVisual from '../../../../components/sections/FieldCommissioningVisual.astro';
 import Badge from '../../../../components/ui/Badge.astro';
 import ProductCard from '../../../../components/ui/ProductCard.astro';
 import StructuredData from '../../../../components/seo/StructuredData.astro';
@@ -56,6 +59,15 @@ const otherLocalePath = `/en/solutions/${d.entrySlug}/`;
       <Badge variant="demo">概念展示內容</Badge>
       <h1 class="detail-title">{d.name['zh-tw']}</h1>
       <p class="detail-summary measure">{d.heroSummary['zh-tw']}</p>
+      {d.entrySlug === 'vision-inspection' && (
+        <MachineVisionInspectionVisual locale={locale} presentation="wide" priority />
+      )}
+      {d.entrySlug === 'precision-positioning' && (
+        <PrecisionHandlingVisual locale={locale} presentation="wide" priority />
+      )}
+      {d.entrySlug === 'custom-integration' && (
+        <FieldCommissioningVisual locale={locale} presentation="wide" priority />
+      )}
     </div>
   </section>
 

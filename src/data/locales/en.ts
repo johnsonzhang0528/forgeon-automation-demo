@@ -115,14 +115,36 @@ export const en: Dictionary = {
     technicalHeading: 'Request Technical Advice',
     technicalBody: "Not ready to submit a full project brief yet? Describe the technical question you're facing and we'll help evaluate a starting direction. This page demonstrates the RFQ form's validation flow; nothing you submit is sent or stored.",
   },
+  productionImagery: {
+    automationIntegration: {
+      alt: 'Enclosed automation cell with a robotic arm working across a conveyor, locating fixtures, sensing station and control cabinet',
+      caption: 'Representative system integration view: conveyor, locating fixtures, robotic operation, sensing and output.',
+    },
+    controlEngineering: {
+      alt: 'Engineer using a digital multimeter at an automation control cabinet with terminal wiring, PLC and I/O modules, and drives visible',
+      caption: 'Representative control engineering view: cabinet wiring, terminal measurement, PLC and I/O, and on-site commissioning.',
+    },
+    machineVisionInspection: {
+      alt: 'Industrial camera, lens and ring light aligned above precision metal workpieces held in a machine-vision inspection fixture',
+      caption: 'Representative machine-vision inspection view: a fixed camera, lens and ring-light geometry aligned with fixtured workpieces.',
+    },
+    precisionHandling: {
+      alt: 'Horizontal linear axis and Z-axis positioning a parallel gripper around the outside diameter of a cylindrical workpiece on a fixture',
+      caption: 'Representative precision-handling view: the motion and load relationship between linear axes, a parallel gripper, workpiece and fixture.',
+    },
+    fieldCommissioning: {
+      alt: 'Two engineers in hard hats and safety glasses commissioning an automation system, one at the control panel and wired pendant while the other inspects the machine',
+      caption: 'Representative field-commissioning view: control-side setup and machine-side visual verification within a shared validation and handoff workflow.',
+    },
+  },
   hero: {
-    eyebrow: 'Precision Automation Integration',
-    headline: 'Align positioning, inspection and assembly\ninto a production-ready system.',
-    body: 'From parts and cycle time to site constraints, FORGEON combines precision motion,\nvision positioning and modular workstations into an automation solution that can be\nevaluated, configured and verified.',
-    ctaPrimary: 'Start a Project Assessment',
+    eyebrow: 'Industrial Automation Integration',
+    headline: 'Integrate equipment, controls and process needs\ninto an automation system built to run.',
+    body: 'Starting with the part, cycle time and site constraints, FORGEON integrates mechanics,\ncontrols, sensing and station interfaces—so the solution can be evaluated before deployment\nand verified at handover.',
+    ctaPrimary: 'Discuss an Automation Project',
     ctaSecondary: 'Review Integration Requirements',
-    visualAlt: 'System diagram of a precision motion module, vision positioning head and assembly workstation connected along one assembly axis',
-    secondaryVisualAlt: 'Close-up of the vision positioning head and its alignment node',
+    imageAlt: 'Automation production floor with large guarded machinery on the right and one operator working beside the equipment',
+    imageDisclosure: 'Concept brand imagery',
     ledger: {
       input: { heading: 'Project Inputs', detail: 'Part drawings, target cycle time, site constraints' },
       evaluation: { heading: 'Evaluation Scope', detail: 'Positioning, inspection, assembly and station integration' },
