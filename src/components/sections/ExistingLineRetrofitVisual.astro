@@ -1,0 +1,121 @@
+---
+/**
+ * YF-IMG-09 — representative existing-line retrofit imagery.
+ *
+ * Every crop preserves the physical relationship between the retained legacy
+ * machine, its handoff point and the new automation module. It must not imply
+ * a real customer site, completed retrofit result or measured improvement.
+ */
+import { Picture } from 'astro:assets';
+import existingLineRetrofitImage from '../../assets/images/solutions/existing-line-retrofit-final-master.png';
+import type { Locale } from '../../config/site';
+import { getDictionary } from '../../utils/i18n';
+
+export interface Props {
+  locale: Locale;
+  presentation?: 'master' | 'wide';
+  priority?: boolean;
+}
+
+const { locale, presentation = 'master', priority = false } = Astro.props;
+const imagery = getDictionary(locale).productionImagery.existingLineRetrofit;
+---
+
+<figure
+  class:list={['existing-line-retrofit-visual', `existing-line-retrofit-visual--${presentation}`]}
+  data-production-image="YF-IMG-09"
+  data-presentation={presentation}
+>
+  <div class="existing-line-retrofit-visual__media">
+    <Picture
+      src={existingLineRetrofitImage}
+      formats={['avif', 'webp']}
+      widths={[480, 768, 1024, 1280, 1536]}
+      sizes="(min-width: 908px) 860px, (min-width: 768px) calc(100vw - 48px), calc(100vw - 32px)"
+      alt={imagery.alt}
+      loading={priority ? 'eager' : 'lazy'}
+      fetchpriority={priority ? 'high' : 'auto'}
+      decoding="async"
+      quality={82}
+    />
+  </div>
+  <figcaption class="existing-line-retrofit-visual__caption">
+    <span class="existing-line-retrofit-visual__marker" aria-hidden="true"></span>
+    <span>{imagery.caption}</span>
+  </figcaption>
+</figure>
+
+<style>
+  .existing-line-retrofit-visual {
+    margin: var(--space-xl) 0;
+  }
+
+  .existing-line-retrofit-visual__media {
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-alt);
+    aspect-ratio: 1 / 1;
+  }
+
+  .existing-line-retrofit-visual__media :global(picture) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .existing-line-retrofit-visual__media :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 54% 50%;
+  }
+
+  .existing-line-retrofit-visual__caption {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: var(--space-sm);
+    align-items: start;
+    margin-top: var(--space-sm);
+    color: var(--color-muted);
+    font-size: var(--fs-xs);
+    line-height: var(--lh-normal);
+  }
+
+  .existing-line-retrofit-visual__marker {
+    display: block;
+    width: 100%;
+    height: 2px;
+    margin-top: 0.55em;
+    background: var(--color-accent);
+  }
+
+  @media (min-width: 480px) {
+    .existing-line-retrofit-visual__media {
+      aspect-ratio: 4 / 3;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .existing-line-retrofit-visual--master .existing-line-retrofit-visual__media {
+      aspect-ratio: 3 / 2;
+    }
+
+    .existing-line-retrofit-visual--wide .existing-line-retrofit-visual__media {
+      aspect-ratio: 16 / 9;
+    }
+
+    .existing-line-retrofit-visual__caption {
+      grid-template-columns: 3rem minmax(0, 44rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .existing-line-retrofit-visual__media,
+    .existing-line-retrofit-visual__media :global(img) {
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
+    }
+  }
+</style>

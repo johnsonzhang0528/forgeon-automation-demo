@@ -1,0 +1,164 @@
+---
+/**
+ * Editorial presentation for the two current technical-resource articles.
+ *
+ * These are representative concept images reused from the accepted production
+ * masters. They must not be presented as customer evidence, measured results
+ * or a record of a specific engineering project.
+ */
+import { Picture } from 'astro:assets';
+import fieldCommissioningImage from '../../assets/images/solutions/field-commissioning-collaboration-final-master.png';
+import existingLineRetrofitImage from '../../assets/images/solutions/existing-line-retrofit-final-master.png';
+import type { Locale } from '../../config/site';
+import { getDictionary } from '../../utils/i18n';
+
+type InsightSlug = 'upgrade-vs-rebuild' | 'automation-readiness-checklist';
+
+export interface Props {
+  locale: Locale;
+  insight: string;
+  placement?: 'card' | 'hero';
+  priority?: boolean;
+}
+
+const { locale, placement = 'card', priority } = Astro.props;
+const insight = Astro.props.insight as InsightSlug;
+const productionImagery = getDictionary(locale).productionImagery;
+const images = {
+  'upgrade-vs-rebuild': {
+    src: existingLineRetrofitImage,
+    id: 'YF-IMG-09',
+    copy: productionImagery.existingLineRetrofit,
+    focalPoint: '54% 50%',
+  },
+  'automation-readiness-checklist': {
+    src: fieldCommissioningImage,
+    id: 'YF-IMG-06',
+    copy: productionImagery.fieldCommissioning,
+    focalPoint: '34% 46%',
+  },
+} as const;
+const image = images[insight];
+
+if (!image) {
+  throw new Error(`Missing technical-resource image contract for: ${insight}`);
+}
+
+const isPriority = priority ?? placement === 'hero';
+const presentation = placement === 'hero' ? 'wide' : 'insight-card';
+const sizes = placement === 'hero'
+  ? '(min-width: 808px) 760px, (min-width: 768px) calc(100vw - 48px), calc(100vw - 32px)'
+  : '(min-width: 1200px) 560px, (min-width: 768px) 46vw, calc(100vw - 32px)';
+---
+
+<figure
+  class:list={['insight-visual', `insight-visual--${placement}`, `insight-visual--${insight}`]}
+  style={`--insight-focal-point: ${image.focalPoint}`}
+  data-production-image={image.id}
+  data-presentation={presentation}
+  data-insight-image={insight}
+>
+  <div class="insight-visual__media">
+    <Picture
+      src={image.src}
+      formats={['avif', 'webp']}
+      widths={[360, 480, 640, 768, 1024, 1280, 1536]}
+      sizes={sizes}
+      alt={placement === 'card' ? '' : image.copy.alt}
+      loading={isPriority ? 'eager' : 'lazy'}
+      fetchpriority={isPriority ? 'high' : 'auto'}
+      decoding="async"
+      quality={82}
+    />
+  </div>
+  {placement === 'hero' && (
+    <figcaption class="insight-visual__caption">
+      <span class="insight-visual__marker" aria-hidden="true"></span>
+      <span>{image.copy.caption}</span>
+    </figcaption>
+  )}
+</figure>
+
+<style>
+  .insight-visual {
+    min-width: 0;
+    margin: 0;
+  }
+
+  .insight-visual--hero {
+    margin-bottom: var(--space-xl);
+  }
+
+  .insight-visual__media {
+    overflow: hidden;
+    background: var(--color-surface-alt);
+  }
+
+  .insight-visual--card .insight-visual__media {
+    aspect-ratio: 16 / 9;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .insight-visual--hero .insight-visual__media {
+    aspect-ratio: 1 / 1;
+    border: 1px solid var(--color-border);
+  }
+
+  .insight-visual__media :global(picture) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .insight-visual__media :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: var(--insight-focal-point);
+  }
+
+  .insight-visual__caption {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: var(--space-sm);
+    align-items: start;
+    margin-top: var(--space-sm);
+    color: var(--color-muted);
+    font-size: var(--fs-xs);
+    line-height: var(--lh-normal);
+  }
+
+  .insight-visual__marker {
+    display: block;
+    width: 100%;
+    height: 2px;
+    margin-top: 0.55em;
+    background: var(--color-accent);
+  }
+
+  @media (min-width: 480px) {
+    .insight-visual--hero .insight-visual__media {
+      aspect-ratio: 4 / 3;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .insight-visual--hero .insight-visual__media {
+      aspect-ratio: 16 / 9;
+    }
+
+    .insight-visual__caption {
+      grid-template-columns: 3rem minmax(0, 44rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .insight-visual__media,
+    .insight-visual__media :global(img) {
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
+    }
+  }
+</style>

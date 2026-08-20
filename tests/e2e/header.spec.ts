@@ -9,6 +9,35 @@ test.describe('Header production implementation (CC-02I-02)', () => {
     expect(height, `desktop header height was ${height}px`).toBeLessThanOrEqual(96);
   });
 
+  for (const locale of ['zh-tw', 'en']) {
+    test(`1024px uses the compact header without wrapped desktop navigation (${locale})`, async ({ page }) => {
+      await page.setViewportSize({ width: 1024, height: 900 });
+      await page.goto(`/${locale}/`);
+
+      await expect(page.locator('.desktop-nav')).toBeHidden();
+      await expect(page.locator('.site-header__cta')).toBeHidden();
+      await expect(page.locator('[data-mobile-nav-toggle]')).toBeVisible();
+
+      const height = await page.locator('[data-header]').evaluate((el) => el.getBoundingClientRect().height);
+      expect(height, `${locale} @ 1024px: compact header height was ${height}px`).toBeGreaterThanOrEqual(64);
+      expect(height, `${locale} @ 1024px: compact header height was ${height}px`).toBeLessThanOrEqual(68);
+    });
+
+    test(`1120px desktop navigation stays on one row (${locale})`, async ({ page }) => {
+      await page.setViewportSize({ width: 1120, height: 900 });
+      await page.goto(`/${locale}/`);
+
+      await expect(page.locator('.desktop-nav')).toBeVisible();
+      await expect(page.locator('.site-header__cta')).toBeVisible();
+      await expect(page.locator('[data-mobile-nav-toggle]')).toBeHidden();
+
+      const linkTops = await page.locator('.desktop-nav__link').evaluateAll((links) =>
+        links.map((link) => Math.round(link.getBoundingClientRect().top)),
+      );
+      expect(new Set(linkTops).size, `${locale} @ 1120px: desktop nav wrapped to multiple rows`).toBe(1);
+    });
+  }
+
   // Remediation (review HIGH-01): the previous 60-84px range accepted
   // measured failures (77px @ 390px, 90px @ 360px, 94px @ 320px) as
   // passing. The ticket's actual contract is 64-68px — tightened here to

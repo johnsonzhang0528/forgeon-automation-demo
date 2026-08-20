@@ -2,7 +2,7 @@
 import type { Locale } from '../../config/site';
 import { getDictionary } from '../../utils/i18n';
 import Card from './Card.astro';
-import IndustryIcon from './IndustryIcon.astro';
+import IndustryVisual from './IndustryVisual.astro';
 
 export interface Props {
   locale: Locale;
@@ -15,17 +15,26 @@ const { locale, slug, name, description, hasDetailPage = false } = Astro.props;
 const dict = getDictionary(locale);
 ---
 
-<Card href={`/${locale}/industries/${slug}/`}>
-  <IndustryIcon industry={slug} />
-  <h3 class="industry-card__title">{name}</h3>
-  <p class="industry-card__desc measure">{description}</p>
-  <span class="industry-card__link">
-    {hasDetailPage ? dict.cta.viewDetail : dict.cta.learnMore}
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </span>
+<Card href={`/${locale}/industries/${slug}/`} padding="none">
+  <IndustryVisual locale={locale} industry={slug} placement="card" />
+  <div class="industry-card__body">
+    <h3 class="industry-card__title">{name}</h3>
+    <p class="industry-card__desc measure">{description}</p>
+    <span class="industry-card__link">
+      {hasDetailPage ? dict.cta.viewDetail : dict.cta.learnMore}
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span>
+  </div>
 </Card>
 
 <style>
+  .industry-card__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding: var(--space-lg);
+  }
   .industry-card__title {
     font-size: var(--fs-md);
     margin: 0;

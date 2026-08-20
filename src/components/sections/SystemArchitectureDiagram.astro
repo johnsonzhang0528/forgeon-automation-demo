@@ -1,0 +1,262 @@
+---
+/**
+ * Code-native, accessible system-architecture diagrams for two solution pages.
+ * The diagrams communicate relationships only; they contain no claimed
+ * performance figures, customer topology or project-specific control logic.
+ */
+import type { Locale } from '../../config/site';
+import { getDictionary } from '../../utils/i18n';
+
+type DiagramVariant = 'vision-guided-assembly' | 'line-upgrade';
+
+export interface Props {
+  locale: Locale;
+  variant: DiagramVariant;
+  headingLevel?: 'h2' | 'h3';
+}
+
+const { locale, variant, headingLevel = 'h2' } = Astro.props;
+const diagrams = getDictionary(locale).engineeringDiagrams;
+const copy = variant === 'vision-guided-assembly'
+  ? diagrams.visionGuidedAssembly
+  : diagrams.lineUpgrade;
+const Heading = headingLevel;
+const headingId = `system-architecture-${variant}`;
+---
+
+<div
+  class:list={['system-architecture', `system-architecture--${variant}`]}
+  data-engineering-diagram={variant}
+  data-stage-count={copy.stages.length}
+>
+  <header class="system-architecture__header">
+    <p class="system-architecture__eyebrow mono">{copy.eyebrow}</p>
+    <Heading id={headingId} class="system-architecture__title">{copy.title}</Heading>
+    <p class="system-architecture__description">{copy.description}</p>
+  </header>
+
+  <figure class="system-architecture__figure" aria-labelledby={headingId}>
+    <div class="system-architecture__main">
+      <div class="system-architecture__boundary system-architecture__boundary--input">
+        <span class="system-architecture__boundary-code mono" aria-hidden="true">IN</span>
+        <strong>{copy.input.label}</strong>
+        <span>{copy.input.detail}</span>
+      </div>
+
+      <ol class="system-architecture__flow" aria-label={copy.flowLabel}>
+        {copy.stages.map((stage, index) => (
+          <li class="system-architecture__stage" data-diagram-stage={index + 1}>
+            <span class="system-architecture__stage-code mono">{stage.code}</span>
+            <strong class="system-architecture__stage-title">{stage.title}</strong>
+            <span class="system-architecture__stage-detail">{stage.detail}</span>
+          </li>
+        ))}
+      </ol>
+
+      <div class="system-architecture__boundary system-architecture__boundary--output">
+        <span class="system-architecture__boundary-code mono" aria-hidden="true">OUT</span>
+        <strong>{copy.output.label}</strong>
+        <span>{copy.output.detail}</span>
+      </div>
+    </div>
+
+    <dl class="system-architecture__support">
+      {copy.support.map((item) => (
+        <div class="system-architecture__support-item">
+          <dt>{item.title}</dt>
+          <dd>{item.detail}</dd>
+        </div>
+      ))}
+    </dl>
+
+    <figcaption>{copy.disclosure}</figcaption>
+  </figure>
+</div>
+
+<style>
+  .system-architecture {
+    min-width: 0;
+  }
+  .system-architecture__header {
+    max-width: 52rem;
+    margin-bottom: var(--space-lg);
+  }
+  .system-architecture__eyebrow {
+    margin: 0 0 var(--space-xs);
+    color: var(--color-accent-dark);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .system-architecture__title {
+    margin: 0;
+    font-size: var(--fs-xl);
+    line-height: var(--lh-tight);
+  }
+  .system-architecture__description {
+    max-width: 46rem;
+    margin: var(--space-sm) 0 0;
+    color: var(--color-muted);
+  }
+  .system-architecture__figure {
+    margin: 0;
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-card);
+  }
+  .system-architecture__main {
+    display: grid;
+    gap: var(--space-md);
+    padding: var(--space-md);
+  }
+  .system-architecture__boundary {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-2xs) var(--space-sm);
+    align-content: start;
+    padding: var(--space-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-alt);
+  }
+  .system-architecture__boundary-code {
+    grid-row: 1 / span 2;
+    align-self: start;
+    color: var(--color-accent-dark);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+  .system-architecture__boundary strong {
+    color: var(--color-ink);
+    font-size: var(--fs-sm);
+  }
+  .system-architecture__boundary span:last-child {
+    color: var(--color-muted);
+    font-size: var(--fs-xs);
+    line-height: var(--lh-normal);
+  }
+  .system-architecture__flow {
+    display: grid;
+    gap: var(--space-sm);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .system-architecture__stage {
+    position: relative;
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    gap: var(--space-2xs) var(--space-sm);
+    min-width: 0;
+    padding: var(--space-md);
+    border-left: 3px solid var(--color-accent);
+    background: var(--color-surface-alt);
+  }
+  .system-architecture__stage-code {
+    grid-row: 1 / span 2;
+    color: var(--color-accent-dark);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+  .system-architecture__stage-title {
+    min-width: 0;
+    color: var(--color-ink);
+    font-size: var(--fs-sm);
+  }
+  .system-architecture__stage-detail {
+    min-width: 0;
+    color: var(--color-muted);
+    font-size: var(--fs-xs);
+    line-height: var(--lh-normal);
+  }
+  .system-architecture__support {
+    display: grid;
+    gap: 1px;
+    margin: 0;
+    padding: 1px 0 0;
+    border-top: 1px solid var(--color-border-strong);
+    background: var(--color-border);
+  }
+  .system-architecture__support-item {
+    padding: var(--space-md);
+    background: var(--color-card);
+  }
+  .system-architecture__support dt {
+    margin: 0 0 var(--space-2xs);
+    color: var(--color-ink);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+  }
+  .system-architecture__support dd {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: var(--fs-xs);
+    line-height: var(--lh-normal);
+  }
+  .system-architecture__figure figcaption {
+    padding: var(--space-sm) var(--space-md);
+    border-top: 1px solid var(--color-border);
+    color: var(--color-muted);
+    font-size: var(--fs-xs);
+    line-height: var(--lh-normal);
+  }
+  @media (min-width: 720px) {
+    .system-architecture__main {
+      padding: var(--space-lg);
+    }
+    .system-architecture__support {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 960px) {
+    .system-architecture__main {
+      grid-template-columns: minmax(9rem, 0.7fr) minmax(0, 3fr) minmax(9rem, 0.7fr);
+      align-items: stretch;
+      gap: var(--space-lg);
+    }
+    .system-architecture__boundary {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: var(--space-xs);
+    }
+    .system-architecture__flow {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      align-items: stretch;
+      gap: 1px;
+      border: 1px solid var(--color-border-strong);
+      background: var(--color-border-strong);
+    }
+    .system-architecture__stage {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      padding: var(--space-md);
+      border-left: 0;
+      border-top: 3px solid var(--color-accent);
+      background: var(--color-card);
+    }
+    .system-architecture__stage:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      z-index: 1;
+      top: 50%;
+      right: -5px;
+      width: 8px;
+      height: 8px;
+      border-top: 2px solid var(--color-accent-dark);
+      border-right: 2px solid var(--color-accent-dark);
+      background: var(--color-card);
+      transform: translateY(-50%) rotate(45deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .system-architecture *,
+    .system-architecture *::before,
+    .system-architecture *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+</style>

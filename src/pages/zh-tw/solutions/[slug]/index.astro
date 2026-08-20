@@ -6,9 +6,12 @@ import FeatureList from '../../../../components/ui/FeatureList.astro';
 import ProcessTimeline from '../../../../components/ui/ProcessTimeline.astro';
 import FAQAccordion from '../../../../components/ui/FAQAccordion.astro';
 import CTABanner from '../../../../components/sections/CTABanner.astro';
+import VisionGuidedAssemblyVisual from '../../../../components/sections/VisionGuidedAssemblyVisual.astro';
+import ExistingLineRetrofitVisual from '../../../../components/sections/ExistingLineRetrofitVisual.astro';
 import MachineVisionInspectionVisual from '../../../../components/sections/MachineVisionInspectionVisual.astro';
 import PrecisionHandlingVisual from '../../../../components/sections/PrecisionHandlingVisual.astro';
 import FieldCommissioningVisual from '../../../../components/sections/FieldCommissioningVisual.astro';
+import SystemArchitectureDiagram from '../../../../components/sections/SystemArchitectureDiagram.astro';
 import Badge from '../../../../components/ui/Badge.astro';
 import ProductCard from '../../../../components/ui/ProductCard.astro';
 import StructuredData from '../../../../components/seo/StructuredData.astro';
@@ -59,6 +62,12 @@ const otherLocalePath = `/en/solutions/${d.entrySlug}/`;
       <Badge variant="demo">概念展示內容</Badge>
       <h1 class="detail-title">{d.name['zh-tw']}</h1>
       <p class="detail-summary measure">{d.heroSummary['zh-tw']}</p>
+      {d.entrySlug === 'vision-guided-assembly' && (
+        <VisionGuidedAssemblyVisual locale={locale} presentation="wide" priority />
+      )}
+      {d.entrySlug === 'line-upgrade' && (
+        <ExistingLineRetrofitVisual locale={locale} presentation="wide" priority />
+      )}
       {d.entrySlug === 'vision-inspection' && (
         <MachineVisionInspectionVisual locale={locale} presentation="wide" priority />
       )}
@@ -84,6 +93,14 @@ const otherLocalePath = `/en/solutions/${d.entrySlug}/`;
     </div>
   </section>
 
+  {d.entrySlug === 'line-upgrade' && (
+    <section class="section section--tight">
+      <div class="container">
+        <SystemArchitectureDiagram locale={locale} variant="line-upgrade" />
+      </div>
+    </section>
+  )}
+
   {isFullDetail && d.background && (
     <section class="section section--tight">
       <div class="container container--narrow">
@@ -104,9 +121,12 @@ const otherLocalePath = `/en/solutions/${d.entrySlug}/`;
 
   {isFullDetail && d.systemComponents && (
     <section class="section section--tight">
-      <div class="container container--narrow">
+      <div class="container">
         <SectionHeading eyebrow="系統組成" title="方案包含哪些系統元件" />
-        <FeatureList items={d.systemComponents['zh-tw']} />
+        <SystemArchitectureDiagram locale={locale} variant="vision-guided-assembly" headingLevel="h3" />
+        <div class="system-components-list">
+          <FeatureList items={d.systemComponents['zh-tw']} />
+        </div>
       </div>
     </section>
   )}
@@ -273,6 +293,10 @@ const otherLocalePath = `/en/solutions/${d.entrySlug}/`;
   }
   .container--narrow {
     max-width: 860px;
+  }
+  .system-components-list {
+    max-width: 860px;
+    margin: var(--space-xl) auto 0;
   }
   .two-col {
     display: grid;

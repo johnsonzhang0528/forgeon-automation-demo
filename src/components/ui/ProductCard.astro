@@ -2,7 +2,7 @@
 import type { Locale } from '../../config/site';
 import { getDictionary } from '../../utils/i18n';
 import Card from './Card.astro';
-import ProductGlyph from './ProductGlyph.astro';
+import ProductVisual from './ProductVisual.astro';
 import Badge from './Badge.astro';
 
 export interface Props {
@@ -14,14 +14,15 @@ export interface Props {
 }
 const { locale, slug, name, positioning, description } = Astro.props;
 const dict = getDictionary(locale);
+const badgeLabel = slug === 'flexcell-m' ? dict.demoNotice.specLabel : dict.misc.demoDataBadge;
 ---
 
 <Card href={`/${locale}/products/${slug}/`} padding="none">
-  <ProductGlyph product={slug} variant="flush" />
+  <ProductVisual locale={locale} product={slug} placement="card" />
   <div class="product-card__body">
     <div class="product-card__head">
       <h3 class="product-card__name mono">{name}</h3>
-      <Badge variant="demo">{dict.misc.demoDataBadge}</Badge>
+      <Badge variant="demo">{badgeLabel}</Badge>
     </div>
     <p class="product-card__positioning">{positioning}</p>
     <p class="product-card__desc measure">{description}</p>
@@ -41,7 +42,8 @@ const dict = getDictionary(locale);
   }
   .product-card__head {
     display: flex;
-    align-items: center;
+    flex-wrap: wrap;
+    align-items: flex-start;
     justify-content: space-between;
     gap: var(--space-sm);
   }

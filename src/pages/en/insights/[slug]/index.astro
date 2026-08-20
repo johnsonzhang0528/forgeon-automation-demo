@@ -2,6 +2,7 @@
 import BaseLayout from '../../../../layouts/BaseLayout.astro';
 import Breadcrumb from '../../../../components/navigation/Breadcrumb.astro';
 import CTABanner from '../../../../components/sections/CTABanner.astro';
+import InsightVisual from '../../../../components/ui/InsightVisual.astro';
 import StructuredData from '../../../../components/seo/StructuredData.astro';
 import { getSortedInsights } from '../../../../utils/content';
 import { getDictionary } from '../../../../utils/i18n';
@@ -44,6 +45,7 @@ function formatDate(dt: Date) {
     <div class="container container--narrow">
       <p class="article-date mono">{dict.misc.publishedOn}: {formatDate(d.publishDate)}</p>
       <h1 class="article-title">{d.title}</h1>
+      <InsightVisual locale={locale} insight={d.entrySlug} placement="hero" priority />
       <div class="article-body">
         <Content />
       </div>
@@ -65,17 +67,8 @@ function formatDate(dt: Date) {
     margin: 0 0 var(--space-sm);
   }
   .article-title {
-    margin: 0 0 var(--space-xl);
-  }
-  .article-body {
-    color: var(--color-ink-soft);
-    line-height: var(--lh-relaxed);
-  }
-  .article-body :global(h2) {
-    font-size: var(--fs-lg);
-    margin-top: var(--space-xl);
-  }
-  .article-body :global(p) {
-    max-width: none;
+    max-width: 18ch;
+    margin: 0 0 clamp(var(--space-lg), 5vw, var(--space-16));
+    text-wrap: balance;
   }
 </style>

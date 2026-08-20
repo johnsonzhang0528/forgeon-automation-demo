@@ -4,13 +4,11 @@ import SectionHeading from '../../../../components/ui/SectionHeading.astro';
 import Breadcrumb from '../../../../components/navigation/Breadcrumb.astro';
 import FeatureList from '../../../../components/ui/FeatureList.astro';
 import SpecificationTable from '../../../../components/ui/SpecificationTable.astro';
-import ProductGlyph from '../../../../components/ui/ProductGlyph.astro';
+import ProductVisual from '../../../../components/ui/ProductVisual.astro';
 import Badge from '../../../../components/ui/Badge.astro';
 import Button from '../../../../components/ui/Button.astro';
 import SolutionCard from '../../../../components/ui/SolutionCard.astro';
 import CTABanner from '../../../../components/sections/CTABanner.astro';
-import MachineVisionInspectionVisual from '../../../../components/sections/MachineVisionInspectionVisual.astro';
-import PrecisionHandlingVisual from '../../../../components/sections/PrecisionHandlingVisual.astro';
 import StructuredData from '../../../../components/seo/StructuredData.astro';
 import { getSortedProducts, getSortedSolutions } from '../../../../utils/content';
 import { demoDataNoticeZh } from '../../../../config/site';
@@ -43,7 +41,12 @@ const otherLocalePath = `/en/products/${d.entrySlug}/`;
   <section class="section section--tight">
     <div class="container product-hero">
       <div class="product-hero__media">
-        <ProductGlyph product={d.entrySlug as 'axm-400' | 'vision-x2' | 'flexcell-m'} />
+        <ProductVisual
+          locale={locale}
+          product={d.entrySlug as 'axm-400' | 'vision-x2' | 'flexcell-m'}
+          placement="hero"
+          priority
+        />
       </div>
       <div class="product-hero__copy">
         <Badge variant="demo">概念展示資料</Badge>
@@ -72,12 +75,6 @@ const otherLocalePath = `/en/products/${d.entrySlug}/`;
   <section class="section section--tight">
     <div class="container container--narrow">
       <SectionHeading eyebrow="適用情境" title="適合的應用場景" />
-      {d.entrySlug === 'vision-x2' && (
-        <MachineVisionInspectionVisual locale={locale} presentation="master" />
-      )}
-      {d.entrySlug === 'axm-400' && (
-        <PrecisionHandlingVisual locale={locale} presentation="master" />
-      )}
       <FeatureList items={d.useCases['zh-tw']} />
     </div>
   </section>

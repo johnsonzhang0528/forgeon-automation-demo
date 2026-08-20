@@ -183,7 +183,7 @@ const noJsLangHref = otherLocalePath ?? switchLocalePath(path, noJsLangTarget);
     align-items: center;
     min-block-size: 64px;
   }
-  @media (min-width: 960px) {
+  @media (min-width: 1120px) {
     .site-header {
       min-block-size: 80px;
     }
@@ -202,7 +202,7 @@ const noJsLangHref = otherLocalePath ?? switchLocalePath(path, noJsLangTarget);
      * horizontal overflow (324 > 320). --space-2xs (8px), the same token
      * already used for .site-header__actions's internal gap, frees that
      * budget back without shrinking either touch target; desktop restores
-     * --space-md in the 960px block below where the row holds three
+     * --space-md in the 1120px block below where the row holds three
      * items (brand/nav/actions) at a much wider budget.
      */
     gap: var(--space-2xs);
@@ -239,7 +239,7 @@ const noJsLangHref = otherLocalePath ?? switchLocalePath(path, noJsLangTarget);
      */
     padding-inline: var(--page-gutter-mobile);
   }
-  @media (min-width: 960px) {
+  @media (min-width: 1120px) {
     .site-header__row {
       padding-block: var(--space-sm);
       gap: var(--space-md);
@@ -276,13 +276,13 @@ const noJsLangHref = otherLocalePath ?? switchLocalePath(path, noJsLangTarget);
    * switch + hamburger only, matching the pre-existing mobile content
    * budget. Adding the mark's 28px + gap unconditionally regressed the
    * 360px/320px no-horizontal-overflow acceptance criteria (ticket §14) —
-   * hiding it below 960px keeps that criterion intact without touching
+   * hiding it below 1120px keeps that criterion intact without touching
    * any spacing/gutter token.
    */
   .site-header__brand > :global(.site-header__datum) {
     display: none;
   }
-  @media (min-width: 960px) {
+  @media (min-width: 1120px) {
     .site-header__brand > :global(.site-header__datum) {
       display: block;
       flex-shrink: 0;
@@ -358,7 +358,7 @@ const noJsLangHref = otherLocalePath ?? switchLocalePath(path, noJsLangTarget);
    * VIEWPORTS fixture (tests/e2e/fixtures.ts) before this ticket. Fixed
    * per the ticket's own §17 rollback allowance: an existing --space-*
    * token substitution, narrower only below the breakpoint where the
-   * desktop CTA/nav reappear (960px already needs this actions row to
+     * desktop CTA/nav reappear (1120px already needs this actions row to
    * hold three items instead of two, at desktop's much wider budget).
    */
   .site-header__actions {
@@ -367,7 +367,7 @@ const noJsLangHref = otherLocalePath ?? switchLocalePath(path, noJsLangTarget);
     gap: var(--space-2xs);
     flex-shrink: 0;
   }
-  @media (min-width: 960px) {
+  @media (min-width: 1120px) {
     .site-header__actions {
       gap: var(--space-md);
     }
@@ -523,7 +523,7 @@ const noJsLangHref = otherLocalePath ?? switchLocalePath(path, noJsLangTarget);
     width: 100%;
   }
 
-  @media (min-width: 960px) {
+  @media (min-width: 1120px) {
     .desktop-nav {
       display: block;
     }

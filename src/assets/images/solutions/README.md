@@ -52,3 +52,30 @@ Production source: `field-commissioning-collaboration-final-master.png` (1536 ×
 - Do not claim commissioning completion, acceptance, safety compliance, throughput, quality, certification or any verified performance result from the image.
 - Do not bake UI callouts, data, metrics, logos or website copy into the bitmap.
 - Keep the master in `src/assets` so Astro emits intrinsic dimensions and responsive AVIF/WebP derivatives.
+
+## YF-IMG-08 — Vision-Guided Automated Assembly
+
+Production source: `vision-guided-assembly-final-master.png` (1536 × 1024, 3:2).
+
+- Use as representative vision-guided assembly imagery, never as evidence of a specific customer installation, delivered machine, validated inspection result or measured assembly performance.
+- Keep the full causal chain visible in every crop: industrial camera and ring illumination, central fixtured workpiece, robotic end effector and enough robot-arm context to explain the guided assembly action.
+- The 3:2 master is primary. A 16:9 solution-page crop and 4:3 crop are approved. Near-square mobile crops must preserve the camera / illumination on the left, the workpiece and fixture near centre, and the robotic gripper on the right.
+- Crop peripheral trays, frame members and background factory detail before removing any part of the camera-to-workpiece-to-gripper relationship.
+- Treat the camera, lighting, tooling, workpieces and robot as representative system elements, not a production optical design, robot configuration, tooling drawing or process validation record.
+- Do not claim detection accuracy, positioning precision, repeatability, cycle time, throughput, yield, defect rate or verified improvement from the image.
+- Do not bake vision overlays, coordinates, PASS / FAIL states, arrows, metrics, logos or website copy into the bitmap.
+- Keep a visible concept-content disclosure on the solution page and keep the master in `src/assets` so Astro emits intrinsic dimensions and responsive AVIF/WebP derivatives.
+
+## YF-IMG-09 — Existing-Line Retrofit
+
+Production source: `existing-line-retrofit-final-master.png` (1536 × 1024, 3:2).
+
+- Use as representative existing-line retrofit and upgrade-versus-rebuild imagery, never as evidence of a specific customer site, before/after record, completed retrofit, safety certification or measured improvement.
+- Keep the core handoff legible in every crop: the edge and output region of the retained legacy machine, the physical transfer interface and the new aluminium-frame automation module.
+- The 3:2 master is primary. A 16:9 solution or article cover and 4:3 crop are approved. Near-square mobile crops may remove most of the engineer and part of the control cabinet, but must retain both the legacy-machine handoff and the new module.
+- Do not crop to only the legacy machine, only the new module or only the engineer with the pendant; each would remove the retrofit story.
+- Treat the open control cabinet, pendant interface, retrofit mechanism and guarding as representative industrial details, not a PLC / servo BOM, electrical design, manufacturable drawing, safety architecture or commissioning record.
+- Do not identify the engineer as a FORGEON employee or describe the setting as a real customer facility.
+- Do not claim downtime reduction, cost savings, efficiency, capacity, throughput, ROI, acceptance, certification or any verified result from the image.
+- Do not bake before/after labels, arrows, metrics, logos, UI overlays or website copy into the bitmap.
+- Keep the master in `src/assets` so Astro emits intrinsic dimensions and responsive AVIF/WebP derivatives.

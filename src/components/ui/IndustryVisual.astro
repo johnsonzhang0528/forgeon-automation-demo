@@ -1,0 +1,170 @@
+---
+/**
+ * Industry presentation for the accepted YF-IMG-10 through YF-IMG-13
+ * production masters. Cards use decorative lazy-loaded crops; industry-page
+ * heroes retain localized alternative text and representative-image captions.
+ */
+import { Picture } from 'astro:assets';
+import semiconductorElectronicsImage from '../../assets/images/industries/semiconductor-electronics-final-master.png';
+import automotiveComponentsImage from '../../assets/images/industries/automotive-components-final-master.png';
+import metalMachiningImage from '../../assets/images/industries/metal-machining-final-master.png';
+import packagingLogisticsImage from '../../assets/images/industries/packaging-logistics-final-master.png';
+import type { Locale } from '../../config/site';
+import { getDictionary } from '../../utils/i18n';
+
+type IndustrySlug =
+  | 'semiconductor-electronics'
+  | 'automotive-components'
+  | 'metal-machining'
+  | 'packaging-logistics';
+
+export interface Props {
+  locale: Locale;
+  industry: IndustrySlug;
+  placement?: 'card' | 'hero';
+  priority?: boolean;
+}
+
+const { locale, industry, placement = 'card', priority } = Astro.props;
+const productionImagery = getDictionary(locale).productionImagery;
+const images = {
+  'semiconductor-electronics': {
+    src: semiconductorElectronicsImage,
+    id: 'YF-IMG-10',
+    copy: productionImagery.semiconductorElectronics,
+    focalPoint: '50% 52%',
+  },
+  'automotive-components': {
+    src: automotiveComponentsImage,
+    id: 'YF-IMG-11',
+    copy: productionImagery.automotiveComponents,
+    focalPoint: '48% 52%',
+  },
+  'metal-machining': {
+    src: metalMachiningImage,
+    id: 'YF-IMG-12',
+    copy: productionImagery.metalMachining,
+    focalPoint: '50% 50%',
+  },
+  'packaging-logistics': {
+    src: packagingLogisticsImage,
+    id: 'YF-IMG-13',
+    copy: productionImagery.packagingLogistics,
+    focalPoint: '50% 52%',
+  },
+} as const;
+const image = images[industry];
+const isPriority = priority ?? placement === 'hero';
+const presentation = placement === 'hero' ? 'industry-hero' : 'industry-card';
+const sizes = placement === 'hero'
+  ? '(min-width: 908px) 860px, (min-width: 768px) calc(100vw - 48px), calc(100vw - 32px)'
+  : '(min-width: 1200px) 360px, (min-width: 760px) 44vw, calc(100vw - 32px)';
+---
+
+<figure
+  class:list={['industry-visual', `industry-visual--${placement}`, `industry-visual--${industry}`]}
+  style={`--industry-focal-point: ${image.focalPoint}`}
+  data-production-image={image.id}
+  data-presentation={presentation}
+  data-industry-image={industry}
+>
+  <div class="industry-visual__media">
+    <Picture
+      src={image.src}
+      formats={['avif', 'webp']}
+      widths={[360, 480, 640, 768, 1024, 1280, 1536]}
+      sizes={sizes}
+      alt={placement === 'card' ? '' : image.copy.alt}
+      loading={isPriority ? 'eager' : 'lazy'}
+      fetchpriority={isPriority ? 'high' : 'auto'}
+      decoding="async"
+      quality={82}
+    />
+  </div>
+  {placement === 'hero' && (
+    <figcaption class="industry-visual__caption">
+      <span class="industry-visual__marker" aria-hidden="true"></span>
+      <span>{image.copy.caption}</span>
+    </figcaption>
+  )}
+</figure>
+
+<style>
+  .industry-visual {
+    min-width: 0;
+    margin: 0;
+  }
+
+  .industry-visual__media {
+    overflow: hidden;
+    background: var(--color-surface-alt);
+  }
+
+  .industry-visual--card .industry-visual__media {
+    aspect-ratio: 4 / 3;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .industry-visual--hero .industry-visual__media {
+    aspect-ratio: 1 / 1;
+    border: 1px solid var(--color-border);
+  }
+
+  .industry-visual__media :global(picture) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .industry-visual__media :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: var(--industry-focal-point);
+  }
+
+  .industry-visual__caption {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: var(--space-sm);
+    align-items: start;
+    margin-top: var(--space-sm);
+    color: var(--color-muted);
+    font-size: var(--fs-xs);
+    line-height: var(--lh-normal);
+  }
+
+  .industry-visual__marker {
+    display: block;
+    width: 100%;
+    height: 2px;
+    margin-top: 0.55em;
+    background: var(--color-accent);
+  }
+
+  @media (min-width: 480px) {
+    .industry-visual--hero .industry-visual__media {
+      aspect-ratio: 4 / 3;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .industry-visual--hero .industry-visual__media {
+      aspect-ratio: 16 / 9;
+    }
+
+    .industry-visual__caption {
+      grid-template-columns: 3rem minmax(0, 44rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .industry-visual__media,
+    .industry-visual__media :global(img) {
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
+    }
+  }
+</style>

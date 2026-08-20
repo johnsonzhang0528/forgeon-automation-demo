@@ -4,6 +4,7 @@ import SectionHeading from '../../../../components/ui/SectionHeading.astro';
 import Breadcrumb from '../../../../components/navigation/Breadcrumb.astro';
 import FeatureList from '../../../../components/ui/FeatureList.astro';
 import IndustryIcon from '../../../../components/ui/IndustryIcon.astro';
+import IndustryVisual from '../../../../components/ui/IndustryVisual.astro';
 import Badge from '../../../../components/ui/Badge.astro';
 import SolutionCard from '../../../../components/ui/SolutionCard.astro';
 import ProductCard from '../../../../components/ui/ProductCard.astro';
@@ -37,12 +38,15 @@ const otherLocalePath = `/en/industries/${d.entrySlug}/`;
 
   <section class="section section--tight">
     <div class="container industry-hero">
-      <IndustryIcon industry={d.entrySlug as any} size="lg" />
-      <div>
-        <Badge variant="demo">概念展示內容</Badge>
-        <h1 class="industry-hero__title">{d.name['zh-tw']}</h1>
-        <p class="industry-hero__desc measure">{d.shortDescription['zh-tw']}</p>
+      <div class="industry-hero__intro">
+        <IndustryIcon industry={d.entrySlug as any} size="lg" />
+        <div>
+          <Badge variant="demo">概念展示內容</Badge>
+          <h1 class="industry-hero__title">{d.name['zh-tw']}</h1>
+          <p class="industry-hero__desc measure">{d.shortDescription['zh-tw']}</p>
+        </div>
       </div>
+      <IndustryVisual locale={locale} industry={d.entrySlug as any} placement="hero" priority />
     </div>
   </section>
 
@@ -105,8 +109,11 @@ const otherLocalePath = `/en/industries/${d.entrySlug}/`;
 
 <style>
   .industry-hero {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    gap: var(--space-xl);
+  }
+  .industry-hero__intro {
+    display: grid;
     gap: var(--space-md);
   }
   .industry-hero__title {
@@ -118,5 +125,11 @@ const otherLocalePath = `/en/industries/${d.entrySlug}/`;
   }
   .container--narrow {
     max-width: 860px;
+  }
+  @media (min-width: 768px) {
+    .industry-hero__intro {
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: start;
+    }
   }
 </style>

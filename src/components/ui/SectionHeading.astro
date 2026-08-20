@@ -19,14 +19,33 @@ const Tag = level;
 
 <style>
   .section-heading {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: var(--space-sm);
-    margin-bottom: var(--space-xl);
+    gap: var(--space-xs);
+    width: 100%;
+    max-width: 56rem;
+    margin-bottom: clamp(var(--space-lg), 4vw, var(--space-16));
+    padding-top: var(--space-md);
+    border-top: var(--border-hairline) solid rgba(92, 104, 112, 0.42);
+  }
+  .section-heading::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: clamp(3.5rem, 8vw, 6rem);
+    height: var(--border-datum);
+    background: var(--color-accent);
   }
   .section-heading--center {
     align-items: center;
+    margin-inline: auto;
     text-align: center;
+  }
+  .section-heading--center::before {
+    left: 50%;
+    transform: translateX(-50%);
   }
   .section-heading--center .section-heading__desc {
     margin-inline: auto;
@@ -54,10 +73,22 @@ const Tag = level;
   }
   .section-heading__title {
     margin: 0;
+    max-width: 24ch;
+    text-wrap: balance;
+  }
+  .section-heading--center .section-heading__title {
+    margin-inline: auto;
   }
   .section-heading__desc {
     color: var(--color-muted);
     font-size: var(--fs-md);
+    line-height: var(--lh-body-lg);
     margin: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .section-heading::before {
+      transition: none;
+    }
   }
 </style>
