@@ -26,17 +26,16 @@ const Tag = level;
     width: 100%;
     max-width: 56rem;
     margin-bottom: clamp(var(--space-lg), 4vw, var(--space-16));
-    padding-top: var(--space-md);
-    border-top: var(--border-hairline) solid rgba(92, 104, 112, 0.42);
+    padding-top: var(--space-sm);
   }
   .section-heading::before {
     content: '';
     position: absolute;
-    top: -1px;
+    top: 0;
     left: 0;
-    width: clamp(3.5rem, 8vw, 6rem);
-    height: var(--border-datum);
-    background: var(--color-accent);
+    width: 2.25rem;
+    height: 2px;
+    background: var(--color-border-strong);
   }
   .section-heading--center {
     align-items: center;
@@ -67,13 +66,13 @@ const Tag = level;
      * `--color-accent-dark` (copper-700, #9c4014) clears it at 5.50:1,
      * same hue family, no other visual change.
      */
-    color: var(--color-accent-dark);
+    color: var(--color-muted);
     margin: 0;
     font-weight: 600;
   }
   .section-heading__title {
     margin: 0;
-    max-width: 24ch;
+    max-width: 21ch;
     text-wrap: balance;
   }
   .section-heading--center .section-heading__title {
@@ -84,6 +83,7 @@ const Tag = level;
     font-size: var(--fs-md);
     line-height: var(--lh-body-lg);
     margin: 0;
+    max-width: 46rem;
   }
 
   @media (prefers-reduced-motion: reduce) {

@@ -5,6 +5,7 @@ import ProductCard from '../../../components/ui/ProductCard.astro';
 import Breadcrumb from '../../../components/navigation/Breadcrumb.astro';
 import CTABanner from '../../../components/sections/CTABanner.astro';
 import { getSortedProducts } from '../../../utils/content';
+import '../../../styles/catalog-refinement.css';
 
 const locale = 'en' as const;
 const products = await getSortedProducts();
@@ -29,7 +30,7 @@ const products = await getSortedProducts();
         title="A Modular Product Line"
         description="Three core products that deploy standalone or combine into a complete automated station. All specifications are conceptual demonstration data; actual configurations require engineering review."
       />
-      <div class="grid-auto">
+      <div class="product-catalog">
         {products.map((p) => (
           <ProductCard
             locale={locale}
