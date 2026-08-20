@@ -1,10 +1,11 @@
 ---
 import type { Locale } from '../../config/site';
-import { getDictionary } from '../../utils/i18n';
+import { getDictionary, otherLocale, switchLocalePath } from '../../utils/i18n';
 import { navItems } from '../../config/nav';
 import Logo from '../ui/Logo.astro';
 import LanguageSwitcher from '../navigation/LanguageSwitcher.astro';
 import Button from '../ui/Button.astro';
+import DatumOrigin from '../brand/DatumOrigin.astro';
 
 export interface Props {
   locale: Locale;
@@ -18,11 +19,22 @@ const dict = getDictionary(locale);
 function isActive(itemPath: string) {
   return path === itemPath || path.startsWith(itemPath);
 }
+
+// No-JS fallback (CC-02I-03, §9/R1-08): duplicates LanguageSwitcher.astro's
+// own href-resolution call (not imported from a new shared utility) because
+// LanguageSwitcher.astro itself is outside this ticket's allowed file scope
+// (§5/§6) — this is the ticket's documented minimum-duplication path rather
+// than a new abstraction (§17 rollback note).
+const noJsLangTarget = otherLocale(locale);
+const noJsLangHref = otherLocalePath ?? switchLocalePath(path, noJsLangTarget);
 ---
 
 <header class="site-header" data-header>
   <div class="container site-header__row">
-    <Logo locale={locale} />
+    <div class="site-header__brand">
+      <DatumOrigin size={28} decorative={true} class="site-header__datum" />
+      <Logo locale={locale} />
+    </div>
 
     <nav class="desktop-nav" aria-label={locale === 'zh-tw' ? '主要導覽' : 'Main navigation'}>
       <ul>
@@ -41,7 +53,9 @@ function isActive(itemPath: string) {
     </nav>
 
     <div class="site-header__actions">
-      <LanguageSwitcher locale={locale} path={path} otherLocalePath={otherLocalePath} />
+      <div class="site-header__lang">
+        <LanguageSwitcher locale={locale} path={path} otherLocalePath={otherLocalePath} />
+      </div>
       <div class="site-header__cta">
         <Button href={`/${locale}/contact/?intent=project`} size="md" trackEvent="cta_click" data-intent="project" data-source="header-desktop">
           {dict.nav.ctaPrimary}
@@ -55,7 +69,7 @@ function isActive(itemPath: string) {
         aria-controls="mobile-nav"
         aria-label={dict.nav.menuOpen}
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
         </svg>
       </button>
@@ -113,6 +127,35 @@ function isActive(itemPath: string) {
   </div>
 </div>
 
+<!--
+  No-JS fallback (CC-02I-03, R1-08): the mobile drawer above is entirely
+  unusable without JavaScript — it starts `hidden` and only the toggle
+  button's `click` handler (itself JS) can reveal it. This <noscript> block
+  renders unconditionally in the static HTML: real nav links, a real locale
+  switch link, and the primary CTA, independent of the drawer/script below.
+  Plain, minimally-styled markup — a functional fallback, not a design
+  deliverable (ticket §9).
+-->
+<noscript>
+  <nav class="mobile-nav-nojs" aria-label={locale === 'zh-tw' ? '行動裝置導覽（無 JavaScript）' : 'Mobile navigation (no JavaScript)'}>
+    <ul class="mobile-nav-nojs__list">
+      {navItems.map((item) => (
+        <li>
+          <a href={item.path(locale)} class="mobile-nav-nojs__link">
+            {dict.nav[item.labelKey]}
+          </a>
+        </li>
+      ))}
+    </ul>
+    <a href={noJsLangHref} class="mobile-nav-nojs__link" hreflang={noJsLangTarget === 'zh-tw' ? 'zh-Hant-TW' : 'en'} lang={noJsLangTarget === 'zh-tw' ? 'zh-Hant-TW' : 'en'}>
+      {dict.footer.langSwitch}
+    </a>
+    <a href={`/${locale}/contact/?intent=project`} class="mobile-nav-nojs__link mobile-nav-nojs__link--cta">
+      {dict.nav.ctaPrimary}
+    </a>
+  </nav>
+</noscript>
+
 <style>
   .site-header {
     position: sticky;
@@ -122,40 +165,233 @@ function isActive(itemPath: string) {
     backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--color-border);
   }
+  /*
+   * Zoom-safe height (R1-08): min-block-size, not a fixed block-size that
+   * clips content. Normal-zoom target is reached via the row's own
+   * padding-block below; at 200% zoom / large text, the row's content may
+   * grow past this minimum and the header expands with it rather than
+   * clipping. `display: flex; align-items: center` on the header itself
+   * (not just the row) is required for mobile: the row's own content
+   * (44px touch target + 8px vertical padding budget below) sizes to
+   * 60px, shorter than the 64px floor, so the header must be the one
+   * vertically centering it in the remaining 4px rather than the row
+   * stretching to fill via `min-block-size: inherit` (removed below —
+   * see the mobile-height remediation note on .site-header__row).
+   */
+  .site-header {
+    display: flex;
+    align-items: center;
+    min-block-size: 64px;
+  }
+  @media (min-width: 1120px) {
+    .site-header {
+      min-block-size: 80px;
+    }
+  }
   .site-header__row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--space-md);
-    padding-block: var(--space-sm);
+    /*
+     * Touch-target remediation (CC-02I-02 review, HIGH-03 follow-on): once
+     * .site-header__lang and .mobile-nav-toggle carry `flex-shrink: 0`
+     * (below) so their own 44px+ boxes stop silently compressing under
+     * width pressure, the full squeeze at the 320px acceptance-criteria
+     * viewport lands on .site-header__brand alone — with the original
+     * --space-md (24px) row gap, that squeeze produced a real 4px
+     * horizontal overflow (324 > 320). --space-2xs (8px), the same token
+     * already used for .site-header__actions's internal gap, frees that
+     * budget back without shrinking either touch target; desktop restores
+     * --space-md in the 1120px block below where the row holds three
+     * items (brand/nav/actions) at a much wider budget.
+     */
+    gap: var(--space-2xs);
+    /*
+     * Mobile-height remediation (CC-02I-02 review, HIGH-01): the ticket's
+     * 64-68px mobile contract and the 44x44px touch-target floor on
+     * .site-header__lang (below) are only simultaneously satisfiable with
+     * a small padding-block — `--space-sm` (16px/side) forced 32px of
+     * padding onto a 44px-tall content row, landing at 76px, clear of the
+     * 68px ceiling. `--space-2xs` (8px/side) is the next-smallest existing
+     * token; at 8+8+44=60px the row is shorter than the header's own
+     * min-block-size (64px) floor, so it no longer stretches the header
+     * via inheritance — the header's own `align-items: center` (above)
+     * centers the shorter row within the 64px floor instead. No new
+     * spacing token, no magic number: --space-2xs already exists in
+     * tokens.css and is used elsewhere in this same file's mobile rules.
+     */
+    padding-block: var(--space-2xs);
+    /*
+     * Mobile horizontal budget (CC-02I-02 review, HIGH-01/HIGH-03
+     * follow-on): `.container`'s own `padding-inline` resolves to
+     * `--container-padding` (= `--page-gutter-desktop`, clamp(32px, 4vw,
+     * 64px)) at every width — a shared, sitewide token this ticket's file
+     * scope does not include (`src/styles/utilities.css`). At the 320px
+     * acceptance-criteria viewport (ticket §14) that leaves too little
+     * width for .site-header__brand's full-width logo text once both
+     * touch targets hold their real 44px+ floors (flex-shrink: 0, below)
+     * — the Chinese wordmark wrapped mid-character onto a 3rd line,
+     * growing the header past the 68px ceiling. This override is scoped
+     * to `.site-header__row` only (not `.container` itself, so every
+     * other `.container` consumer sitewide is unaffected) and reuses the
+     * existing `--page-gutter-mobile` token (20px) that other mobile-only
+     * layout in this codebase already uses for exactly this role.
+     */
+    padding-inline: var(--page-gutter-mobile);
   }
+  @media (min-width: 1120px) {
+    .site-header__row {
+      padding-block: var(--space-sm);
+      gap: var(--space-md);
+      padding-inline: var(--container-padding);
+    }
+  }
+  /*
+   * min-width: 0 (not flex-shrink: 0) so the brand block can compress
+   * instead of forcing .site-header__actions off-screen when the logo
+   * wordmark's own text grows very large (e.g. large-text/zoom
+   * accessibility settings, R1-08) — Logo.astro's own text has no
+   * truncation of its own (it is not modified under this ticket, §6),
+   * so the brand container must be the one that yields space rather
+   * than pushing siblings out of the flex row entirely.
+   */
+  .site-header__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    min-width: 0;
+  }
+  /*
+   * .site-header__datum targets DatumOrigin's own rendered <svg> root, not
+   * an element authored directly in Header.astro's template — same
+   * scope-hash issue documented above for .site-header__cta/.mobile-nav__cta
+   * (Astro's data-astro-cid-* scoping attribute stamps the CHILD
+   * component's own hash onto its root, not the parent's), so this
+   * selector needs :global() to actually match, exactly like the
+   * `.mobile-nav__cta > :global(.btn)` case below.
+   *
+   * The Datum mark is a desktop-only addition to the brand composition
+   * (same responsive pattern this file already uses for .desktop-nav and
+   * .site-header__cta): at mobile widths, the header row is logo + lang
+   * switch + hamburger only, matching the pre-existing mobile content
+   * budget. Adding the mark's 28px + gap unconditionally regressed the
+   * 360px/320px no-horizontal-overflow acceptance criteria (ticket §14) —
+   * hiding it below 1120px keeps that criterion intact without touching
+   * any spacing/gutter token.
+   */
+  .site-header__brand > :global(.site-header__datum) {
+    display: none;
+  }
+  @media (min-width: 1120px) {
+    .site-header__brand > :global(.site-header__datum) {
+      display: block;
+      flex-shrink: 0;
+      inline-size: 28px;
+      block-size: 28px;
+    }
+  }
+  /*
+   * Zoom-safety fix (CC-02I-02 review, HIGH-02): at 200%-equivalent
+   * font-size, the nav list's un-wrapped intrinsic width overflowed the
+   * viewport, pushing the CTA fully off-screen and overlapping the brand
+   * — a real bug the previous test suite's `zoom: 200%` simulation never
+   * caught (see the suite-level comment on the 200%-zoom tests above).
+   * `flex-wrap: wrap` lets nav items reflow onto additional lines instead
+   * of forcing horizontal overflow; `row-gap` reuses the existing gap
+   * token rather than introducing a new one. The header's own
+   * `min-block-size` (not a fixed height) already accommodates the
+   * resulting taller content without clipping.
+   */
   .desktop-nav ul {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--space-lg);
+    row-gap: var(--space-2xs);
     list-style: none;
     margin: 0;
     padding: 0;
   }
   .desktop-nav {
     display: none;
+    min-width: 0;
   }
+  /*
+   * Short Datum-line nav hover (ticket §8): an ::after scaleX underline
+   * using existing --duration-ui/--ease-standard, replacing the previous
+   * full-width border-bottom-color swap. Matches the CC-02F prototype
+   * reference (FinalPrototypeHeader.astro's .final-header__link).
+   */
   .desktop-nav__link {
+    position: relative;
     color: var(--color-ink-soft);
     text-decoration: none;
     font-size: var(--fs-sm);
     font-weight: 500;
     padding-block: var(--space-3xs);
-    border-bottom: 2px solid transparent;
+  }
+  .desktop-nav__link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 16px;
+    height: 2px;
+    background: var(--color-action-primary);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--duration-ui) var(--ease-standard);
   }
   .desktop-nav__link:hover,
   .desktop-nav__link.is-active {
     color: var(--color-ink);
-    border-bottom-color: var(--color-accent);
   }
+  .desktop-nav__link:hover::after,
+  .desktop-nav__link.is-active::after {
+    transform: scaleX(1);
+  }
+  /*
+   * At the narrowest mandatory viewport (320px, ticket §14 acceptance
+   * criteria), the default --space-md (24px) gap between the language
+   * switch and the mobile toggle pushed the toggle 12-13px past the
+   * viewport edge — a pre-existing tightness in this row's content
+   * budget that no prior test caught, since 320px was not in the global
+   * VIEWPORTS fixture (tests/e2e/fixtures.ts) before this ticket. Fixed
+   * per the ticket's own §17 rollback allowance: an existing --space-*
+   * token substitution, narrower only below the breakpoint where the
+     * desktop CTA/nav reappear (1120px already needs this actions row to
+   * hold three items instead of two, at desktop's much wider budget).
+   */
   .site-header__actions {
     display: flex;
     align-items: center;
-    gap: var(--space-md);
+    gap: var(--space-2xs);
+    flex-shrink: 0;
+  }
+  @media (min-width: 1120px) {
+    .site-header__actions {
+      gap: var(--space-md);
+    }
+  }
+  /*
+   * .site-header__lang is a native <div> wrapper around <LanguageSwitcher>
+   * for the same scope-hash reason documented below for .site-header__cta
+   * — a class handed to a child component renders on a DOM node carrying
+   * the CHILD's own Astro scope hash, not Header's, so this wrapper is
+   * necessary to apply Header-local visual-weight styling (ticket §8:
+   * "thinner border, no heavy box") without editing LanguageSwitcher.astro
+   * itself (whose own default treatment — no border, plain text link —
+   * already matches CC-02F's lighter-weight direction closely; this
+   * override only removes the base focus-ring padding assumption and
+   * confirms the >=44x44px tap target via the wrapper, per acceptance
+   * criteria, rather than restyling the component's internals).
+   */
+  .site-header__lang {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-inline-size: 44px;
+    min-block-size: 44px;
   }
   /*
    * .site-header__cta / .mobile-nav__cta are native <div> wrappers around
@@ -170,16 +406,49 @@ function isActive(itemPath: string) {
    * P0.1 for the full writeup; the same fix is applied everywhere else a
    * parent tried to reach into a child component's rendered class
    * (IndustryIcon's `industry-hero__icon`, Card's `insight-card`).
+   *
+   * The nested :global(.btn) override swaps only the Header CTA's token
+   * from --color-accent to --color-action-primary/-hover (ticket §8) —
+   * Button.astro's own primary variant default is untouched, so every
+   * other Button call site across the site keeps rendering
+   * --color-accent unchanged. This is the R2-06-preferred path: the
+   * token swap is expressed entirely through a scoped call-site CSS
+   * override of Button's existing public output, with no change to
+   * Button.astro itself, no new variant, and no opt-in prop needed.
    */
   .site-header__cta {
     display: none;
   }
+  .site-header__cta > :global(.btn--primary) {
+    background: var(--color-action-primary);
+    border-color: var(--color-action-primary);
+  }
+  .site-header__cta > :global(.btn--primary:hover) {
+    background: var(--color-action-primary-hover);
+    border-color: var(--color-action-primary-hover);
+  }
+  /*
+   * Touch-target remediation (CC-02I-02 review, HIGH-03): the 24px svg +
+   * previous --space-2xs (8px) padding rendered a 40x40px actual button
+   * box, under the ticket's 44x44px floor for "mobile toggle" (§10/§13).
+   * --space-xs (12px, an existing token — no new magic-number spacing) +
+   * the icon's own markup dimension reduced from 24px to 20px (adjusted
+   * directly in Header.astro's own inline svg, not a shared token) lands
+   * the button's own box at exactly 44x44px: enough headroom over the
+   * floor without the extra 4px/side that a 24px icon would have added,
+   * which is the width this exact ticket's 320px acceptance-criteria
+   * viewport (§14) has no slack for once both this control and
+   * .site-header__lang stop silently compressing below their own floors
+   * (see `flex-shrink: 0` below and .site-header__brand's note on why
+   * brand, not the touch targets, is the element that yields space).
+   */
   .mobile-nav-toggle {
     background: none;
     border: none;
     color: var(--color-ink);
     display: inline-flex;
-    padding: var(--space-2xs);
+    flex-shrink: 0;
+    padding: var(--space-xs);
     border-radius: var(--radius-sm);
   }
   .mobile-nav-toggle:hover {
@@ -254,7 +523,7 @@ function isActive(itemPath: string) {
     width: 100%;
   }
 
-  @media (min-width: 960px) {
+  @media (min-width: 1120px) {
     .desktop-nav {
       display: block;
     }
@@ -264,6 +533,35 @@ function isActive(itemPath: string) {
     .mobile-nav-toggle {
       display: none;
     }
+  }
+
+  /*
+   * No-JS fallback styling (CC-02I-03, §9): plain/minimal per ticket —
+   * not a design deliverable. Reuses existing spacing/color/border tokens
+   * only; no new tokens introduced. Static block-level list, no drawer/
+   * overlay mechanics (those all depend on the script this fallback exists
+   * because of the absence of).
+   */
+  .mobile-nav-nojs {
+    padding: var(--space-md) var(--page-gutter-mobile);
+    border-top: 1px solid var(--color-border);
+  }
+  .mobile-nav-nojs__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .mobile-nav-nojs__link {
+    display: block;
+    padding: var(--space-sm) 0;
+    color: var(--color-ink);
+    text-decoration: underline;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .mobile-nav-nojs__link--cta {
+    font-weight: 600;
   }
 </style>
 

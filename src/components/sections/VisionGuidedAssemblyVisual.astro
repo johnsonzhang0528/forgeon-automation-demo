@@ -1,0 +1,121 @@
+---
+/**
+ * YF-IMG-08 — representative vision-guided automated assembly imagery.
+ *
+ * Every crop preserves the causal relationship between camera / illumination,
+ * the fixtured workpiece and the robotic end effector. It must not imply a
+ * real customer installation, inspection result, accuracy or cycle-time claim.
+ */
+import { Picture } from 'astro:assets';
+import visionGuidedAssemblyImage from '../../assets/images/solutions/vision-guided-assembly-final-master.png';
+import type { Locale } from '../../config/site';
+import { getDictionary } from '../../utils/i18n';
+
+export interface Props {
+  locale: Locale;
+  presentation?: 'master' | 'wide';
+  priority?: boolean;
+}
+
+const { locale, presentation = 'master', priority = false } = Astro.props;
+const imagery = getDictionary(locale).productionImagery.visionGuidedAssembly;
+---
+
+<figure
+  class:list={['vision-guided-assembly-visual', `vision-guided-assembly-visual--${presentation}`]}
+  data-production-image="YF-IMG-08"
+  data-presentation={presentation}
+>
+  <div class="vision-guided-assembly-visual__media">
+    <Picture
+      src={visionGuidedAssemblyImage}
+      formats={['avif', 'webp']}
+      widths={[480, 768, 1024, 1280, 1536]}
+      sizes="(min-width: 908px) 860px, (min-width: 768px) calc(100vw - 48px), calc(100vw - 32px)"
+      alt={imagery.alt}
+      loading={priority ? 'eager' : 'lazy'}
+      fetchpriority={priority ? 'high' : 'auto'}
+      decoding="async"
+      quality={82}
+    />
+  </div>
+  <figcaption class="vision-guided-assembly-visual__caption">
+    <span class="vision-guided-assembly-visual__marker" aria-hidden="true"></span>
+    <span>{imagery.caption}</span>
+  </figcaption>
+</figure>
+
+<style>
+  .vision-guided-assembly-visual {
+    margin: var(--space-xl) 0;
+  }
+
+  .vision-guided-assembly-visual__media {
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-alt);
+    aspect-ratio: 1 / 1;
+  }
+
+  .vision-guided-assembly-visual__media :global(picture) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .vision-guided-assembly-visual__media :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 52%;
+  }
+
+  .vision-guided-assembly-visual__caption {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: var(--space-sm);
+    align-items: start;
+    margin-top: var(--space-sm);
+    color: var(--color-muted);
+    font-size: var(--fs-xs);
+    line-height: var(--lh-normal);
+  }
+
+  .vision-guided-assembly-visual__marker {
+    display: block;
+    width: 100%;
+    height: 2px;
+    margin-top: 0.55em;
+    background: var(--color-accent);
+  }
+
+  @media (min-width: 480px) {
+    .vision-guided-assembly-visual__media {
+      aspect-ratio: 4 / 3;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .vision-guided-assembly-visual--master .vision-guided-assembly-visual__media {
+      aspect-ratio: 3 / 2;
+    }
+
+    .vision-guided-assembly-visual--wide .vision-guided-assembly-visual__media {
+      aspect-ratio: 16 / 9;
+    }
+
+    .vision-guided-assembly-visual__caption {
+      grid-template-columns: 3rem minmax(0, 44rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vision-guided-assembly-visual__media,
+    .vision-guided-assembly-visual__media :global(img) {
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
+    }
+  }
+</style>

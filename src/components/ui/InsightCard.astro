@@ -1,0 +1,62 @@
+---
+import type { Locale } from '../../config/site';
+import Card from './Card.astro';
+import InsightVisual from './InsightVisual.astro';
+
+export interface Props {
+  locale: Locale;
+  insight: string;
+  href: string;
+  dateIso: string;
+  dateLabel: string;
+  title: string;
+  summary: string;
+  linkLabel: string;
+}
+
+const { locale, insight, href, dateIso, dateLabel, title, summary, linkLabel } = Astro.props;
+---
+
+<Card href={href} padding="none" class="insight-card">
+  <InsightVisual locale={locale} insight={insight} placement="card" />
+  <div class="insight-card__body">
+    <time class="insight-card__date mono" datetime={dateIso}>{dateLabel}</time>
+    <h2 class="insight-card__title">{title}</h2>
+    <p class="insight-card__summary">{summary}</p>
+    <span class="insight-card__link">{linkLabel}</span>
+  </div>
+</Card>
+
+<style>
+  .insight-card__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding: var(--space-lg);
+  }
+
+  .insight-card__date {
+    color: var(--color-muted);
+    font-size: var(--fs-xs);
+  }
+
+  .insight-card__title {
+    margin: 0;
+    font-size: var(--fs-xl);
+    line-height: var(--lh-tight);
+  }
+
+  .insight-card__summary {
+    margin: 0;
+    color: var(--color-muted);
+  }
+
+  .insight-card__link {
+    margin-top: auto;
+    padding-top: var(--space-xs);
+    color: var(--color-accent);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+  }
+</style>

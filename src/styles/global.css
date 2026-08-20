@@ -345,3 +345,60 @@ code,
   border-radius: var(--radius-sm);
   padding: 0.2em 0.6em;
 }
+
+/* ---------------------------------------------------------------------- */
+/* Long-form technical reading rhythm                                     */
+/* ---------------------------------------------------------------------- */
+.article-body {
+  padding-top: var(--space-lg);
+  border-top: var(--border-hairline) solid rgba(92, 104, 112, 0.42);
+  color: var(--color-ink-soft);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body-lg);
+}
+
+.article-body > :first-child {
+  margin-top: 0;
+}
+
+.article-body > :last-child {
+  margin-bottom: 0;
+}
+
+.article-body h2 {
+  margin: clamp(var(--space-xl), 7vw, var(--space-20)) 0 var(--space-md);
+  padding-top: var(--space-sm);
+  border-top: var(--border-hairline) solid rgba(92, 104, 112, 0.3);
+  font-size: var(--fs-h3);
+  text-wrap: balance;
+}
+
+.article-body h3 {
+  margin: var(--space-xl) 0 var(--space-sm);
+  font-size: var(--fs-h4);
+}
+
+.article-body p,
+.article-body ul,
+.article-body ol,
+.article-body blockquote {
+  max-width: none;
+  margin-block: 0 var(--space-md);
+}
+
+.article-body ul,
+.article-body ol {
+  display: grid;
+  gap: var(--space-xs);
+  padding-left: var(--space-md);
+}
+
+.article-body li::marker {
+  color: var(--color-accent-dark);
+}
+
+.article-body blockquote {
+  padding: var(--space-md);
+  border-left: var(--border-datum) solid var(--color-accent);
+  background: var(--color-surface-alt);
+}

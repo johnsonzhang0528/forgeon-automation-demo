@@ -1,0 +1,189 @@
+{
+  "_note": "This is a PROPOSAL, not the live registry. It must not be copied over docs/agents/TASK_REGISTRY.json directly. current_live_state reflects the real, current TASK_REGISTRY.json entry for CC-02I as of this revision (Revision 2, WF-CC02I-SPEC-R2). activation_target is the state this proposal asks ChatGPT to approve moving toward — it is not applied by this document and is not applied by any ticket in WF-CC02I-SPEC-R2. Moving from current_live_state to activation_target requires a separate, independently-authorized activation workflow (WF-CC02I-ACT-01, not yet created) after ChatGPT approves this revised spec and ticket package. The existing register-maintenance command is a generic maintenance-stage bootstrap mechanism (see docs/agents/DUAL_AGENT_PROTOCOL.md's 'Maintenance registration' section) — it cannot be used to unlock CC-02I itself, since CC-02I is a Product Stage, not a Maintenance Stage, and the same protocol explicitly states an agent cannot use maintenance registration to unlock a blocked Product Stage. Until WF-CC02I-ACT-01 is authorized, claimed, and completed, CC-02I remains claimable:false in the live registry, regardless of what this proposal's activation_target says. The single canonical Implementation Authorization Gate is docs/engineering/reviews/CC-02I-stage-gate-r2-review.md plus this file — CC-02I-stage-gate-review.md and CC-02I-stage-gate-r1-review.md are both Historical/Superseded and carry no gate authority (R2-01).",
+  "revision": 2,
+  "revision_context": "Produced under WF-CC02I-SPEC-R2 in response to ChatGPT's REVISE AND RESUBMIT — Narrow Revision 2 verdict on the Revision 1 bundle (20260806-2107-cc02i-spec-r1-stage-gate.zip). Variant C (Engineering Editorial Sheet) is unchanged; this narrow revision resolves six findings (R2-01 through R2-06): gate-document consolidation, the Motion Orchestrator's first-frame state model, a pre-fixed Production Acceptance Gate schema, a fixed Implementation Base Commit rule, a corrected review-bundle handoff, and a scoped-down Button.astro change allowance. Revision 1 (WF-CC02I-SPEC-R1, produced in response to the original CC-02I-PREP REVISE AND RESUBMIT verdict) resolved thirteen earlier findings and remains in effect except where explicitly refined here.",
+  "current_live_state": {
+    "stage": "CC-02I",
+    "claimable": false,
+    "spec": null,
+    "tickets": []
+  },
+  "activation_target": {
+    "stage": {
+      "id": "CC-02I",
+      "title": "Production Header and Hero Integration",
+      "claimable": true,
+      "external_reviewer": "ChatGPT",
+      "spec": "docs/engineering/specs/CC-02I-header-hero-production-spec.md"
+    },
+    "tickets": [
+      {
+        "id": "CC-02I-01",
+        "title": "Production Contract and Locale API",
+        "status": "ready",
+        "file": "docs/engineering/tickets/CC-02I/01-production-contract-locale-api.md",
+        "depends_on": [],
+        "allowed_files": [
+          "src/data/locales/zh-tw.ts",
+          "src/data/locales/en.ts"
+        ],
+        "required_tests": [
+          "pnpm check",
+          "pnpm typecheck",
+          "pnpm build"
+        ]
+      },
+      {
+        "id": "CC-02I-05",
+        "title": "Brand Primitives and Hero Visual",
+        "status": "ready",
+        "file": "docs/engineering/tickets/CC-02I/05-brand-primitives-hero-visual.md",
+        "depends_on": ["CC-02I-01"],
+        "allowed_files": [
+          "src/components/sections/PrecisionSystemVisual.astro",
+          "src/components/sections/ProcessRail.astro",
+          "src/components/sections/EvaluationLedger.astro"
+        ],
+        "required_tests": [
+          "pnpm check",
+          "pnpm typecheck",
+          "pnpm build"
+        ],
+        "note_fix01": "CC-02I-05 is a pre-integration component-construction ticket. Runtime Playwright verification is intentionally deferred to CC-02I-04 / CC-02I-06 / CC-02I-07 after the components have a real production render surface."
+      },
+      {
+        "id": "CC-02I-02",
+        "title": "Header Production Implementation",
+        "status": "ready",
+        "file": "docs/engineering/tickets/CC-02I/02-header-production-implementation.md",
+        "depends_on": ["CC-02I-01", "CC-02I-05"],
+        "allowed_files": [
+          "src/components/layout/Header.astro",
+          "src/components/ui/Button.astro",
+          "src/components/ui/LanguageSwitcher.astro",
+          "tests/e2e/header.spec.ts"
+        ],
+        "required_tests": [
+          "pnpm test:e2e -- tests/e2e/header.spec.ts",
+          "pnpm test:e2e -- tests/e2e/mobile-nav.spec.ts",
+          "pnpm test:axe"
+        ],
+        "note_r2": "src/components/ui/Button.astro remains an allowed path, but R2-06 restricts it to an opt-in-only change with a mandatory call-site inventory and no-regression proof — see ticket §8. If opt-in isn't achievable, this ticket must stop without touching Button.astro rather than use this allowed-path entry to modify shared defaults."
+      },
+      {
+        "id": "CC-02I-03",
+        "title": "Mobile Navigation Verification and Hardening",
+        "status": "ready",
+        "file": "docs/engineering/tickets/CC-02I/03-mobile-navigation.md",
+        "depends_on": ["CC-02I-02"],
+        "allowed_files": [
+          "src/components/layout/Header.astro",
+          "tests/e2e/mobile-nav.spec.ts"
+        ],
+        "required_tests": [
+          "pnpm test:e2e -- tests/e2e/mobile-nav.spec.ts",
+          "pnpm test:axe"
+        ]
+      },
+      {
+        "id": "CC-02I-04",
+        "title": "Hero Production Structure",
+        "status": "ready",
+        "file": "docs/engineering/tickets/CC-02I/04-hero-production-structure.md",
+        "depends_on": ["CC-02I-01", "CC-02I-05"],
+        "allowed_files": [
+          "src/components/sections/Hero.astro",
+          "src/pages/zh-tw/index.astro",
+          "src/pages/en/index.astro",
+          "tests/e2e/cc02i-hero.spec.ts"
+        ],
+        "required_tests": [
+          "pnpm test:e2e -- tests/e2e/cc02i-hero.spec.ts",
+          "pnpm test:e2e -- tests/e2e/responsive-overflow.spec.ts",
+          "pnpm test:axe",
+          "pnpm check:h1"
+        ],
+        "note_fix01": "Receives CC-02I-05's deferred rendered-DOM SVG ID presence/uniqueness and basic post-integration correctness verification, now that the three CC-02I-05 components have a real production render surface here."
+      },
+      {
+        "id": "CC-02I-06",
+        "title": "Motion Orchestrator and Performance Verification",
+        "status": "ready",
+        "file": "docs/engineering/tickets/CC-02I/06-motion-reduced-motion-performance.md",
+        "depends_on": ["CC-02I-04", "CC-02I-05"],
+        "allowed_files": [
+          "src/components/sections/Hero.astro",
+          "src/components/sections/PrecisionSystemVisual.astro",
+          "src/components/sections/ProcessRail.astro",
+          "tests/e2e/cc02i-motion.spec.ts"
+        ],
+        "required_tests": [
+          "pnpm test:e2e -- tests/e2e/cc02i-motion.spec.ts"
+        ],
+        "note_r2": "tests/e2e/cc02i-motion.spec.ts must cover the seven R2-02 mandatory cases (No-JS, reduced-motion observer-count spy, first-frame armed/running correctness, state-invariant accessible content, complete-is-terminal, observer count, first-frame flash evidence) in addition to the Revision 1 state-machine assertions.",
+        "note_fix01": "Receives CC-02I-05's deferred reduced-motion end-state and IntersectionObserver non-instantiation runtime verification for PrecisionSystemVisual/ProcessRail (covered by this ticket's existing cases 1, 2, and 6)."
+      },
+      {
+        "id": "CC-02I-07",
+        "title": "Responsive, Locale, and Accessibility Verification",
+        "status": "ready",
+        "file": "docs/engineering/tickets/CC-02I/07-responsive-locale-accessibility.md",
+        "depends_on": ["CC-02I-02", "CC-02I-03", "CC-02I-04", "CC-02I-05", "CC-02I-06"],
+        "allowed_files": [
+          "src/components/layout/Header.astro",
+          "src/components/sections/Hero.astro",
+          "src/components/sections/PrecisionSystemVisual.astro",
+          "src/components/sections/ProcessRail.astro",
+          "src/components/sections/EvaluationLedger.astro",
+          "tests/e2e/cc02i-hero.spec.ts",
+          "tests/e2e/cc02i-motion.spec.ts",
+          "tests/e2e/mobile-nav.spec.ts",
+          "tests/e2e/responsive-overflow.spec.ts",
+          "tests/e2e/axe.spec.ts"
+        ],
+        "required_tests": [
+          "pnpm test:e2e -- tests/e2e/responsive-overflow.spec.ts",
+          "pnpm test:axe"
+        ],
+        "note_fix01": "Receives CC-02I-05's deferred ProcessRail keyboard-focus and both-locale aria-label runtime verification, covered by this ticket's existing keyboard walkthrough and locale-independent verification requirements."
+      },
+      {
+        "id": "CC-02I-08",
+        "title": "Regression, QA, and Review Bundle",
+        "status": "ready",
+        "file": "docs/engineering/tickets/CC-02I/08-regression-qa-review-bundle.md",
+        "depends_on": ["CC-02I-01", "CC-02I-02", "CC-02I-03", "CC-02I-04", "CC-02I-05", "CC-02I-06", "CC-02I-07"],
+        "allowed_files": [
+          "docs/screenshots/**",
+          "docs/engineering/handoffs/**",
+          "docs/engineering/reviews/**"
+        ],
+        "required_tests": [
+          "pnpm test:e2e",
+          "pnpm test:axe",
+          "pnpm check:h1",
+          "pnpm check:links",
+          "pnpm check:locale-routes",
+          "pnpm check",
+          "pnpm typecheck",
+          "pnpm build"
+        ],
+        "note_r2": "Produces docs/engineering/reviews/CC-02I-production-acceptance-gate.md using the fixed 18-section schema (production spec §17.2, R2-03). Uses the CC-02I Implementation Base Commit (production spec §17.3, R2-04) as pnpm review:bundle's base-commit argument — received from WF-CC02I-ACT-01's output, never derived. Verifies the review bundle selects the correct current handoff document, not a stale one (R2-05)."
+      }
+    ]
+  },
+  "build_sequence_note": "CC-02I-01 -> CC-02I-05 -> CC-02I-02 -> CC-02I-03 -> CC-02I-04 -> CC-02I-06 -> CC-02I-07 -> CC-02I-08. CC-02I-05 (production visual components) now runs before CC-02I-02/CC-02I-04 so Header/Hero assembly always integrates finished components, never a placeholder skeleton. The dual-agent workflow still enforces exactly one Active Ticket at a time regardless of this ordering.",
+  "activation_workflow_prerequisites": [
+    "ChatGPT approves this revised production spec (docs/engineering/specs/CC-02I-header-hero-production-spec.md) and this revised ticket package.",
+    "A separate, independently-authorized maintenance/activation workflow, WF-CC02I-ACT-01, is created — its sole purpose is to write the activation_target values above into the live docs/agents/TASK_REGISTRY.json under Human/ChatGPT stage-gate authorization, exactly as docs/agents/DUAL_AGENT_PROTOCOL.md's stage gate rule requires.",
+    "WF-CC02I-ACT-01 is not created, claimed, or executed as part of WF-CC02I-SPEC-R2. This revision round produces documents only.",
+    "Until WF-CC02I-ACT-01 completes, CC-02I remains claimable:false and no ticket under it may be claimed by either agent.",
+    "When WF-CC02I-ACT-01 eventually runs, the Activation Commit it produces is, by definition, the CC-02I Implementation Base Commit (production spec §17.3, R2-04) — CC-02I-08 uses that exact SHA as its review-bundle base commit, not a derived or guessed value."
+  ],
+  "constraints": [
+    "current_live_state.claimable must equal the live docs/agents/TASK_REGISTRY.json CC-02I.claimable value at all times during WF-CC02I-SPEC-R2 — false.",
+    "No ticket in WF-CC02I-SPEC-R2 may modify docs/agents/TASK_REGISTRY.json's CC-02I entry.",
+    "activation_target is a proposal only; applying it is out of scope for this document and this stage.",
+    "The canonical Implementation Authorization Gate is CC-02I-stage-gate-r2-review.md plus this file — no document may cite CC-02I-stage-gate-review.md or CC-02I-stage-gate-r1-review.md as current gate authority (R2-01)."
+  ]
+}

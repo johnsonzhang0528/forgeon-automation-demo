@@ -2,7 +2,9 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionHeading from '../../components/ui/SectionHeading.astro';
 import Button from '../../components/ui/Button.astro';
-import HeroIllustration from '../../components/ui/HeroIllustration.astro';
+import Hero from '../../components/sections/Hero.astro';
+import AutomationIntegrationVisual from '../../components/sections/AutomationIntegrationVisual.astro';
+import FieldCommissioningVisual from '../../components/sections/FieldCommissioningVisual.astro';
 import SolutionCard from '../../components/ui/SolutionCard.astro';
 import ProductCard from '../../components/ui/ProductCard.astro';
 import IndustryCard from '../../components/ui/IndustryCard.astro';
@@ -28,7 +30,7 @@ const whyReasons = [
   { title: '工程導向流程', desc: '每個方案都從實際製程問題出發，先確認可行性再進入設計，不做無根據的承諾。' },
   { title: '模組化產品線', desc: '運動、視覺與組裝模組可單獨導入或組合使用，依專案規模彈性配置。' },
   { title: '結構化技術文件', desc: '規格、選配與導入條件均以文件化方式呈現，方便工程團隊內部評估與比較。' },
-  { title: '海外專案溝通經驗', desc: '提供中英文技術對應窗口，降低跨國專案在規格確認上的溝通落差。' },
+  { title: '中英文技術溝通', desc: '以中英文整理規格、介面與導入條件，方便跨地區團隊確認需求與責任邊界。' },
 ];
 ---
 
@@ -37,30 +39,10 @@ const whyReasons = [
   path="/zh-tw/"
   otherLocalePath="/en/"
   title="鋒岳自動化｜精密運動與視覺整合的工業自動化方案"
-  description="鋒岳自動化提供精密線性模組、視覺定位檢測與自動化組裝整合方案，協助半導體、汽車零組件、金屬加工與包裝物流產業處理定位、檢測與組裝挑戰。"
+  description="鋒岳自動化是虛構的工業自動化品牌概念案例，展示精密運動、視覺定位與自動化組裝整合的網站策略與工程資訊架構。"
 >
   <!-- Hero -->
-  <section class="hero section">
-    <div class="container hero__grid">
-      <div class="hero__copy">
-        <p class="hero__eyebrow">工業自動化 · 精密運動與視覺整合</p>
-        <h1 class="hero__title">精準驅動，更有效率的生產流程。</h1>
-        <p class="hero__desc measure">
-          鋒岳自動化整合精密線性模組、視覺定位檢測與組裝工作站，協助工廠處理定位、
-          檢測與重複組裝流程中的精度與效率挑戰。從單一站點升級到完整產線整合，
-          依製程條件提出可評估、可導入的自動化方案。
-        </p>
-        <div class="hero__actions">
-          <Button href="/zh-tw/contact/?intent=project" size="lg" trackEvent="cta_click" data-intent="project" data-source="home-hero">提交專案需求</Button>
-          <Button href="/zh-tw/contact/?intent=technical-advice" variant="secondary" size="lg" trackEvent="cta_click" data-intent="technical-advice" data-source="home-hero">索取技術建議</Button>
-        </div>
-        <p class="hero__note">本網站為作品集概念案例，公司與產品為虛構內容。</p>
-      </div>
-      <div class="hero__visual">
-        <HeroIllustration />
-      </div>
-    </div>
-  </section>
+  <Hero locale={locale} />
 
   <!-- Capability overview -->
   <section class="section section--tight">
@@ -70,6 +52,7 @@ const whyReasons = [
         title="從精密運動到系統整合"
         description="鋒岳自動化的能力涵蓋運動模組設計、視覺定位檢測與整廠整合工程，讓客戶可以依專案規模選擇單一模組或完整方案。"
       />
+      <AutomationIntegrationVisual locale={locale} presentation="wide" />
       <div class="capability-grid">
         <div class="capability-item">
           <span class="capability-item__index mono">01</span>
@@ -230,8 +213,9 @@ const whyReasons = [
       <SectionHeading
         eyebrow="專案導入流程"
         title="從需求釐清到現場驗收"
-        description="五個階段的標準流程，確保每個專案都經過完整的技術評估。"
+        description="以五個階段呈現評估與交付框架，逐步確認需求、設計、測試與驗收條件。"
       />
+      <FieldCommissioningVisual locale={locale} presentation="wide" />
       <ProcessTimeline steps={processSteps} />
     </div>
   </section>
@@ -262,51 +246,6 @@ const whyReasons = [
 </BaseLayout>
 
 <style>
-  .hero {
-    background:
-      radial-gradient(ellipse at top right, color-mix(in srgb, var(--color-accent) 6%, transparent), transparent 60%),
-      var(--color-surface);
-    border-bottom: 1px solid var(--color-border);
-    padding-top: var(--space-2xl);
-  }
-  .hero__grid {
-    display: grid;
-    gap: var(--space-2xl);
-    align-items: center;
-  }
-  .hero__eyebrow {
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--color-accent);
-    font-weight: 600;
-    margin: 0 0 var(--space-sm);
-  }
-  .hero__title {
-    margin: 0 0 var(--space-md);
-  }
-  .hero__desc {
-    color: var(--color-muted);
-    font-size: var(--fs-md);
-    margin: 0 0 var(--space-lg);
-  }
-  .hero__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-sm);
-    margin-bottom: var(--space-md);
-  }
-  .hero__note {
-    font-size: var(--fs-xs);
-    color: var(--color-muted-soft);
-    margin: 0;
-  }
-  .hero__visual {
-    display: flex;
-    justify-content: center;
-  }
-
   .section--alt {
     background: var(--color-surface-alt);
   }
@@ -451,9 +390,6 @@ const whyReasons = [
     }
   }
   @media (min-width: 960px) {
-    .hero__grid {
-      grid-template-columns: 1.1fr 0.9fr;
-    }
     .capability-grid {
       grid-template-columns: repeat(4, 1fr);
     }

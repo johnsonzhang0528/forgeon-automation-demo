@@ -1,0 +1,337 @@
+---
+/**
+ * Homepage Hero — Engineering Editorial Sheet with a photographic focal
+ * point. Copy remains semantic HTML so it stays selectable, translatable,
+ * accessible and independent from the image asset.
+ *
+ * The Final Master is imported through Astro's asset pipeline. This keeps
+ * its intrinsic dimensions in the markup and produces responsive AVIF/WebP
+ * derivatives at build time. Desktop uses an editorial overlay; smaller
+ * viewports keep the same DOM order and place copy above the image.
+ */
+import { Picture } from 'astro:assets';
+import heroImage from '../../assets/images/home/forgeon-automation-hero-final-master.png';
+import { getDictionary } from '../../utils/i18n';
+import type { Locale } from '../../config/site';
+import Button from '../ui/Button.astro';
+import DatumOrigin from '../brand/DatumOrigin.astro';
+import ProcessRail from './ProcessRail.astro';
+import EvaluationLedger from './EvaluationLedger.astro';
+
+export interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const hero = getDictionary(locale).hero;
+
+const ledgerGroups: [
+  { heading: string; detail: string },
+  { heading: string; detail: string },
+  { heading: string; detail: string },
+] = [hero.ledger.input, hero.ledger.evaluation, hero.ledger.output];
+
+const processSteps: [string, string, string, string] = [
+  hero.processRail.step1,
+  hero.processRail.step2,
+  hero.processRail.step3,
+  hero.processRail.step4,
+];
+---
+
+<section class="hero-root" data-hero-motion-root data-motion-state="settled">
+  <div class="hero-root__origin">
+    <DatumOrigin size={40} orientation="both" label="0,0" />
+  </div>
+
+  <p class="hero-root__eyebrow mono">{hero.eyebrow}</p>
+
+  <h1 class="hero-root__headline">{hero.headline}</h1>
+
+  <p class="hero-root__body">{hero.body}</p>
+
+  <div class="hero-root__ctas">
+    <Button
+      href={`/${locale}/contact/?intent=project`}
+      size="lg"
+      trackEvent="cta_click"
+      data-intent="project"
+      data-source="home-hero"
+    >
+      {hero.ctaPrimary}
+    </Button>
+    <Button
+      href={`/${locale}/contact/?intent=technical-advice`}
+      variant="secondary"
+      size="lg"
+      trackEvent="cta_click"
+      data-intent="technical-advice"
+      data-source="home-hero"
+    >
+      {hero.ctaSecondary}
+    </Button>
+  </div>
+
+  <figure class="hero-root__media" data-hero-image="final-master">
+    <Picture
+      src={heroImage}
+      formats={['avif', 'webp']}
+      widths={[480, 768, 1024, 1448]}
+      sizes="(min-width: 1024px) min(100vw - 64px, 1440px), (min-width: 768px) calc(100vw - 48px), calc(100vw - 32px)"
+      alt={hero.imageAlt}
+      loading="eager"
+      fetchpriority="high"
+      decoding="async"
+      quality={82}
+    />
+    <figcaption class="hero-root__disclosure mono">{hero.imageDisclosure}</figcaption>
+  </figure>
+
+  <div class="hero-root__ledger">
+    <EvaluationLedger groups={ledgerGroups} />
+  </div>
+
+  <div class="hero-root__rail">
+    <ProcessRail
+      steps={processSteps}
+      railLabel={hero.processRail.railLabel}
+      stateLabels={hero.processRail.stateLabels}
+    />
+  </div>
+</section>
+
+<style>
+  .hero-root {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-7, 1.75rem);
+    max-width: var(--container-wide);
+    margin-inline: auto;
+    padding: var(--space-6) var(--page-gutter-mobile) var(--space-16);
+  }
+
+  .hero-root__origin {
+    margin-bottom: calc(-1 * var(--space-4));
+  }
+
+  .hero-root__eyebrow {
+    margin: 0;
+    color: var(--color-action-primary);
+    font-size: var(--fs-technical);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .hero-root__headline {
+    max-width: 720px;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--fs-h1-mobile, clamp(2.35rem, 10.5vw, 3rem));
+    line-height: 1.04;
+    letter-spacing: var(--ls-h1);
+    white-space: pre-line;
+    text-wrap: balance;
+  }
+
+  :lang(zh-Hant-TW) .hero-root__headline {
+    font-family: 'Noto Sans TC', var(--font-display);
+    letter-spacing: 0;
+  }
+
+  :lang(en) .hero-root__headline {
+    font-size: clamp(1.6rem, 7.4vw, 2.35rem);
+  }
+
+  .hero-root__body {
+    max-width: var(--measure-zh);
+    margin: 0;
+    color: var(--color-steel-700);
+    font-size: var(--fs-small);
+    line-height: var(--lh-body, 1.6);
+    white-space: pre-line;
+  }
+
+  .hero-root__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .hero-root__media {
+    position: relative;
+    min-width: 0;
+    margin: var(--space-2) 0 0;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--color-steel-600) 72%, transparent);
+    background: var(--color-steel-900);
+    aspect-ratio: 4 / 3;
+  }
+
+  .hero-root__media :global(picture) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .hero-root__media :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 66% 52%;
+  }
+
+  .hero-root__disclosure {
+    position: absolute;
+    inset-inline-end: var(--space-3);
+    inset-block-end: var(--space-3);
+    margin: 0;
+    padding: 0.3rem 0.45rem;
+    color: #fff;
+    background: rgb(10 16 20 / 78%);
+    font-size: 0.6875rem;
+    line-height: 1.25;
+    letter-spacing: 0.04em;
+  }
+
+  .hero-root__ledger :global(.eval-ledger) {
+    max-width: var(--measure-zh);
+  }
+
+  .hero-root__rail {
+    margin-top: var(--space-5);
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--color-steel-600);
+  }
+
+  @media (max-width: 400px) {
+    .hero-root__ctas :global(.btn) {
+      flex: 1 1 100%;
+      white-space: normal;
+      text-align: center;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .hero-root {
+      padding-inline: var(--page-gutter-tablet);
+    }
+
+    .hero-root__media {
+      aspect-ratio: 16 / 9;
+    }
+
+    .hero-root__media :global(img) {
+      object-position: 64% 52%;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .hero-root {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      grid-template-rows: auto auto auto auto auto auto auto;
+      column-gap: var(--space-6);
+      row-gap: 0;
+      align-items: start;
+      padding: var(--space-12) var(--page-gutter-desktop) var(--space-16);
+      isolation: isolate;
+    }
+
+    .hero-root__media {
+      grid-column: 1 / 13;
+      grid-row: 1 / 7;
+      align-self: stretch;
+      min-height: clamp(620px, 52vw, 720px);
+      margin: 0;
+      aspect-ratio: auto;
+      z-index: -1;
+    }
+
+    .hero-root__media::after {
+      position: absolute;
+      inset: 0;
+      content: '';
+      pointer-events: none;
+      background: linear-gradient(
+        90deg,
+        rgb(246 245 239 / 98%) 0%,
+        rgb(246 245 239 / 96%) 30%,
+        rgb(246 245 239 / 75%) 40%,
+        rgb(246 245 239 / 18%) 54%,
+        transparent 68%
+      );
+    }
+
+    .hero-root__media :global(img) {
+      object-position: 64% 52%;
+    }
+
+    .hero-root__origin,
+    .hero-root__eyebrow,
+    .hero-root__headline,
+    .hero-root__body,
+    .hero-root__ctas,
+    .hero-root__ledger {
+      position: relative;
+      z-index: 1;
+      grid-column: 1 / 6;
+      margin-inline-start: var(--space-6);
+    }
+
+    .hero-root__origin {
+      grid-row: 1;
+      margin-top: var(--space-8);
+      margin-bottom: var(--space-4);
+    }
+
+    .hero-root__eyebrow {
+      grid-row: 2;
+      margin-bottom: var(--space-3);
+    }
+
+    .hero-root__headline {
+      grid-row: 3;
+      max-width: 100%;
+      margin-bottom: var(--space-6);
+      font-size: var(--fs-h1);
+    }
+
+    :lang(en) .hero-root__headline {
+      font-size: clamp(2.5rem, 3.25vw, 3.5rem);
+    }
+
+    .hero-root__body {
+      grid-row: 4;
+      margin-bottom: var(--space-6);
+      font-size: var(--fs-body);
+    }
+
+    .hero-root__ctas {
+      grid-row: 5;
+    }
+
+    .hero-root__ledger {
+      grid-row: 6;
+      align-self: end;
+      margin-top: var(--space-8);
+      margin-bottom: var(--space-8);
+    }
+
+    .hero-root__rail {
+      grid-column: 1 / 13;
+      grid-row: 7;
+      margin-top: var(--space-10);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-root__media,
+    .hero-root__media :global(picture),
+    .hero-root__media :global(img) {
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
+    }
+  }
+</style>

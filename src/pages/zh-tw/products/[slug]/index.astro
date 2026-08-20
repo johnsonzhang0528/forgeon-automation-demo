@@ -4,7 +4,7 @@ import SectionHeading from '../../../../components/ui/SectionHeading.astro';
 import Breadcrumb from '../../../../components/navigation/Breadcrumb.astro';
 import FeatureList from '../../../../components/ui/FeatureList.astro';
 import SpecificationTable from '../../../../components/ui/SpecificationTable.astro';
-import ProductGlyph from '../../../../components/ui/ProductGlyph.astro';
+import ProductVisual from '../../../../components/ui/ProductVisual.astro';
 import Badge from '../../../../components/ui/Badge.astro';
 import Button from '../../../../components/ui/Button.astro';
 import SolutionCard from '../../../../components/ui/SolutionCard.astro';
@@ -41,7 +41,12 @@ const otherLocalePath = `/en/products/${d.entrySlug}/`;
   <section class="section section--tight">
     <div class="container product-hero">
       <div class="product-hero__media">
-        <ProductGlyph product={d.entrySlug as 'axm-400' | 'vision-x2' | 'flexcell-m'} />
+        <ProductVisual
+          locale={locale}
+          product={d.entrySlug as 'axm-400' | 'vision-x2' | 'flexcell-m'}
+          placement="hero"
+          priority
+        />
       </div>
       <div class="product-hero__copy">
         <Badge variant="demo">概念展示資料</Badge>

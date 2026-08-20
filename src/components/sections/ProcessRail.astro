@@ -1,0 +1,120 @@
+---
+/**
+ * ProcessRail — production Hero process rail (CC-02I-05), rebuilt at its
+ * fixed path from the CC-02F prototype
+ * (src/components/prototypes/cc02-final/ProcessRail.astro), wrapping the
+ * existing AssemblySpine Brand Primitive (unchanged API) with Hero-
+ * specific labels.
+ *
+ * Fixes the prototype's known locale gap: `railLabel` and `stateLabels`
+ * are required props with no in-component English/zh-TW fallback
+ * ternary. `Hero.astro` assembles `steps` from `hero.processRail.step1`–
+ * `step4` (CC-02I-01's fixed locale schema) in that order and passes
+ * `railLabel`/`stateLabels` straight from `hero.processRail`.
+ *
+ * Motion Orchestrator contract (R1-06, selector fixed R2-02): creates no
+ * `IntersectionObserver` of its own — same contract as
+ * PrecisionSystemVisual. AssemblySpine's own reveal behavior (if any) is
+ * left static/non-interactive under Hero usage. The five-step narrative's
+ * final beat ("rail completes") is a CSS-only accent-line reveal on this
+ * wrapper, driven purely by the ancestor Hero root's
+ * [data-hero-motion-root][data-motion-state] — no JS, no own observer.
+ */
+import AssemblySpine from '../brand/AssemblySpine.astro';
+
+export interface Props {
+  steps: [string, string, string, string];
+  railLabel: string;
+  stateLabels: { unconnected: string; aligned: string; connected: string };
+  class?: string;
+}
+
+const { steps, railLabel, stateLabels, class: className = '' } = Astro.props;
+
+const nodes = steps.map((label, i) => ({
+  label,
+  state: (i === 0 ? 'connected' : 'unconnected') as 'connected' | 'unconnected',
+}));
+---
+
+<div class:list={['process-rail', className]} role="group" aria-label={railLabel} tabindex="0">
+  <span class="process-rail__complete-accent" aria-hidden="true"></span>
+  <AssemblySpine orientation="horizontal" nodes={nodes} stateLabels={stateLabels} />
+</div>
+
+<style>
+  /*
+   * AssemblySpine's own <640px breakpoint switches to a stacked-vertical
+   * layout instead of introducing horizontal scroll — a real, keyboard-
+   * accessible mobile mode with no scroll container needed. tabindex="0"
+   * + role="group" + aria-label are kept on the wrapper regardless of
+   * breakpoint.
+   */
+  .process-rail {
+    position: relative;
+    width: 100%;
+  }
+  .process-rail:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 4px;
+    border-radius: var(--radius-xs);
+  }
+
+  /*
+   * Narrative step 5 ("rail completes", spec §10/§3): a decorative
+   * accent underline that draws in only once the Motion Orchestrator
+   * reaches `running`, finishing at `complete`. Purely CSS-reactive to
+   * the Hero root's [data-hero-motion-root][data-motion-state] — this
+   * component owns no observer and reads no state locally (R1-06/R2-02).
+   * `settled`/`armed` (and any state before the ancestor sets an explicit
+   * value) render the fully-drawn end state — never a "not yet drawn"
+   * flash.
+   *
+   * Retimed (CC-02I-06 remediation) to start at 660ms, strictly after
+   * PrecisionSystemVisual's step 4 vision-lock (540ms start / ~1020ms
+   * transition-end) and its own step-5 spine-flow bridge accent (620ms) —
+   * "rail completes" is the fifth and final step, so it must be the last
+   * visible motion in the narrative. Duration shortened from
+   * --duration-section (480ms) to --duration-ui (260ms) so the visible
+   * transition finishes at 660+260=920ms, inside Hero.astro's
+   * NARRATIVE_MS=1000ms bootstrap timer — `complete` never fires before
+   * this transition has visually finished (spec §11).
+   *
+   * HIGH-01 remediation: `[data-hero-motion-root]` is wrapped in
+   * `:global(...)` below because Astro would otherwise append THIS
+   * file's own data-astro-cid-* to the bare attribute selector, producing
+   * a compiled rule that can never match Hero.astro's real root element
+   * (which only ever carries Hero's own scope attribute) — confirmed
+   * against the pre-remediation compiled dist/_astro/*.css output. See
+   * the matching note in PrecisionSystemVisual.astro for the full
+   * explanation; re-verified against this file's own rebuilt compiled
+   * CSS after the fix.
+   */
+  .process-rail__complete-accent {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: var(--color-copper-500);
+    transform: scaleX(1);
+    transform-origin: left;
+    pointer-events: none;
+  }
+  :global([data-hero-motion-root][data-motion-state='armed']) .process-rail__complete-accent {
+    transform: scaleX(0);
+  }
+  :global([data-hero-motion-root][data-motion-state='running']) .process-rail__complete-accent,
+  :global([data-hero-motion-root][data-motion-state='complete']) .process-rail__complete-accent {
+    transform: scaleX(1);
+    transition: transform var(--duration-ui) var(--ease-standard);
+    transition-delay: 660ms;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .process-rail__complete-accent {
+      transition: none;
+      transform: scaleX(1);
+    }
+  }
+</style>

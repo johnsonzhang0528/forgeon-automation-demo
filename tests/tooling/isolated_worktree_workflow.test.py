@@ -45,6 +45,21 @@ class Fixture:
         module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
         (self.repo / "docs/agents/CURRENT_TASK.md").write_text(module.render_versioned(state))
         (self.repo / "work.txt").write_text("base\n")
+        (self.repo / "docs/engineering/specs").mkdir(parents=True)
+        (self.repo / "docs/engineering/specs/blocked-spec.md").write_text("# Spec\n")
+        self.proposal = {
+            "activation_target": {
+                "stage": {"id": "BLOCKED", "title": "Activated Stage", "external_reviewer": "ChatGPT",
+                           "claimable": True, "spec": "docs/engineering/specs/blocked-spec.md"},
+                "tickets": [
+                    {"id": "BLOCKED-01", "title": "First", "status": "ready",
+                     "allowed_files": ["src/a.ts"], "required_tests": ["pnpm check"], "depends_on": []},
+                    {"id": "BLOCKED-02", "title": "Second", "status": "ready",
+                     "allowed_files": ["src/b.ts"], "required_tests": [], "depends_on": ["BLOCKED-01"]},
+                ],
+            }
+        }
+        (self.repo / "docs/engineering/specs/blocked-registry-proposal.json").write_text(json.dumps(self.proposal))
         proc(["git", "add", "--", ".agent-project.json", "package.json", "docs", "scripts", "tests", "work.txt"], self.repo)
         proc(["git", "commit", "-qm", "fixture"], self.repo)
         self.claude = self.tmp / "claude"; self.codex = self.tmp / "codex"
@@ -94,6 +109,31 @@ class Fixture:
         }
         value.update(overrides or {})
         path = self.common(self.codex) / f"agent-state/human-authorizations/{stage_id}.json"
+        path.parent.mkdir(parents=True, exist_ok=True); path.write_text(json.dumps(value)); path.chmod(0o600)
+        return path, value
+
+    def activation_auth(self, *, overrides=None, proposal_overrides=None, stage_id="BLOCKED"):
+        base = proc(["git", "rev-parse", "HEAD"], self.codex).stdout.strip()
+        proposal_path = self.codex / "docs/engineering/specs/blocked-registry-proposal.json"
+        if proposal_overrides is not None:
+            proposal = json.loads(proposal_path.read_text())
+            proposal["activation_target"].update(proposal_overrides)
+            proposal_path.write_text(json.dumps(proposal))
+            proc(["git", "add", "--", "docs/engineering/specs/blocked-registry-proposal.json"], self.codex)
+            proc(["git", "commit", "-qm", "revise proposal"], self.codex)
+        target = json.loads(proposal_path.read_text())["activation_target"]
+        value = {
+            "schema_version": 1, "authorization_id": "auth-activate-" + stage_id.lower(),
+            "authorization_type": "product-stage-activation",
+            "issued_by": "human-user", "issued_at": "2026-01-01T00:00:00+00:00",
+            "expires_at": "2099-01-01T00:00:00+00:00", "single_use": True, "consumed": False,
+            "project_id": "fixture", "authorized_agent": "codex", "authorized_branch": "agent/codex",
+            "authorized_base_head": base, "stage_id": stage_id,
+            "activation_source": "docs/engineering/specs/blocked-registry-proposal.json",
+            "activation_target": target,
+        }
+        value.update(overrides or {})
+        path = self.common(self.codex) / f"agent-state/human-authorizations/activate-{stage_id}.json"
         path.parent.mkdir(parents=True, exist_ok=True); path.write_text(json.dumps(value)); path.chmod(0o600)
         return path, value
 
@@ -422,6 +462,149 @@ class IsolatedWorkflowTests(unittest.TestCase):
         (self.f.codex/"src").mkdir(); (self.f.codex/"src/forbidden.txt").write_text("no\n")
         proc(["git","add","--","src/forbidden.txt"],self.f.codex); proc(["git","commit","-qm","forbidden"],self.f.codex)
         self.assertNotEqual(self.f.run(self.f.codex,"register-maintenance","--authorization-file",str(path)).returncode,0)
+
+    def activate(self, path, ok=None, stage="BLOCKED"):
+        return self.f.run(self.f.codex, "activate-product-stage", "--agent", "codex", "--stage", stage,
+                          "--proposal", "docs/engineering/specs/blocked-registry-proposal.json",
+                          "--authorization-file", str(path), ok=ok)
+
+    def test_activate_product_stage_success_and_other_stages_untouched(self):
+        path, auth = self.f.activation_auth()
+        before_s1 = json.loads((self.f.codex/"docs/agents/TASK_REGISTRY.json").read_text())["stages"]["S1"]
+        self.activate(path, ok=True)
+        registry = json.loads((self.f.codex/"docs/agents/TASK_REGISTRY.json").read_text())
+        self.assertEqual(registry["stages"]["S1"], before_s1)
+        blocked = registry["stages"]["BLOCKED"]
+        self.assertTrue(blocked["claimable"])
+        self.assertEqual(blocked["spec"], "docs/engineering/specs/blocked-spec.md")
+        self.assertEqual([t["id"] for t in blocked["tickets"]], ["BLOCKED-01", "BLOCKED-02"])
+        self.assertEqual([t["status"] for t in blocked["tickets"]], ["ready", "ready"])
+        self.assertFalse(path.exists())
+        consumed = path.parent/"consumed"/f"{auth['authorization_id']}.json"
+        self.assertTrue(json.loads(consumed.read_text())["consumed"])
+        audit = self.f.common(self.f.codex)/"agent-state/activation-audits"/f"{auth['authorization_id']}.json"
+        self.assertTrue(audit.exists())
+
+    def test_activate_product_stage_rejects_replay(self):
+        path, _ = self.f.activation_auth()
+        self.activate(path, ok=True)
+        self.assertNotEqual(self.activate(path).returncode, 0)
+
+    def test_activate_product_stage_first_ticket_becomes_claimable(self):
+        path, _ = self.f.activation_auth()
+        self.activate(path, ok=True)
+        self.f.run(self.f.codex, "claim", "--agent", "codex", "--stage", "BLOCKED", "--ticket", "BLOCKED-01", ok=True)
+
+    def test_activate_product_stage_rejects_missing_stage(self):
+        path, _ = self.f.activation_auth(overrides={"stage_id": "NO-SUCH-STAGE"})
+        self.assertNotEqual(self.activate(path, stage="NO-SUCH-STAGE").returncode, 0)
+
+    def test_activate_product_stage_rejects_already_claimable_stage(self):
+        path, _ = self.f.activation_auth(overrides={"stage_id": "S1"},
+                                          proposal_overrides={"stage": {"id": "S1", "title": "x",
+                                                                         "external_reviewer": "ChatGPT",
+                                                                         "claimable": True,
+                                                                         "spec": "docs/engineering/specs/blocked-spec.md"}})
+        self.assertNotEqual(self.activate(path, stage="S1").returncode, 0)
+
+    def test_activate_product_stage_rejects_ticket_id_collision_with_other_stage(self):
+        path, _ = self.f.activation_auth(proposal_overrides={"tickets": [
+            {"id": "T1", "title": "Collides with S1's ticket", "status": "ready",
+             "allowed_files": ["x"], "required_tests": [], "depends_on": []}]})
+        self.assertNotEqual(self.activate(path).returncode, 0)
+
+    def test_activate_product_stage_rejects_invalid_dependency(self):
+        path, _ = self.f.activation_auth(proposal_overrides={"tickets": [
+            {"id": "BLOCKED-01", "title": "First", "status": "ready",
+             "allowed_files": ["x"], "required_tests": [], "depends_on": ["BLOCKED-99"]}]})
+        self.assertNotEqual(self.activate(path).returncode, 0)
+
+    def test_activate_product_stage_rejects_dependency_cycle(self):
+        path, _ = self.f.activation_auth(proposal_overrides={"tickets": [
+            {"id": "BLOCKED-01", "title": "First", "status": "ready",
+             "allowed_files": ["x"], "required_tests": [], "depends_on": ["BLOCKED-02"]},
+            {"id": "BLOCKED-02", "title": "Second", "status": "ready",
+             "allowed_files": ["y"], "required_tests": [], "depends_on": ["BLOCKED-01"]}]})
+        self.assertNotEqual(self.activate(path).returncode, 0)
+
+    def test_activate_product_stage_rejects_authorization_mismatches(self):
+        cases = [
+            {"authorized_agent": "claude"}, {"authorized_branch": "agent/other"},
+            {"project_id": "other"}, {"authorized_base_head": "0"*40},
+            {"consumed": True}, {"single_use": False},
+            {"authorization_type": "maintenance-bootstrap"},
+            {"expires_at": "2000-01-01T00:00:00+00:00"},
+            {"stage_id": "OTHER"}, {"activation_source": "docs/engineering/specs/other.json"},
+            {"activation_source": "../escape.json"}, {"activation_source": "/etc/passwd"},
+        ]
+        for override in cases:
+            with self.subTest(override=override):
+                path, _ = self.f.activation_auth(overrides=override)
+                self.assertNotEqual(self.activate(path).returncode, 0)
+                path.unlink(missing_ok=True)
+
+    def test_activate_product_stage_rejects_target_tampering_after_authorization(self):
+        path, _ = self.f.activation_auth()
+        proposal_path = self.f.codex/"docs/engineering/specs/blocked-registry-proposal.json"
+        proposal = json.loads(proposal_path.read_text())
+        proposal["activation_target"]["tickets"][0]["allowed_files"] = ["src/tampered.ts"]
+        proposal_path.write_text(json.dumps(proposal))
+        proc(["git","add","--","docs/engineering/specs/blocked-registry-proposal.json"],self.f.codex)
+        proc(["git","commit","-qm","tamper"],self.f.codex)
+        self.assertNotEqual(self.activate(path).returncode, 0)
+
+    def test_activate_product_stage_rejects_malformed_activation_target(self):
+        cases = [
+            {"tickets": []},
+            {"tickets": [{"id": "BLOCKED-01", "title": "x", "status": "ready", "allowed_files": [], "required_tests": []}]},
+            {"tickets": [{"id": "WRONG-NS-01", "title": "x", "status": "ready", "allowed_files": ["a"], "required_tests": []}]},
+            {"tickets": [{"id": "BLOCKED-01", "title": "x", "status": "ready", "allowed_files": ["a"], "required_tests": []},
+                         {"id": "BLOCKED-01", "title": "y", "status": "ready", "allowed_files": ["b"], "required_tests": []}]},
+            {"stage": {"id": "BLOCKED", "title": "x", "external_reviewer": "ChatGPT", "claimable": False,
+                        "spec": "docs/engineering/specs/blocked-spec.md"}},
+            {"stage": {"id": "BLOCKED", "title": "x", "external_reviewer": "ChatGPT", "claimable": True,
+                        "spec": "does/not/exist.md"}},
+            {"stage": {"id": "BLOCKED", "title": "x", "external_reviewer": "ChatGPT", "claimable": True,
+                        "spec": "../escape.md"}},
+        ]
+        for override in cases:
+            with self.subTest(override=override):
+                path, _ = self.f.activation_auth(proposal_overrides=override)
+                self.assertNotEqual(self.activate(path).returncode, 0)
+                path.unlink(missing_ok=True)
+
+    def test_activate_product_stage_rejects_dirty_tree_lock_and_active_state(self):
+        path, _ = self.f.activation_auth()
+        (self.f.codex/"work.txt").write_text("dirty\n")
+        self.assertNotEqual(self.activate(path).returncode, 0)
+        proc(["git","checkout","--","work.txt"],self.f.codex)
+        common=self.f.common(self.f.codex); (common/"agent-state/runtime-lock.json").write_text(json.dumps({"agent":"codex"}))
+        self.assertNotEqual(self.activate(path).returncode, 0)
+        (common/"agent-state/runtime-lock.json").unlink()
+        state = json.loads((common/"agent-state/current-task.json").read_text())
+        state["active_agent"]="codex"; (common/"agent-state/current-task.json").write_text(json.dumps(state))
+        self.assertNotEqual(self.activate(path).returncode, 0)
+
+    def test_activate_product_stage_rejects_wrong_worktree(self):
+        path, _ = self.f.activation_auth()
+        self.assertNotEqual(self.f.run(self.f.repo, "activate-product-stage", "--agent", "codex", "--stage", "BLOCKED",
+                                       "--proposal", "docs/engineering/specs/blocked-registry-proposal.json",
+                                       "--authorization-file", str(path)).returncode, 0)
+
+    def test_activate_product_stage_transaction_failures_roll_back(self):
+        for injection in ("AGENT_TEST_FAIL_REGISTRY_WRITE", "AGENT_TEST_FAIL_AUTH_MOVE", "AGENT_TEST_FAIL_AUDIT_WRITE"):
+            with self.subTest(injection=injection):
+                path, auth = self.f.activation_auth()
+                before=(self.f.codex/"docs/agents/TASK_REGISTRY.json").read_bytes()
+                result=self.f.run(self.f.codex,"activate-product-stage","--agent","codex","--stage","BLOCKED",
+                                  "--proposal","docs/engineering/specs/blocked-registry-proposal.json",
+                                  "--authorization-file",str(path),env={injection:"1"})
+                self.assertNotEqual(result.returncode,0)
+                self.assertEqual((self.f.codex/"docs/agents/TASK_REGISTRY.json").read_bytes(),before)
+                self.assertTrue(path.exists())
+                self.assertFalse((path.parent/"consumed"/f"{auth['authorization_id']}.json").exists())
+                self.assertFalse((self.f.common(self.f.codex)/"agent-state/.mutex").exists())
+                self.f.close(); self.f=Fixture()
 
 
 if __name__ == "__main__": unittest.main(verbosity=2)

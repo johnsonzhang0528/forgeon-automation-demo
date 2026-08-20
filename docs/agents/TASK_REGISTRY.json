@@ -3,9 +3,176 @@
   "stages": {
     "CC-02I": {
       "title": "Production Header and Hero Integration",
-      "claimable": false,
-      "spec": null,
-      "tickets": []
+      "claimable": true,
+      "external_reviewer": "ChatGPT",
+      "spec": "docs/engineering/specs/CC-02I-header-hero-production-spec.md",
+      "tickets": [
+        {
+          "id": "CC-02I-01",
+          "title": "Production Contract and Locale API",
+          "status": "ready",
+          "allowed_files": [
+            "src/data/locales/zh-tw.ts",
+            "src/data/locales/en.ts"
+          ],
+          "required_tests": [
+            "pnpm check",
+            "pnpm typecheck",
+            "pnpm build"
+          ],
+          "depends_on": []
+        },
+        {
+          "id": "CC-02I-05",
+          "title": "Brand Primitives and Hero Visual",
+          "status": "ready",
+          "allowed_files": [
+            "src/components/sections/PrecisionSystemVisual.astro",
+            "src/components/sections/ProcessRail.astro",
+            "src/components/sections/EvaluationLedger.astro"
+          ],
+          "required_tests": [
+            "pnpm check",
+            "pnpm typecheck",
+            "pnpm build"
+          ],
+          "depends_on": [
+            "CC-02I-01"
+          ]
+        },
+        {
+          "id": "CC-02I-02",
+          "title": "Header Production Implementation",
+          "status": "ready",
+          "allowed_files": [
+            "src/components/layout/Header.astro",
+            "src/components/ui/Button.astro",
+            "src/components/navigation/LanguageSwitcher.astro",
+            "tests/e2e/header.spec.ts"
+          ],
+          "required_tests": [
+            "pnpm test:e2e -- tests/e2e/header.spec.ts",
+            "pnpm test:e2e -- tests/e2e/mobile-nav.spec.ts",
+            "pnpm test:axe"
+          ],
+          "depends_on": [
+            "CC-02I-01",
+            "CC-02I-05"
+          ]
+        },
+        {
+          "id": "CC-02I-03",
+          "title": "Mobile Navigation Verification and Hardening",
+          "status": "ready",
+          "allowed_files": [
+            "src/components/layout/Header.astro",
+            "tests/e2e/mobile-nav.spec.ts"
+          ],
+          "required_tests": [
+            "pnpm test:e2e -- tests/e2e/mobile-nav.spec.ts",
+            "pnpm test:axe"
+          ],
+          "depends_on": [
+            "CC-02I-02"
+          ]
+        },
+        {
+          "id": "CC-02I-04",
+          "title": "Hero Production Structure",
+          "status": "ready",
+          "allowed_files": [
+            "src/components/sections/Hero.astro",
+            "src/pages/zh-tw/index.astro",
+            "src/pages/en/index.astro",
+            "tests/e2e/cc02i-hero.spec.ts"
+          ],
+          "required_tests": [
+            "pnpm test:e2e -- tests/e2e/cc02i-hero.spec.ts",
+            "pnpm test:e2e -- tests/e2e/responsive-overflow.spec.ts",
+            "pnpm test:axe",
+            "pnpm check:h1"
+          ],
+          "depends_on": [
+            "CC-02I-01",
+            "CC-02I-05"
+          ]
+        },
+        {
+          "id": "CC-02I-06",
+          "title": "Motion Orchestrator and Performance Verification",
+          "status": "ready",
+          "allowed_files": [
+            "src/components/sections/Hero.astro",
+            "src/components/sections/PrecisionSystemVisual.astro",
+            "src/components/sections/ProcessRail.astro",
+            "tests/e2e/cc02i-motion.spec.ts"
+          ],
+          "required_tests": [
+            "pnpm test:e2e -- tests/e2e/cc02i-motion.spec.ts"
+          ],
+          "depends_on": [
+            "CC-02I-04",
+            "CC-02I-05"
+          ]
+        },
+        {
+          "id": "CC-02I-07",
+          "title": "Responsive, Locale, and Accessibility Verification",
+          "status": "ready",
+          "allowed_files": [
+            "src/components/layout/Header.astro",
+            "src/components/sections/Hero.astro",
+            "src/components/sections/PrecisionSystemVisual.astro",
+            "src/components/sections/ProcessRail.astro",
+            "src/components/sections/EvaluationLedger.astro",
+            "tests/e2e/cc02i-hero.spec.ts",
+            "tests/e2e/cc02i-motion.spec.ts",
+            "tests/e2e/mobile-nav.spec.ts",
+            "tests/e2e/responsive-overflow.spec.ts",
+            "tests/e2e/axe.spec.ts"
+          ],
+          "required_tests": [
+            "pnpm test:e2e -- tests/e2e/responsive-overflow.spec.ts",
+            "pnpm test:axe"
+          ],
+          "depends_on": [
+            "CC-02I-02",
+            "CC-02I-03",
+            "CC-02I-04",
+            "CC-02I-05",
+            "CC-02I-06"
+          ]
+        },
+        {
+          "id": "CC-02I-08",
+          "title": "Regression, QA, and Review Bundle",
+          "status": "ready",
+          "allowed_files": [
+            "docs/screenshots/**",
+            "docs/engineering/handoffs/**",
+            "docs/engineering/reviews/**"
+          ],
+          "required_tests": [
+            "pnpm test:e2e",
+            "pnpm test:axe",
+            "pnpm check:h1",
+            "pnpm check:links",
+            "pnpm check:locale-routes",
+            "pnpm check",
+            "pnpm typecheck",
+            "pnpm build"
+          ],
+          "depends_on": [
+            "CC-02I-01",
+            "CC-02I-02",
+            "CC-02I-03",
+            "CC-02I-04",
+            "CC-02I-05",
+            "CC-02I-06",
+            "CC-02I-07"
+          ]
+        }
+      ]
     },
     "WF-SEC-04": {
       "title": "Verification Capability Hardening",
@@ -79,6 +246,78 @@
             "docs/agents/**",
             ".claude/skills/dual-agent/**",
             "tests/tooling/**"
+          ],
+          "required_tests": []
+        }
+      ]
+    },
+    "WF-CC02I-SPEC-R1": {
+      "title": "Revise CC-02I Specification Package",
+      "type": "maintenance",
+      "claimable": true,
+      "external_reviewer": "ChatGPT",
+      "tickets": [
+        {
+          "id": "WF-CC02I-SPEC-R1-01",
+          "title": "修訂 CC-02I Production Spec、Registry Proposal、Stage Gate Review 與八張 Ticket",
+          "status": "ready",
+          "allowed_files": [
+            "docs/engineering/specs/CC-02I-header-hero-production-spec.md",
+            "docs/engineering/specs/CC-02I-registry-proposal.json",
+            "docs/engineering/reviews/CC-02I-stage-gate-review.md",
+            "docs/engineering/reviews/CC-02I-stage-gate-r1-review.md",
+            "docs/engineering/tickets/CC-02I/**"
+          ],
+          "required_tests": []
+        },
+        {
+          "id": "WF-CC02I-SPEC-R1-02",
+          "title": "執行規格一致性檢查並建立新版 ChatGPT Review Bundle",
+          "status": "ready",
+          "allowed_files": [
+            "docs/engineering/specs/CC-02I-header-hero-production-spec.md",
+            "docs/engineering/specs/CC-02I-registry-proposal.json",
+            "docs/engineering/reviews/CC-02I-stage-gate-review.md",
+            "docs/engineering/reviews/CC-02I-stage-gate-r1-review.md",
+            "docs/engineering/tickets/CC-02I/**"
+          ],
+          "required_tests": []
+        }
+      ]
+    },
+    "WF-CC02I-SPEC-R2": {
+      "title": "Finalize CC-02I Specification Package (Narrow Revision 2)",
+      "type": "maintenance",
+      "claimable": true,
+      "external_reviewer": "ChatGPT",
+      "tickets": [
+        {
+          "id": "WF-CC02I-SPEC-R2-01",
+          "title": "Finalize CC-02I authorization, motion, acceptance, and baseline contracts",
+          "status": "ready",
+          "allowed_files": [
+            "docs/engineering/specs/CC-02I-header-hero-production-spec.md",
+            "docs/engineering/specs/CC-02I-registry-proposal.json",
+            "docs/engineering/reviews/CC-02I-stage-gate-review.md",
+            "docs/engineering/reviews/CC-02I-stage-gate-r1-review.md",
+            "docs/engineering/reviews/CC-02I-stage-gate-r2-review.md",
+            "docs/engineering/tickets/CC-02I/**",
+            "docs/engineering/handoffs/CC-02I-spec-r2-chatgpt-review-handoff.md"
+          ],
+          "required_tests": []
+        },
+        {
+          "id": "WF-CC02I-SPEC-R2-02",
+          "title": "Verify Revision 2 consistency and build ChatGPT Stage Gate Bundle",
+          "status": "ready",
+          "allowed_files": [
+            "docs/engineering/specs/CC-02I-header-hero-production-spec.md",
+            "docs/engineering/specs/CC-02I-registry-proposal.json",
+            "docs/engineering/reviews/CC-02I-stage-gate-review.md",
+            "docs/engineering/reviews/CC-02I-stage-gate-r1-review.md",
+            "docs/engineering/reviews/CC-02I-stage-gate-r2-review.md",
+            "docs/engineering/tickets/CC-02I/**",
+            "docs/engineering/handoffs/CC-02I-spec-r2-chatgpt-review-handoff.md"
           ],
           "required_tests": []
         }

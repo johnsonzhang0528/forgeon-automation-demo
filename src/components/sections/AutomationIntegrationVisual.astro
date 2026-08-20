@@ -1,0 +1,111 @@
+---
+/**
+ * YF-IMG-02 — representative automation-integration imagery.
+ *
+ * One Final Master serves both its homepage section-feature role and the
+ * Solutions overview. Astro owns responsive derivatives and intrinsic
+ * dimensions; crop behavior is controlled here, never baked into copies.
+ */
+import { Picture } from 'astro:assets';
+import automationIntegrationImage from '../../assets/images/solutions/automation-integration-final-master.png';
+import type { Locale } from '../../config/site';
+import { getDictionary } from '../../utils/i18n';
+
+export interface Props {
+  locale: Locale;
+  presentation?: 'master' | 'wide';
+  priority?: boolean;
+}
+
+const { locale, presentation = 'master', priority = false } = Astro.props;
+const imagery = getDictionary(locale).productionImagery.automationIntegration;
+---
+
+<figure
+  class:list={['automation-integration-visual', `automation-integration-visual--${presentation}`]}
+  data-production-image="YF-IMG-02"
+  data-presentation={presentation}
+>
+  <div class="automation-integration-visual__media">
+    <Picture
+      src={automationIntegrationImage}
+      formats={['avif', 'webp']}
+      widths={[480, 768, 1024, 1280, 1535]}
+      sizes="(min-width: 1280px) 1180px, (min-width: 768px) calc(100vw - 48px), calc(100vw - 32px)"
+      alt={imagery.alt}
+      loading={priority ? 'eager' : 'lazy'}
+      fetchpriority={priority ? 'high' : 'auto'}
+      decoding="async"
+      quality={82}
+    />
+  </div>
+  <figcaption class="automation-integration-visual__caption">
+    <span class="automation-integration-visual__marker" aria-hidden="true"></span>
+    <span>{imagery.caption}</span>
+  </figcaption>
+</figure>
+
+<style>
+  .automation-integration-visual {
+    margin: var(--space-xl) 0;
+  }
+
+  .automation-integration-visual__media {
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    background: var(--color-steel-900, #151a1e);
+    aspect-ratio: 3 / 2;
+  }
+
+  .automation-integration-visual__media :global(picture) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .automation-integration-visual__media :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 48%;
+  }
+
+  .automation-integration-visual__caption {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: var(--space-sm);
+    align-items: start;
+    margin-top: var(--space-sm);
+    color: var(--color-muted);
+    font-size: var(--fs-xs);
+    line-height: var(--lh-normal);
+  }
+
+  .automation-integration-visual__marker {
+    display: block;
+    width: 100%;
+    height: 2px;
+    margin-top: 0.55em;
+    background: var(--color-accent);
+  }
+
+  @media (min-width: 768px) {
+    .automation-integration-visual--wide .automation-integration-visual__media {
+      aspect-ratio: 16 / 9;
+    }
+
+    .automation-integration-visual__caption {
+      grid-template-columns: 3rem minmax(0, 44rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .automation-integration-visual__media,
+    .automation-integration-visual__media :global(img) {
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
+    }
+  }
+</style>

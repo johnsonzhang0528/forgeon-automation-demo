@@ -9,14 +9,28 @@
   width: 100%;
   max-width: var(--container-max);
   margin-inline: auto;
-  padding-inline: var(--container-padding);
+  padding-inline: var(--page-gutter-mobile);
 }
 
 .container-wide {
   width: 100%;
   max-width: var(--container-wide);
   margin-inline: auto;
-  padding-inline: var(--container-padding);
+  padding-inline: var(--page-gutter-mobile);
+}
+
+@media (min-width: 768px) {
+  .container,
+  .container-wide {
+    padding-inline: var(--page-gutter-tablet);
+  }
+}
+
+@media (min-width: 1024px) {
+  .container,
+  .container-wide {
+    padding-inline: var(--page-gutter-desktop);
+  }
 }
 
 /* ---- New Datum-named container aliases (spec §7) — same behavior as
@@ -57,7 +71,30 @@
 }
 
 .section--tight {
-  padding-block: var(--space-2xl);
+  padding-block: clamp(4rem, 7vw, 6rem);
+}
+
+/* Full-width editorial alternation. These classes are used across the
+   existing detail pages, so the treatment belongs here instead of being
+   scoped to the home page. The restrained rule and paper shift create
+   hierarchy without introducing another card layer. */
+.section--alt {
+  background: var(--color-surface-alt);
+  border-block: var(--border-hairline) solid rgba(92, 104, 112, 0.3);
+}
+
+/* Two consecutive paper sections read as one editorial chapter. A quiet
+   divider keeps the relationship visible when no alternate background sits
+   between them. */
+main > .section:not(.section--alt) + .section:not(.section--alt) {
+  border-top: var(--border-hairline) solid rgba(92, 104, 112, 0.3);
+}
+
+/* Breadcrumb wrappers currently reuse section--tight. Compact only the
+   leading wrapper so page intros do not receive two full vertical paddings. */
+main > .container.section--tight:first-child {
+  padding-top: var(--space-lg);
+  padding-bottom: 0;
 }
 
 /* ---- New Datum section-rhythm utilities (spec §7 "Section Spacing") ---- */
@@ -93,7 +130,7 @@
 .grid-auto {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-  gap: var(--space-lg);
+  gap: clamp(var(--space-md), 3vw, var(--space-xl));
 }
 
 /* ---------------------------------------------------------------------- */

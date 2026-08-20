@@ -43,12 +43,30 @@ const href = otherLocalePath ?? switchLocalePath(path, target);
   .lang-switch {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.35em;
     font-size: var(--fs-sm);
     font-weight: 600;
     color: var(--color-ink);
     text-decoration: none;
-    padding: var(--space-3xs) var(--space-2xs);
+    /*
+     * Touch-target remediation (CC-02I-02 review, HIGH-03): the ANCHOR's
+     * own box, not a parent wrapper, must clear 44x44px — Header.astro's
+     * `.site-header__lang` wrapper previously supplied the 44px floor via
+     * `min-block-size` while this link's own rendered box stayed ~32.5px
+     * tall, which is what an actual pointer/assistive-tech hit-test
+     * targets. --space-xs (12px block) brings the link's own content-box
+     * to >=44px without a new spacing token. Horizontal padding stays at
+     * the smaller --space-3xs (4px, down from --space-2xs) — width isn't
+     * the constrained axis for this control's own 44px floor
+     * (min-inline-size covers it directly), and every inline pixel here
+     * is shared with .mobile-nav-toggle's own 44px floor in the same row
+     * at the 320px acceptance-criteria viewport (ticket §14) — see
+     * Header.astro's .site-header__actions remediation note.
+     */
+    padding: var(--space-xs) var(--space-3xs);
+    min-inline-size: 44px;
+    min-block-size: 44px;
     border-radius: var(--radius-sm);
   }
   .lang-switch:hover {

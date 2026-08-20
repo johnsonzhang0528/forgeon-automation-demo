@@ -1,0 +1,122 @@
+---
+/**
+ * YF-IMG-06 — representative field-commissioning collaboration imagery.
+ *
+ * The desktop crop preserves both complementary work roles. The mobile crop
+ * prioritizes the control-side engineer, panel interaction and wired pendant.
+ * It must not imply real employees, customer-site evidence, safety procedure,
+ * commissioning data or an acceptance result.
+ */
+import { Picture } from 'astro:assets';
+import fieldCommissioningImage from '../../assets/images/solutions/field-commissioning-collaboration-final-master.png';
+import type { Locale } from '../../config/site';
+import { getDictionary } from '../../utils/i18n';
+
+export interface Props {
+  locale: Locale;
+  presentation?: 'master' | 'wide';
+  priority?: boolean;
+}
+
+const { locale, presentation = 'master', priority = false } = Astro.props;
+const imagery = getDictionary(locale).productionImagery.fieldCommissioning;
+---
+
+<figure
+  class:list={['field-commissioning-visual', `field-commissioning-visual--${presentation}`]}
+  data-production-image="YF-IMG-06"
+  data-presentation={presentation}
+>
+  <div class="field-commissioning-visual__media">
+    <Picture
+      src={fieldCommissioningImage}
+      formats={['avif', 'webp']}
+      widths={[480, 768, 1024, 1280, 1536]}
+      sizes="(min-width: 908px) 860px, (min-width: 768px) calc(100vw - 48px), calc(100vw - 32px)"
+      alt={imagery.alt}
+      loading={priority ? 'eager' : 'lazy'}
+      fetchpriority={priority ? 'high' : 'auto'}
+      decoding="async"
+      quality={82}
+    />
+  </div>
+  <figcaption class="field-commissioning-visual__caption">
+    <span class="field-commissioning-visual__marker" aria-hidden="true"></span>
+    <span>{imagery.caption}</span>
+  </figcaption>
+</figure>
+
+<style>
+  .field-commissioning-visual {
+    margin: var(--space-xl) 0;
+  }
+
+  .field-commissioning-visual__media {
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    background: var(--color-steel-900, #151a1e);
+    aspect-ratio: 1 / 1;
+  }
+
+  .field-commissioning-visual__media :global(picture) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .field-commissioning-visual__media :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 34% 46%;
+  }
+
+  .field-commissioning-visual__caption {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: var(--space-sm);
+    align-items: start;
+    margin-top: var(--space-sm);
+    color: var(--color-muted);
+    font-size: var(--fs-xs);
+    line-height: var(--lh-normal);
+  }
+
+  .field-commissioning-visual__marker {
+    display: block;
+    width: 100%;
+    height: 2px;
+    margin-top: 0.55em;
+    background: var(--color-accent);
+  }
+
+  @media (min-width: 480px) {
+    .field-commissioning-visual__media {
+      aspect-ratio: 4 / 3;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .field-commissioning-visual--master .field-commissioning-visual__media {
+      aspect-ratio: 3 / 2;
+    }
+
+    .field-commissioning-visual--wide .field-commissioning-visual__media {
+      aspect-ratio: 16 / 9;
+    }
+
+    .field-commissioning-visual__caption {
+      grid-template-columns: 3rem minmax(0, 44rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .field-commissioning-visual__media,
+    .field-commissioning-visual__media :global(img) {
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
+    }
+  }
+</style>
