@@ -14,9 +14,6 @@ import heroImage from '../../assets/images/home/forgeon-automation-hero-final-ma
 import { getDictionary } from '../../utils/i18n';
 import type { Locale } from '../../config/site';
 import Button from '../ui/Button.astro';
-import DatumOrigin from '../brand/DatumOrigin.astro';
-import ProcessRail from './ProcessRail.astro';
-import EvaluationLedger from './EvaluationLedger.astro';
 
 export interface Props {
   locale: Locale;
@@ -25,25 +22,9 @@ export interface Props {
 const { locale } = Astro.props;
 const hero = getDictionary(locale).hero;
 
-const ledgerGroups: [
-  { heading: string; detail: string },
-  { heading: string; detail: string },
-  { heading: string; detail: string },
-] = [hero.ledger.input, hero.ledger.evaluation, hero.ledger.output];
-
-const processSteps: [string, string, string, string] = [
-  hero.processRail.step1,
-  hero.processRail.step2,
-  hero.processRail.step3,
-  hero.processRail.step4,
-];
 ---
 
 <section class="hero-root" data-hero-motion-root data-motion-state="settled">
-  <div class="hero-root__origin">
-    <DatumOrigin size={40} orientation="both" label="0,0" />
-  </div>
-
   <p class="hero-root__eyebrow mono">{hero.eyebrow}</p>
 
   <h1 class="hero-root__headline">{hero.headline}</h1>
@@ -87,17 +68,6 @@ const processSteps: [string, string, string, string] = [
     <figcaption class="hero-root__disclosure mono">{hero.imageDisclosure}</figcaption>
   </figure>
 
-  <div class="hero-root__ledger">
-    <EvaluationLedger groups={ledgerGroups} />
-  </div>
-
-  <div class="hero-root__rail">
-    <ProcessRail
-      steps={processSteps}
-      railLabel={hero.processRail.railLabel}
-      stateLabels={hero.processRail.stateLabels}
-    />
-  </div>
 </section>
 
 <style>
@@ -333,5 +303,79 @@ const processSteps: [string, string, string, string] = [
       transition: none !important;
       transform: none !important;
     }
+  }
+
+  /* Commercial navy hero: one message, one image, no technical ornament. */
+  .hero-root {
+    margin-top: var(--space-6);
+    padding: clamp(var(--space-8), 7vw, var(--space-16));
+    color: #fff;
+    background: var(--color-ink-950);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  .hero-root__eyebrow {
+    color: #a9cdf6;
+    font-family: var(--font-body);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .hero-root__headline {
+    color: #fff;
+  }
+  .hero-root__body {
+    color: #d7e5f5;
+  }
+  .hero-root__media {
+    margin-top: var(--space-4);
+    border: 0;
+    border-radius: var(--radius-md);
+    background: #17365f;
+  }
+  .hero-root__disclosure {
+    border-radius: var(--radius-xs);
+    background: rgb(11 31 58 / 82%);
+  }
+  .hero-root__ctas :global(.btn--secondary) {
+    color: #fff;
+    border-color: #8eb7e4;
+  }
+  .hero-root__ctas :global(.btn--secondary:hover) {
+    color: #fff;
+    background: rgb(255 255 255 / 10%);
+    border-color: #fff;
+  }
+
+  @media (min-width: 1024px) {
+    .hero-root {
+      grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+      grid-template-rows: auto auto auto auto;
+      gap: var(--space-6) clamp(var(--space-8), 5vw, var(--space-16));
+      align-items: center;
+      padding: clamp(var(--space-10), 5vw, var(--space-16));
+    }
+    .hero-root__eyebrow,
+    .hero-root__headline,
+    .hero-root__body,
+    .hero-root__ctas {
+      position: static;
+      z-index: auto;
+      grid-column: 1;
+      margin: 0;
+    }
+    .hero-root__eyebrow { grid-row: 1; align-self: end; }
+    .hero-root__headline { grid-row: 2; }
+    .hero-root__body { grid-row: 3; }
+    .hero-root__ctas { grid-row: 4; align-self: start; }
+    .hero-root__media {
+      z-index: auto;
+      grid-column: 2;
+      grid-row: 1 / 5;
+      min-height: clamp(500px, 43vw, 620px);
+      margin: 0;
+      aspect-ratio: auto;
+    }
+    .hero-root__media::after { display: none; }
+    .hero-root__media :global(img) { object-position: 65% 52%; }
   }
 </style>

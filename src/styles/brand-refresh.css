@@ -1,0 +1,87 @@
+/* Global commercial visual language: navy, white, generous rounding, no datum ornament. */
+body {
+  background: #fff;
+}
+
+main > .section {
+  border-top: 0 !important;
+}
+
+.section--alt {
+  background: #f3f7fc !important;
+}
+
+.section-heading::before {
+  display: none !important;
+}
+
+.section-heading {
+  padding-top: 0 !important;
+  border-top: 0 !important;
+}
+
+.section-heading__eyebrow,
+.mono {
+  font-family: var(--font-body);
+}
+
+.site-header {
+  background: rgb(255 255 255 / 96%) !important;
+  border-bottom-color: #e3eaf3 !important;
+  box-shadow: 0 6px 24px rgb(11 31 58 / 6%);
+}
+
+.desktop-nav__link {
+  padding: 0.55rem 0.75rem !important;
+  border-radius: var(--radius-sm);
+}
+
+.desktop-nav__link::after {
+  display: none !important;
+}
+
+.desktop-nav__link:hover,
+.desktop-nav__link.is-active {
+  color: var(--color-ink) !important;
+  background: #edf4fc;
+}
+
+.cta-banner::before {
+  display: none !important;
+}
+
+.site-footer {
+  background: var(--color-ink-950) !important;
+}
+
+.card,
+.fit-card,
+.path-card,
+.why-item,
+.specification-table,
+.form-field input,
+.form-field textarea,
+.form-field select {
+  border-radius: var(--radius-md) !important;
+}
+
+.card {
+  border-color: var(--color-border) !important;
+}
+
+.card:hover {
+  box-shadow: 0 14px 36px rgb(11 31 58 / 10%) !important;
+}
+
+.product-visual,
+.industry-visual,
+.insight-visual,
+.hero-illustration,
+.product-glyph {
+  border-radius: var(--radius-md) !important;
+}
+
+::selection {
+  color: #fff;
+  background: var(--color-accent-dark);
+}

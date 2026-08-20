@@ -6,6 +6,7 @@ import Breadcrumb from '../../../components/navigation/Breadcrumb.astro';
 import CTABanner from '../../../components/sections/CTABanner.astro';
 import AutomationIntegrationVisual from '../../../components/sections/AutomationIntegrationVisual.astro';
 import { getSortedSolutions } from '../../../utils/content';
+import '../../../styles/catalog-refinement.css';
 
 const locale = 'zh-tw' as const;
 const solutions = await getSortedSolutions();
@@ -31,7 +32,7 @@ const solutions = await getSortedSolutions();
         description="從精密定位、視覺檢測到整廠整合，每項方案都從實際製程問題出發，並標示適用產業與可搭配產品。"
       />
       <AutomationIntegrationVisual locale={locale} presentation="master" priority />
-      <div class="grid-auto">
+      <div class="solution-catalog">
         {solutions.map((s) => (
           <SolutionCard
             locale={locale}

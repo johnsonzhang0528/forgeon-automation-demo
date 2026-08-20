@@ -22,12 +22,12 @@
      ====================================================================== */
 
   /* ---- Ink: primary text, deep structure, product-assembly stage, footer ---- */
-  --color-ink-950: #0b1218;
-  --color-ink-800: #1b2730;
+  --color-ink-950: #0b1f3a;
+  --color-ink-800: #17365f;
 
   /* ---- Paper: primary background, reading areas, quiet sections ---- */
-  --color-paper-50: #f7f4ed;
-  --color-paper-100: #eee9df;
+  --color-paper-50: #ffffff;
+  --color-paper-100: #f3f7fc;
 
   /* ---- Steel: technical lines, secondary info, spec dividers, inactive ----
      Three tuned values, not one — the spec's single `--color-steel-500`
@@ -35,18 +35,18 @@
      light-background border (fails 3:1). Rather than pick one value that
      compromises both roles, three role-specific steps are defined; all
      share the same neutral-gray hue family. See CONTRAST_AUDIT.md. */
-  --color-steel-700: #5c6870; /* muted/secondary text on paper — 5.21:1 */
-  --color-steel-600: #78838b; /* technical line / border on paper — 3.53:1 (UI) */
-  --color-steel-500: #87939b; /* AS SPECIFIED — muted text on ink-950 (5.99:1) and non-text decorative use only; fails as light-bg text/border, do not use on paper for text or borders */
-  --color-steel-200: #cdd3d5; /* AS SPECIFIED — border/hairline on ink-950 (dark bg) only; fails 3:1 on paper, do not use as a light-background border */
+  --color-steel-700: #52657d;
+  --color-steel-600: #8293a8;
+  --color-steel-500: #aebdd0;
+  --color-steel-200: #dce6f2;
 
   /* ---- Copper: Datum Origin, primary CTA, active state, engineering
      fix points. Deliberately NOT used for all headings/icons/card borders/
      large backgrounds/decorative gradients — see DESIGN_SYSTEM.md. ---- */
-  --color-copper-600: #b84e1d; /* AS SPECIFIED — primary CTA fill + text/link on paper-50, 4.61:1 (passes 4.5:1 with a real but small margin) */
-  --color-copper-700: #9c4014; /* new — deeper copper for text on paper-100 or wherever more margin is needed (6.06:1); same hue family, not a new accent */
-  --color-copper-800: #84340f; /* CC-02 new — Primary Action hover state, 7.71:1 on paper-50; same 19° hue as copper-600/700, one step darker (L 29% vs 35%/42%), not a new accent */
-  --color-copper-500: #d5662b; /* AS SPECIFIED — non-text UI/decorative on paper (3.32:1, clears 3:1 border floor) and accent text on ink-950 dark backgrounds (5.18:1); do not use as body text on paper (3.32:1 fails 4.5:1) */
+  --color-copper-600: #1769c2;
+  --color-copper-700: #0d57a6;
+  --color-copper-800: #094781;
+  --color-copper-500: #4b91df;
 
   /* ---- Primary Action semantic tokens (CC-02-03) ----
      Spec explicitly asks for a semantic --color-action-primary distinct
@@ -80,7 +80,7 @@
   --color-surface: var(--color-paper-50);
   --color-surface-alt: var(--color-paper-100);
   --color-card: #ffffff;
-  --color-border: var(--color-steel-600);
+  --color-border: #d8e2ef;
   --color-border-strong: var(--color-ink-800);
   --color-muted: var(--color-steel-700);
   --color-muted-soft: var(--color-steel-700);
@@ -89,7 +89,7 @@
   --color-accent-light: var(--color-copper-500);
   --color-accent-contrast: var(--color-paper-50);
   --color-success: var(--color-signal-green);
-  --color-success-bg: #eaf3ec;
+  --color-success-bg: #edf8f3;
   --color-error-bg: #fbebe9;
   --color-invert-bg: var(--color-ink-950);
   --color-invert-text: var(--color-paper-50);
@@ -228,9 +228,9 @@
   /* ======================================================================
      RADIUS, BORDER, SHADOW
      ====================================================================== */
-  --radius-xs: 2px;
-  --radius-sm: 6px;
-  --radius-md: 12px;
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 20px;
 
   /* Compat aliases: old scale was 4/8/12; new spec caps at 2/6/12. Mapped
      to the nearest new step so nothing silently changes to a LARGER radius

@@ -5,6 +5,7 @@ import IndustryCard from '../../../components/ui/IndustryCard.astro';
 import Breadcrumb from '../../../components/navigation/Breadcrumb.astro';
 import CTABanner from '../../../components/sections/CTABanner.astro';
 import { getSortedIndustries } from '../../../utils/content';
+import '../../../styles/catalog-refinement.css';
 
 const locale = 'en' as const;
 const industries = await getSortedIndustries();
@@ -29,7 +30,7 @@ const industries = await getSortedIndustries();
         title="Industries We Serve"
         description="Each industry has different process challenges. Below are common problems, suitable solutions, and what to prepare before evaluation."
       />
-      <div class="grid-auto">
+      <div class="industry-catalog">
         {industries.map((ind) => (
           <IndustryCard
             locale={locale}

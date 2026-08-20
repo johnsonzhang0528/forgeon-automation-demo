@@ -35,7 +35,7 @@ const dict = getDictionary(locale);
     overflow: hidden;
     background: var(--color-ink);
     color: var(--color-invert-text);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     margin-block: var(--section-compact);
     border: var(--border-hairline) solid var(--color-ink-800);
   }
@@ -44,11 +44,8 @@ const dict = getDictionary(locale);
     position: absolute;
     inset: 0 0 auto;
     height: var(--border-datum);
-    background: linear-gradient(
-      90deg,
-      var(--color-copper-500) 0 clamp(5rem, 14vw, 11rem),
-      var(--color-steel-600) clamp(5rem, 14vw, 11rem) 100%
-    );
+    width: clamp(4rem, 10vw, 8rem);
+    background: var(--color-copper-500);
   }
   .cta-banner__inner {
     padding: clamp(var(--space-lg), 5vw, var(--space-16));

@@ -138,12 +138,14 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className, loading ? 
   }
   .btn--ghost {
     background: transparent;
-    color: var(--color-accent);
+    color: var(--color-ink);
     border-color: transparent;
     padding-inline: 0.4em;
   }
   .btn--ghost:hover {
     color: var(--color-accent-dark);
+    text-decoration: underline;
+    text-underline-offset: 0.28em;
   }
   .btn[disabled] {
     opacity: 0.55;

@@ -31,12 +31,12 @@ const { href, padding = 'default', class: className = '' } = Astro.props;
     gap: var(--space-sm);
     background: var(--color-card);
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     padding: var(--space-lg);
     text-decoration: none;
     color: inherit;
     transition: border-color var(--duration-fast) var(--ease-standard),
-      box-shadow var(--duration-fast) var(--ease-standard),
+      background-color var(--duration-fast) var(--ease-standard),
       transform var(--duration-fast) var(--ease-standard);
   }
   .card--padding-none {
@@ -44,8 +44,8 @@ const { href, padding = 'default', class: className = '' } = Astro.props;
     overflow: hidden;
   }
   .card:hover {
-    border-color: var(--color-accent);
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
+    border-color: var(--color-border-strong);
+    background: color-mix(in srgb, var(--color-card) 92%, var(--color-surface-alt));
+    transform: translateY(-1px);
   }
 </style>
