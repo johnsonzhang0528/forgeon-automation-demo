@@ -3,7 +3,6 @@ import type { Locale } from '../../config/site';
 import { getDictionary } from '../../utils/i18n';
 import Card from './Card.astro';
 import ProductVisual from './ProductVisual.astro';
-import Badge from './Badge.astro';
 
 export interface Props {
   locale: Locale;
@@ -11,18 +10,26 @@ export interface Props {
   name: string;
   positioning: string;
   description: string;
+  /**
+   * Dominant-anchor treatment for the Product Editorial Plate composition
+   * (docs/uiux-upgrade/09-product-plate-and-ending.md P1-1): larger name/
+   * positioning type, more caption weight. The subordinate pair renders
+   * with the same markup and shared rules, just without this modifier —
+   * one composition read through scale, not three interchangeable cards.
+   */
+  dominant?: boolean;
 }
-const { locale, slug, name, positioning, description } = Astro.props;
+const { locale, slug, name, positioning, description, dominant = false } = Astro.props;
 const dict = getDictionary(locale);
 const badgeLabel = slug === 'flexcell-m' ? dict.demoNotice.specLabel : dict.misc.demoDataBadge;
 ---
 
-<Card href={`/${locale}/products/${slug}/`} padding="none">
+<Card href={`/${locale}/products/${slug}/`} padding="none" class={dominant ? 'product-card--dominant' : ''}>
   <ProductVisual locale={locale} product={slug} placement="card" />
   <div class="product-card__body">
     <div class="product-card__head">
       <h3 class="product-card__name mono">{name}</h3>
-      <Badge variant="demo">{badgeLabel}</Badge>
+      <span class="product-card__demo-notice mono">{badgeLabel}</span>
     </div>
     <p class="product-card__positioning">{positioning}</p>
     <p class="product-card__desc measure">{description}</p>
@@ -40,6 +47,15 @@ const badgeLabel = slug === 'flexcell-m' ? dict.demoNotice.specLabel : dict.misc
     gap: var(--space-xs);
     padding: var(--space-lg);
   }
+  :global(.product-card--dominant) .product-card__name {
+    font-size: var(--fs-xl);
+  }
+  :global(.product-card--dominant) .product-card__positioning {
+    font-size: var(--fs-md);
+  }
+  :global(.product-card--dominant) .product-card__desc {
+    font-size: var(--fs-md);
+  }
   .product-card__head {
     display: flex;
     flex-wrap: wrap;
@@ -51,6 +67,12 @@ const badgeLabel = slug === 'flexcell-m' ? dict.demoNotice.specLabel : dict.misc
     font-size: var(--fs-lg);
     margin: 0;
     font-weight: 700;
+  }
+  .product-card__demo-notice {
+    color: var(--color-muted);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
   }
   .product-card__positioning {
     font-weight: 600;

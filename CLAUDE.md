@@ -1,19 +1,80 @@
-# Claude isolated-worktree rules
+# Claude Code Project Rules
 
-Read `docs/agents/DUAL_AGENT_PROTOCOL.md`, `docs/agents/CURRENT_TASK.md`,
-`docs/agents/RECOVERY_PROTOCOL.md`, `docs/agents/TASK_REGISTRY.json`,
-`docs/agents/COMMUNICATION_POLICY.md`, and `CONTEXT.md`, then run
-doctor/status.
+## Development model
 
-Human-readable replies to the user default to `zh-TW` (台灣繁體中文), per
-`docs/agents/COMMUNICATION_POLICY.md`. Code, commands, paths, schema keys,
-and raw tool/log output stay in their original form. Do not fall back to
-Simplified Chinese or an all-English completion report unless the user
-explicitly asks for another language in that turn.
+Claude Code is the sole development agent for this repository.
 
-Claude may modify files only in `$HOME/projects/forgeon-worktrees/claude` after
-claiming a registered ticket and starting a step. The integration checkout and
-Codex worktree are read-only to Claude. Bash is fail-closed by the project hook;
-stage and commit only through the workflow CLI. Never push or rewrite history.
+The previous dual-agent Claude/Codex workflow is retired for this project.
 
-CC-02I remains unclaimable until ChatGPT provides its formal spec and tickets.
+Do not require or use:
+
+- Ticket
+- Claim
+- Lock
+- TASK_REGISTRY
+- CURRENT_TASK
+- DUAL_AGENT_PROTOCOL
+- agent workflow commands
+- Claude/Codex worktree ownership
+- ChatGPT authorization for normal development work
+
+Work directly in the current repository and current working branch unless the user explicitly requests otherwise.
+
+## Before modifying files
+
+Always:
+
+1. Run `git status`.
+2. Inspect the relevant existing implementation.
+3. Preserve any user-created or uncommitted changes.
+4. Avoid unrelated modifications.
+
+## Git safety
+
+Do not perform without explicit user authorization:
+
+- git push
+- git merge
+- git rebase
+- force push
+- git reset --hard
+- git clean
+- destructive branch deletion
+- destructive worktree removal
+- destructive bulk checkout / restore
+- history rewriting
+
+Normal local development operations are allowed, including:
+
+- inspect files
+- edit files
+- install dependencies when required
+- run dev server
+- run tests
+- run lint / typecheck
+- run production build
+- git status
+- git diff
+- git add
+- local git commit when appropriate
+
+## Engineering principles
+
+Preserve the existing project architecture unless there is a concrete reason to change it.
+
+Do not introduce unnecessary frameworks, dependencies, migrations, or architectural rewrites.
+
+For the current UI/UX work, preserve the existing Engineering Editorial Sheet direction and avoid generic SaaS / AI-startup design patterns.
+
+## Communication
+
+User-facing explanations should default to Traditional Chinese (zh-TW).
+
+Report:
+
+- what was changed
+- why it was changed
+- tests performed
+- remaining risks or limitations
+
+Do not claim tests or validation passed unless they were actually executed.

@@ -1,4 +1,12 @@
-/* Home editorial refinement: fewer interchangeable cards, clearer hierarchy. */
+/* Home editorial refinement: fewer interchangeable cards, clearer hierarchy.
+   Only Solutions and Industries move to a hairline-divider list — they were
+   plain repeating card grids with no other visual language of their own.
+   Products (asymmetric feature card), Fit/not-fit (top-color-bar card) and
+   Path (hover-elevated card) already carry their own distinct skeleton and
+   are left as designed. `border-radius: 0 !important` below counters
+   global.css's brand-refresh.css `.card { border-radius: var(--radius-md)
+   !important }` for just these two. See
+   docs/uiux-upgrade/02-redesign-diagnosis.md IMPROVE 1. */
 .solution-index {
   display: grid;
   border-top: 1px solid var(--color-border-strong);
@@ -12,7 +20,7 @@
   padding: var(--space-lg) 0;
   border: 0;
   border-bottom: 1px solid var(--color-border);
-  border-radius: 0;
+  border-radius: 0 !important;
   background: transparent;
   box-shadow: none;
 }
@@ -39,22 +47,71 @@
   color: var(--color-ink-soft);
 }
 
-.product-showcase {
+/* Product Editorial Plate: AXM-400 as dominant anchor, VISION-X2/
+   FLEXCELL-M as a subordinate pair sharing the same rules at smaller
+   scale — one composition read through asymmetry and scale, not three
+   interchangeable cards or a "featured card + two cards" grid. See
+   docs/uiux-upgrade/09-product-plate-and-ending.md P1-1. */
+.product-plate {
   display: grid;
-  gap: var(--space-lg);
+  gap: var(--space-2xl);
+  grid-template-columns: 1fr;
+  border-top: 1px solid var(--color-border-strong);
+  padding-top: var(--space-xl);
 }
-.product-showcase .card {
-  border-radius: var(--radius-md);
+.product-plate .card {
+  border: 0;
+  border-radius: 0 !important;
   box-shadow: none;
 }
-.product-showcase .card:first-child {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(18rem, 0.75fr);
-  grid-column: 1 / -1;
+.product-plate .card:hover {
+  box-shadow: none;
+  transform: none;
+  background: var(--color-surface-alt);
 }
-.product-showcase .card:first-child .product-card__body {
+.product-plate__anchor .card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: var(--space-xl);
+}
+/* LC-03: the anchor's info column previously kept ProductCard's default
+   all-side padding, which read as an independent white card floating
+   beside the photograph rather than part of the same plate. Dropping the
+   inline padding so the text sits flush with the image's own right edge
+   rhythm, and trimming the block padding, ties anchor and pair into one
+   surface without restructuring the markup. */
+.product-plate__anchor .product-card__body {
   justify-content: center;
-  padding: clamp(var(--space-xl), 5vw, var(--space-3xl));
+  padding-block: var(--space-2xs);
+  padding-inline: 0 var(--space-lg);
+}
+.product-plate__pair {
+  display: grid;
+  gap: 0;
+  grid-template-columns: 1fr;
+  border-top: 1px solid var(--color-border);
+}
+.product-plate__pair .card {
+  display: grid;
+  grid-template-columns: minmax(7rem, 9rem) minmax(0, 1fr);
+  gap: var(--space-md);
+  align-items: center;
+  padding-block: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+.product-plate__pair .product-visual--card .product-visual__media {
+  border-bottom: 0;
+}
+.product-plate__pair .product-card__body {
+  padding: 0;
+  gap: 0.3em;
+}
+.product-plate__pair .product-card__desc {
+  font-size: var(--fs-xs);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .industry-index {
@@ -68,7 +125,7 @@
   min-height: 14rem;
   border: 0;
   border-bottom: 1px solid var(--color-border);
-  border-radius: 0;
+  border-radius: 0 !important;
   background: transparent;
   box-shadow: none;
 }
@@ -83,89 +140,6 @@
 .industry-index .industry-card__body {
   justify-content: center;
   padding: clamp(var(--space-md), 3vw, var(--space-xl));
-}
-
-main .fit-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0;
-  border-block: 1px solid var(--color-border-strong);
-}
-main .fit-card {
-  padding: clamp(var(--space-lg), 4vw, var(--space-2xl));
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-main .fit-card + .fit-card {
-  border-left: 1px solid var(--color-border);
-}
-main .fit-card h3 {
-  padding-bottom: var(--space-sm);
-  border-bottom: 1px solid var(--color-border);
-}
-
-main .path-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0;
-  border-block: 1px solid var(--color-border-strong);
-}
-main .path-card {
-  min-height: 20rem;
-  padding: clamp(var(--space-xl), 5vw, var(--space-3xl));
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-main .path-card + .path-card {
-  border-left: 1px solid var(--color-border);
-}
-main .path-card:hover {
-  border-color: var(--color-border);
-  background: var(--color-surface-alt);
-  box-shadow: none;
-}
-main .path-card__label {
-  color: var(--color-muted);
-}
-main .path-card h3 {
-  margin-top: auto;
-  font-size: clamp(var(--fs-lg), 3vw, var(--fs-xl));
-  max-width: 18ch;
-}
-main .path-card__cta {
-  color: var(--color-accent-dark);
-}
-
-.principles-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  border-top: 1px solid var(--color-border-strong);
-}
-main .principles-list .why-item {
-  display: grid;
-  grid-template-columns: 2.5rem minmax(0, 1fr);
-  gap: var(--space-sm) var(--space-md);
-  padding: clamp(var(--space-lg), 4vw, var(--space-2xl)) 0;
-  text-align: left;
-  border-bottom: 1px solid var(--color-border);
-}
-main .principles-list .why-item:nth-child(odd) {
-  padding-right: clamp(var(--space-lg), 4vw, var(--space-2xl));
-  border-right: 1px solid var(--color-border);
-}
-main .principles-list .why-item:nth-child(even) {
-  padding-left: clamp(var(--space-lg), 4vw, var(--space-2xl));
-}
-.why-item__index {
-  grid-row: 1 / span 2;
-  color: var(--color-muted);
-  font-size: var(--fs-xs);
-  letter-spacing: 0.08em;
-}
-main .principles-list .why-item h3,
-main .principles-list .why-item p {
-  grid-column: 2;
 }
 
 main .section-cta {
@@ -190,25 +164,15 @@ main .section-cta {
   .product-showcase .card:first-child {
     display: flex;
   }
-  .industry-index,
-  main .fit-grid,
-  main .path-grid,
-  .principles-list {
+  .industry-index {
     grid-template-columns: 1fr;
   }
   .industry-index .card {
     grid-template-columns: minmax(8rem, 0.75fr) minmax(0, 1.25fr);
   }
-  .industry-index .card:nth-child(odd),
-  main .fit-card + .fit-card,
-  main .path-card + .path-card,
-  main .principles-list .why-item:nth-child(odd) {
+  .industry-index .card:nth-child(odd) {
     border-right: 0;
     border-left: 0;
-  }
-  main .principles-list .why-item:nth-child(odd),
-  main .principles-list .why-item:nth-child(even) {
-    padding-inline: 0;
   }
 }
 
@@ -220,51 +184,15 @@ main .section-cta {
   .solution-index .solution-card__desc {
     grid-column: auto;
   }
-  main .path-card {
-    min-height: 17rem;
-    padding-inline: 0;
-  }
 }
 
-/* Rounded category blocks for the navy/white commercial direction. */
-.solution-index,
-.industry-index,
-main .fit-grid,
-main .path-grid,
-.principles-list {
-  gap: var(--space-md);
-  border: 0;
-}
-.solution-index .card,
-.industry-index .card,
-main .fit-card,
-main .path-card,
-main .principles-list .why-item {
-  padding: clamp(var(--space-lg), 4vw, var(--space-xl));
-  border: 1px solid var(--color-border) !important;
-  border-radius: var(--radius-md);
-  background: #fff;
-}
-.solution-index .card:nth-child(3n + 1) { background: #edf5ff; }
-.solution-index .card:nth-child(3n + 2) { background: #f2f7fc; }
-.solution-index .card:nth-child(3n) { background: #eaf1fa; }
-.industry-index .card:nth-child(4n + 1) { background: #eef6ff; }
-.industry-index .card:nth-child(4n + 2) { background: #f4f8fd; }
-.industry-index .card:nth-child(4n + 3) { background: #eaf3fc; }
-.industry-index .card:nth-child(4n) { background: #f0f5fb; }
-main .fit-card:first-child { background: #edf7f3; }
-main .fit-card:last-child { background: #f5f7fa; }
-main .path-card:first-child { background: #eaf3ff; }
-main .path-card:last-child { background: #f2f6fb; }
-main .principles-list .why-item { background: #f5f8fc; }
+/* Editorial list rhythm restored (see docs/uiux-upgrade/02-redesign-diagnosis.md
+   IMPROVE 1 — the rounded/tinted card-grid treatment previously here made
+   Solutions/Products/Industries/Fit/Path read as five back-to-back card
+   grids. The hairline-divider list structure defined earlier in this file
+   already gives each section a distinct skeleton; this block only adds the
+   product card radius, which does not affect section-shape variety). */
 .product-showcase .card {
   overflow: hidden;
   border-radius: var(--radius-md);
-}
-.why-item__index { display: none; }
-main .principles-list .why-item h3,
-main .principles-list .why-item p { grid-column: 1 / -1; }
-
-@media (max-width: 560px) {
-  main .path-card { padding-inline: var(--space-lg); }
 }

@@ -14,6 +14,7 @@ const dict = getDictionary(locale);
 
 <section class="cta-banner">
   <div class="cta-banner__inner">
+    <p class="cta-banner__datum mono">從這裡開始 · 提交需求</p>
     <div class="cta-banner__copy">
       <h2 class="cta-banner__title">{title}</h2>
       {description && <p class="cta-banner__desc">{description}</p>}
@@ -32,35 +33,40 @@ const dict = getDictionary(locale);
 <style>
   .cta-banner {
     position: relative;
-    overflow: hidden;
+    width: 100vw;
+    margin-inline-start: 50%;
+    transform: translateX(-50%);
     background: var(--color-ink);
     color: var(--color-invert-text);
-    border-radius: var(--radius-md);
-    margin-block: var(--section-compact);
-    border: var(--border-hairline) solid var(--color-ink-800);
-  }
-  .cta-banner::before {
-    content: '';
-    position: absolute;
-    inset: 0 0 auto;
-    height: var(--border-datum);
-    width: clamp(4rem, 10vw, 8rem);
-    background: var(--color-copper-500);
+    margin-top: var(--section-compact);
+    border-top: var(--border-datum) solid var(--color-copper-500);
   }
   .cta-banner__inner {
-    padding: clamp(var(--space-lg), 5vw, var(--space-16));
+    max-width: var(--container-content);
+    margin-inline: auto;
+    padding: clamp(var(--space-2xl), 6vw, var(--space-16)) var(--page-gutter-desktop);
     display: flex;
     flex-direction: column;
-    gap: var(--space-xl);
+    align-items: flex-start;
+    gap: var(--space-lg);
+  }
+  .cta-banner__datum {
+    margin: 0;
+    color: var(--color-copper-500);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
   }
   .cta-banner__copy {
     min-width: 0;
   }
   .cta-banner__title {
     color: var(--color-invert-text);
-    margin: 0 0 var(--space-xs);
-    max-width: 19ch;
+    margin: 0 0 var(--space-sm);
+    max-width: 22ch;
     font-size: var(--fs-2xl);
+    font-weight: 600;
+    line-height: 1.2;
     text-wrap: balance;
   }
   .cta-banner__desc {
@@ -71,37 +77,27 @@ const dict = getDictionary(locale);
   .cta-banner__actions {
     display: flex;
     flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-sm);
+    align-items: flex-start;
+    gap: var(--space-md);
+    margin-top: var(--space-sm);
   }
-  .cta-banner__actions :global(.btn) {
-    width: 100%;
-    max-width: 100%;
-    white-space: normal;
-    text-align: center;
-    justify-content: center;
+  .cta-banner__actions :global(.btn--secondary-invert) {
+    background: transparent;
+    border-color: transparent;
+    color: var(--color-invert-muted);
+    padding-inline: 0;
+  }
+  .cta-banner__actions :global(.btn--secondary-invert:hover) {
+    background: transparent;
+    color: var(--color-invert-text);
+    text-decoration: underline;
+    text-underline-offset: 0.28em;
   }
 
   @media (min-width: 560px) {
     .cta-banner__actions {
       flex-direction: row;
-      flex-wrap: wrap;
       align-items: center;
-    }
-    .cta-banner__actions :global(.btn) {
-      width: auto;
-    }
-  }
-
-  @media (min-width: 960px) {
-    .cta-banner__inner {
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .cta-banner__actions {
-      flex-shrink: 0;
-      justify-content: flex-end;
     }
   }
 </style>

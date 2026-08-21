@@ -18,6 +18,10 @@ const locale = 'zh-tw' as const;
 const solutions = (await getSortedSolutions()).slice(0, 3);
 const products = await getSortedProducts();
 const industries = await getSortedIndustries();
+const [productAnchor, ...productPair] = products;
+if (!productAnchor) {
+  throw new Error('Products collection is empty — the Product Editorial Plate requires at least one product.');
+}
 
 const processSteps = [
   { title: '需求釐清', description: '了解製程背景、現有設備介面與導入目標，確認初步可行性。' },
@@ -41,14 +45,16 @@ const whyReasons = [
   otherLocalePath="/en/"
   title="鋒岳自動化｜精密運動與視覺整合的工業自動化方案"
   description="鋒岳自動化是虛構的工業自動化品牌概念案例，展示精密運動、視覺定位與自動化組裝整合的網站策略與工程資訊架構。"
+  bodyClass="home-dark-ending"
 >
   <!-- Hero -->
   <Hero locale={locale} />
 
-  <!-- Capability overview -->
-  <section class="section section--tight">
+  <!-- Capability overview: quiet supporting section, not a second Hero. -->
+  <section class="section section-compact">
     <div class="container">
       <SectionHeading
+        compact
         eyebrow="核心能力"
         title="從精密運動到系統整合"
         description="鋒岳自動化的能力涵蓋運動模組設計、視覺定位檢測與整廠整合工程，讓客戶可以依專案規模選擇單一模組或完整方案。"
@@ -79,10 +85,11 @@ const whyReasons = [
     </div>
   </section>
 
-  <!-- Solutions -->
-  <section class="section section--tight">
+  <!-- Solutions: quiet supporting section. -->
+  <section class="section section-compact">
     <div class="container">
       <SectionHeading
+        compact
         eyebrow="解決方案"
         title="依製程挑戰配置的自動化方案"
         description="從精密定位到視覺檢測，每項方案都從實際製程問題出發。"
@@ -104,24 +111,38 @@ const whyReasons = [
     </div>
   </section>
 
-  <!-- Products -->
-  <section class="section section--tight section--alt">
+  <!-- Products: Mid-page Signature Composition (page moment B). Full
+       section-major rhythm and the page's second full-weight heading —
+       everything before it exists to arrive here. -->
+  <section class="section section-major section--alt product-signature">
     <div class="container">
       <SectionHeading
         eyebrow="代表產品"
         title="模組化產品線"
         description="三款核心產品可獨立導入，也可組合為完整自動化站點。"
       />
-      <div class="product-showcase">
-        {products.map((p) => (
+      <div class="product-plate">
+        <div class="product-plate__anchor">
           <ProductCard
             locale={locale}
-            slug={p.data.entrySlug as 'axm-400' | 'vision-x2' | 'flexcell-m'}
-            name={p.data.name}
-            positioning={p.data.positioning['zh-tw']}
-            description={p.data.shortDescription['zh-tw']}
+            slug={productAnchor.data.entrySlug as 'axm-400' | 'vision-x2' | 'flexcell-m'}
+            name={productAnchor.data.name}
+            positioning={productAnchor.data.positioning['zh-tw']}
+            description={productAnchor.data.shortDescription['zh-tw']}
+            dominant
           />
-        ))}
+        </div>
+        <div class="product-plate__pair">
+          {productPair.map((p) => (
+            <ProductCard
+              locale={locale}
+              slug={p.data.entrySlug as 'axm-400' | 'vision-x2' | 'flexcell-m'}
+              name={p.data.name}
+              positioning={p.data.positioning['zh-tw']}
+              description={p.data.shortDescription['zh-tw']}
+            />
+          ))}
+        </div>
       </div>
       <div class="section-cta">
         <Button href="/zh-tw/products/" variant="ghost">比較完整產品規格 →</Button>
@@ -129,10 +150,11 @@ const whyReasons = [
     </div>
   </section>
 
-  <!-- Industries -->
-  <section class="section section--tight">
+  <!-- Industries: quiet supporting section. -->
+  <section class="section section-compact">
     <div class="container">
       <SectionHeading
+        compact
         eyebrow="應用產業"
         title="服務的產業範圍"
         description="從半導體到包裝物流，依產業特性配置適合的自動化方案。"
@@ -151,109 +173,145 @@ const whyReasons = [
     </div>
   </section>
 
-  <!-- Fit / not-fit -->
-  <section class="section section--tight section--alt">
+  <!-- Fit assessment + browsing paths: one compact decision-support block,
+       not two separate generic two/four-item patterns. -->
+  <section class="section section-compact section--alt">
     <div class="container">
-      <SectionHeading
-        eyebrow="適合評估"
-        title="鋒岳自動化適合什麼情況，不適合什麼情況"
-        description="在提交詢價前，先確認您的專案背景是否落在我們實際能提供價值的範圍內。"
-      />
-      <div class="fit-grid">
-        <div class="fit-card fit-card--yes">
-          <h3>適合的情況</h3>
-          <ul>
-            <li>加工、檢測或組裝站點需要穩定的重複定位精度，且已能描述工件尺寸與節拍需求</li>
-            <li>既有產線有明確瓶頸站點，希望局部自動化升級而非整線重建</li>
-            <li>需要視覺定位或瑕疵檢測，且製程條件（光源、工件表面特性）大致明確</li>
-            <li>專案規模足以支撐工程評估與客製設計（非單一標準品採購）</li>
-          </ul>
+      <div class="assess-block">
+        <div class="assess-block__fit">
+          <p class="assess-block__eyebrow mono">適合評估</p>
+          <h2 class="assess-block__title">鋒岳自動化適合什麼情況，不適合什麼情況</h2>
+          <div class="fit-columns">
+            <div class="fit-col fit-col--yes">
+              <h3>適合的情況</h3>
+              <ul>
+                <li>加工、檢測或組裝站點需要穩定的重複定位精度，且已能描述工件尺寸與節拍需求</li>
+                <li>既有產線有明確瓶頸站點，希望局部自動化升級而非整線重建</li>
+                <li>需要視覺定位或瑕疵檢測，且製程條件（光源、工件表面特性）大致明確</li>
+                <li>專案規模足以支撐工程評估與客製設計（非單一標準品採購）</li>
+              </ul>
+            </div>
+            <div class="fit-col fit-col--no">
+              <h3>暫時不適合的情況</h3>
+              <ul>
+                <li>僅需採購單一標準零組件，不需要整合工程或客製設計</li>
+                <li>製程條件尚未確認（例如工件規格、節拍、現場空間都還在變動），建議先完成內部評估</li>
+                <li>時程要求在標準工程評估週期內無法完成（例如兩週內需要完整方案定案）</li>
+                <li>需要防爆、無塵室特殊等級或其他尚未經過工程確認的特殊環境認證</li>
+              </ul>
+            </div>
+          </div>
         </div>
-        <div class="fit-card fit-card--no">
-          <h3>暫時不適合的情況</h3>
-          <ul>
-            <li>僅需採購單一標準零組件，不需要整合工程或客製設計</li>
-            <li>製程條件尚未確認（例如工件規格、節拍、現場空間都還在變動），建議先完成內部評估</li>
-            <li>時程要求在標準工程評估週期內無法完成（例如兩週內需要完整方案定案）</li>
-            <li>需要防爆、無塵室特殊等級或其他尚未經過工程確認的特殊環境認證</li>
-          </ul>
-        </div>
+        <aside class="assess-block__paths">
+          <p class="assess-block__eyebrow mono">從這裡開始</p>
+          <a href="/zh-tw/industries/" class="path-link">
+            <span class="path-link__label">海外採購／工廠管理者</span>
+            <span class="path-link__desc">依產業別瀏覽常見製程問題與適合的解決方案 →</span>
+          </a>
+          <a href="/zh-tw/products/" class="path-link">
+            <span class="path-link__label">自動化／製程工程師</span>
+            <span class="path-link__desc">直接查看三款核心產品的完整規格表 →</span>
+          </a>
+        </aside>
       </div>
     </div>
   </section>
 
-  <!-- Two browsing paths -->
-  <section class="section section--tight">
+  <!-- Process: narrative pairing of the on-site photograph with the
+       delivery stages, not "image then a documentation list" — the
+       photograph stays visible beside every stage as the throughline. -->
+  <section class="section section-compact section--alt">
     <div class="container">
       <SectionHeading
-        eyebrow="從這裡開始"
-        title="依您的角色選擇瀏覽路徑"
-        description="兩種最常見的進站情境，各自對應不同的下一步。"
-        align="center"
-      />
-      <div class="path-grid">
-        <a href="/zh-tw/industries/" class="path-card">
-          <span class="path-card__label">海外採購／工廠管理者</span>
-          <h3>先確認產業與能力是否對應</h3>
-          <p>依產業別瀏覽常見製程問題與適合的解決方案，快速判斷是否值得深入了解。</p>
-          <span class="path-card__cta">瀏覽產業應用 →</span>
-        </a>
-        <a href="/zh-tw/products/" class="path-card">
-          <span class="path-card__label">自動化／製程工程師</span>
-          <h3>先確認產品規格與系統相容性</h3>
-          <p>直接查看三款核心產品的完整規格表、選配項目與相容方案，評估技術可行性。</p>
-          <span class="path-card__cta">瀏覽產品規格 →</span>
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Process -->
-  <section class="section section--tight section--alt">
-    <div class="container container--narrow">
-      <SectionHeading
+        compact
         eyebrow="專案導入流程"
         title="從需求釐清到現場驗收"
         description="以五個階段呈現評估與交付框架，逐步確認需求、設計、測試與驗收條件。"
       />
-      <FieldCommissioningVisual locale={locale} presentation="wide" />
-      <ProcessTimeline steps={processSteps} />
-    </div>
-  </section>
-
-  <!-- Why us -->
-  <section class="section section--tight">
-    <div class="container">
-      <SectionHeading eyebrow="合作理由" title="為什麼與鋒岳自動化合作" align="center" />
-      <div class="principles-list">
-        {whyReasons.map((r, index) => (
-          <div class="why-item">
-            <span class="why-item__index mono">{String(index + 1).padStart(2, '0')}</span>
-            <h3>{r.title}</h3>
-            <p>{r.desc}</p>
-          </div>
-        ))}
+      <div class="process-narrative">
+        <div class="process-narrative__media">
+          <FieldCommissioningVisual locale={locale} presentation="wide" />
+        </div>
+        <div class="process-narrative__steps">
+          <ProcessTimeline steps={processSteps} />
+        </div>
       </div>
     </div>
   </section>
 
+  <!-- Why us: quiet closing transition, not a third full-weight
+       declaration competing with Final CTA. -->
+  <section class="section why-strip">
+    <div class="container">
+      <p class="why-strip__label mono">合作理由</p>
+      <ul class="why-strip__list">
+        {whyReasons.map((r) => (
+          <li class="why-strip__item">
+            <h3>{r.title}</h3>
+            <p>{r.desc}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
   <!-- Final CTA -->
-  <div class="container">
-    <CTABanner
-      locale={locale}
-      title="準備好討論您的自動化需求了嗎？"
-      description="提交專案背景與需求，我們的技術團隊將協助評估可行的解決方案。"
-    />
-  </div>
+  <CTABanner
+    locale={locale}
+    title="準備好討論您的自動化需求了嗎？"
+    description="提交專案背景與需求，我們的技術團隊將協助評估可行的解決方案。"
+  />
 </BaseLayout>
 
 <style>
+  /* CTA banner and Footer share the same dark ink background — remove the
+     Footer's default top margin only on this page so the two read as one
+     continuous dark ending rather than a dark card floating in white space
+     before another dark block (P1-4, docs/uiux-upgrade/09-product-plate-
+     and-ending.md). Footer.astro is a child component with its own Astro
+     scope hash, so this must be :global() to reach the rendered <footer>
+     node (same reason Header.astro's own CSS documents for
+     .site-header__cta). Scoped via the page's own bodyClass rather than a
+     :has() selector, and rather than editing Footer.astro's default
+     margin, which is shared by every other page. */
+  :global(body.home-dark-ending .site-footer) {
+    margin-top: 0;
+  }
+
+  /* LC-02: --section-major's padding-bottom (clamp(120px, 12vw, 176px),
+     ~173px at 1440px) read as an accidental oversized gap after the "比較
+     完整產品規格" link — the top half (heading -> visual) is a normal
+     48px, so the section was front-light/bottom-heavy. Trimmed ~18% at
+     every width via the same clamp shape, scoped to this page's own
+     Products section only; utilities.css's shared .section-major class
+     and its consumers elsewhere are untouched. */
+  .product-signature {
+    padding-bottom: clamp(98px, 9.8vw, 145px);
+  }
+
   .section--alt {
     background: var(--color-surface-alt);
   }
 
   .container--narrow {
     max-width: 860px;
+  }
+
+  .process-narrative {
+    display: grid;
+    gap: var(--space-xl);
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 900px) {
+    .process-narrative {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      align-items: start;
+      gap: var(--space-2xl);
+    }
+    .process-narrative__media {
+      position: sticky;
+      top: calc(80px + var(--space-lg));
+    }
   }
 
   .capability-grid {
@@ -286,113 +344,154 @@ const whyReasons = [
     justify-content: center;
   }
 
-  .why-item {
-    text-align: center;
-    padding: var(--space-lg);
+  /* Quiet closing transition — deliberately not another Section­Heading +
+     grid declaration; see docs/uiux-upgrade/08-fullpage-composition.md. */
+  .why-strip {
+    padding-block: var(--space-2xl);
   }
-  .why-item h3 {
-    font-size: var(--fs-md);
-    margin: 0 0 var(--space-2xs);
+  .why-strip__label {
+    margin: 0 0 var(--space-md);
+    color: var(--color-muted);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
-  .why-item p {
+  .why-strip__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-md) var(--space-xl);
+    grid-template-columns: 1fr;
+  }
+  .why-strip__item h3 {
+    margin: 0 0 0.2em;
+    font-size: var(--fs-sm);
+    font-weight: 700;
+  }
+  .why-strip__item p {
     margin: 0;
     color: var(--color-muted);
-    font-size: var(--fs-sm);
+    font-size: var(--fs-xs);
+    line-height: var(--lh-normal);
   }
 
-  .fit-grid {
+  /* Fit assessment + browsing paths, merged into one compact
+     decision-support block rather than two symmetric two/four-item
+     sections (see docs/uiux-upgrade/08-fullpage-composition.md). */
+  .assess-block {
+    display: grid;
+    gap: var(--space-2xl);
+    grid-template-columns: 1fr;
+  }
+  .assess-block__eyebrow {
+    margin: 0 0 var(--space-2xs);
+    color: var(--color-muted);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .assess-block__title {
+    margin: 0 0 var(--space-lg);
+    max-width: 34ch;
+    font-size: var(--fs-md);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  .fit-columns {
     display: grid;
     gap: var(--space-lg);
     grid-template-columns: 1fr;
   }
-  .fit-card {
-    background: var(--color-card);
-    border-radius: var(--radius-lg);
-    padding: var(--space-lg);
-    border-top: 3px solid var(--color-border-strong);
+  .fit-col {
+    padding-top: var(--space-sm);
+    border-top: 2px solid var(--color-border-strong);
   }
-  .fit-card--yes {
+  .fit-col--yes {
     border-top-color: var(--color-success);
   }
-  .fit-card--no {
+  .fit-col--no {
     border-top-color: var(--color-muted);
   }
-  .fit-card h3 {
-    margin: 0 0 var(--space-sm);
-    font-size: var(--fs-md);
+  .fit-col h3 {
+    margin: 0 0 var(--space-xs);
+    font-size: var(--fs-sm);
+    font-weight: 700;
   }
-  .fit-card ul {
+  .fit-col ul {
     margin: 0;
     padding-left: var(--space-md);
     display: flex;
     flex-direction: column;
-    gap: var(--space-xs);
+    gap: var(--space-2xs);
   }
-  .fit-card li {
+  .fit-col li {
     color: var(--color-ink-soft);
-    font-size: var(--fs-sm);
+    font-size: var(--fs-xs);
     line-height: var(--lh-normal);
   }
 
-  .path-grid {
-    display: grid;
-    gap: var(--space-lg);
-    grid-template-columns: 1fr;
-  }
-  .path-card {
+  .assess-block__paths {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2xs);
-    background: var(--color-card);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-xl);
+    gap: var(--space-sm);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--color-border);
+  }
+  .path-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2em;
+    padding-block: var(--space-xs);
     text-decoration: none;
     color: inherit;
-    transition: border-color var(--duration-fast) var(--ease-standard),
-      box-shadow var(--duration-fast) var(--ease-standard);
   }
-  .path-card:hover {
-    border-color: var(--color-accent);
-    box-shadow: var(--shadow-md);
+  .path-link + .path-link {
+    border-top: 1px solid var(--color-border);
   }
-  .path-card__label {
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--color-accent);
+  .path-link__label {
+    font-size: var(--fs-sm);
     font-weight: 600;
   }
-  .path-card h3 {
-    margin: var(--space-2xs) 0;
-    font-size: var(--fs-lg);
-  }
-  .path-card p {
-    margin: 0 0 var(--space-sm);
+  .path-link__desc {
     color: var(--color-muted);
-    font-size: var(--fs-sm);
+    font-size: var(--fs-xs);
   }
-  .path-card__cta {
-    color: var(--color-accent);
-    font-weight: 600;
-    font-size: var(--fs-sm);
-    margin-top: auto;
+  .path-link:hover .path-link__label {
+    color: var(--color-accent-dark);
   }
 
   @media (min-width: 720px) {
     .capability-grid {
       grid-template-columns: repeat(2, 1fr);
     }
-    .fit-grid {
+    .fit-columns {
       grid-template-columns: repeat(2, 1fr);
+      column-gap: var(--space-xl);
     }
-    .path-grid {
+    .fit-col--yes {
+      padding-right: var(--space-xl);
+      border-right: 1px solid var(--color-border);
+    }
+    .why-strip__list {
       grid-template-columns: repeat(2, 1fr);
     }
   }
   @media (min-width: 960px) {
+    .assess-block {
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+      gap: var(--space-3xl);
+    }
+    .assess-block__paths {
+      padding-top: 0;
+      padding-left: var(--space-2xl);
+      border-top: 0;
+      border-left: 1px solid var(--color-border);
+    }
     .capability-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .why-strip__list {
       grid-template-columns: repeat(4, 1fr);
     }
   }

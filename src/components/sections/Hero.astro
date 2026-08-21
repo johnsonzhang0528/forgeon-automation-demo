@@ -25,6 +25,8 @@ const hero = getDictionary(locale).hero;
 ---
 
 <section class="hero-root" data-hero-motion-root data-motion-state="settled">
+  <div class="hero-root__datum" aria-hidden="true"></div>
+
   <p class="hero-root__eyebrow mono">{hero.eyebrow}</p>
 
   <h1 class="hero-root__headline">{hero.headline}</h1>
@@ -43,7 +45,7 @@ const hero = getDictionary(locale).hero;
     </Button>
     <Button
       href={`/${locale}/contact/?intent=technical-advice`}
-      variant="secondary"
+      variant="ghost"
       size="lg"
       trackEvent="cta_click"
       data-intent="technical-advice"
@@ -81,8 +83,11 @@ const hero = getDictionary(locale).hero;
     padding: var(--space-6) var(--page-gutter-mobile) var(--space-16);
   }
 
-  .hero-root__origin {
-    margin-bottom: calc(-1 * var(--space-4));
+  .hero-root__datum {
+    width: 2.5rem;
+    height: 2px;
+    margin-bottom: var(--space-4);
+    background: var(--color-action-primary);
   }
 
   .hero-root__eyebrow {
@@ -97,8 +102,9 @@ const hero = getDictionary(locale).hero;
     max-width: 720px;
     margin: 0;
     font-family: var(--font-display);
-    font-size: var(--fs-h1-mobile, clamp(2.35rem, 10.5vw, 3rem));
-    line-height: 1.04;
+    font-size: clamp(2rem, 8vw, 2.5rem);
+    font-weight: 600;
+    line-height: 1.3;
     letter-spacing: var(--ls-h1);
     white-space: pre-line;
     text-wrap: balance;
@@ -110,7 +116,8 @@ const hero = getDictionary(locale).hero;
   }
 
   :lang(en) .hero-root__headline {
-    font-size: clamp(1.6rem, 7.4vw, 2.35rem);
+    font-size: clamp(1.5rem, 6vw, 2rem);
+    font-weight: 600;
   }
 
   .hero-root__body {
@@ -157,12 +164,13 @@ const hero = getDictionary(locale).hero;
     inset-inline-end: var(--space-3);
     inset-block-end: var(--space-3);
     margin: 0;
-    padding: 0.3rem 0.45rem;
-    color: #fff;
-    background: rgb(10 16 20 / 78%);
+    padding: 0;
+    color: rgb(255 255 255 / 82%);
+    font-family: var(--font-mono);
     font-size: 0.6875rem;
     line-height: 1.25;
     letter-spacing: 0.04em;
+    text-shadow: 0 1px 3px rgb(0 0 0 / 55%);
   }
 
   .hero-root__ledger :global(.eval-ledger) {
@@ -237,7 +245,7 @@ const hero = getDictionary(locale).hero;
       object-position: 64% 52%;
     }
 
-    .hero-root__origin,
+    .hero-root__datum,
     .hero-root__eyebrow,
     .hero-root__headline,
     .hero-root__body,
@@ -249,7 +257,7 @@ const hero = getDictionary(locale).hero;
       margin-inline-start: var(--space-6);
     }
 
-    .hero-root__origin {
+    .hero-root__datum {
       grid-row: 1;
       margin-top: var(--space-8);
       margin-bottom: var(--space-4);
@@ -264,11 +272,14 @@ const hero = getDictionary(locale).hero;
       grid-row: 3;
       max-width: 100%;
       margin-bottom: var(--space-6);
-      font-size: var(--fs-h1);
+      font-size: clamp(2.25rem, 2.6vw, 3rem);
+      font-weight: 600;
+      line-height: 1.28;
     }
 
     :lang(en) .hero-root__headline {
-      font-size: clamp(2.5rem, 3.25vw, 3.5rem);
+      font-size: clamp(2rem, 2.3vw, 2.75rem);
+      font-weight: 600;
     }
 
     .hero-root__body {
@@ -303,79 +314,5 @@ const hero = getDictionary(locale).hero;
       transition: none !important;
       transform: none !important;
     }
-  }
-
-  /* Commercial navy hero: one message, one image, no technical ornament. */
-  .hero-root {
-    margin-top: var(--space-6);
-    padding: clamp(var(--space-8), 7vw, var(--space-16));
-    color: #fff;
-    background: var(--color-ink-950);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-  }
-  .hero-root__eyebrow {
-    color: #a9cdf6;
-    font-family: var(--font-body);
-    font-weight: 600;
-    letter-spacing: 0.04em;
-  }
-  .hero-root__headline {
-    color: #fff;
-  }
-  .hero-root__body {
-    color: #d7e5f5;
-  }
-  .hero-root__media {
-    margin-top: var(--space-4);
-    border: 0;
-    border-radius: var(--radius-md);
-    background: #17365f;
-  }
-  .hero-root__disclosure {
-    border-radius: var(--radius-xs);
-    background: rgb(11 31 58 / 82%);
-  }
-  .hero-root__ctas :global(.btn--secondary) {
-    color: #fff;
-    border-color: #8eb7e4;
-  }
-  .hero-root__ctas :global(.btn--secondary:hover) {
-    color: #fff;
-    background: rgb(255 255 255 / 10%);
-    border-color: #fff;
-  }
-
-  @media (min-width: 1024px) {
-    .hero-root {
-      grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
-      grid-template-rows: auto auto auto auto;
-      gap: var(--space-6) clamp(var(--space-8), 5vw, var(--space-16));
-      align-items: center;
-      padding: clamp(var(--space-10), 5vw, var(--space-16));
-    }
-    .hero-root__eyebrow,
-    .hero-root__headline,
-    .hero-root__body,
-    .hero-root__ctas {
-      position: static;
-      z-index: auto;
-      grid-column: 1;
-      margin: 0;
-    }
-    .hero-root__eyebrow { grid-row: 1; align-self: end; }
-    .hero-root__headline { grid-row: 2; }
-    .hero-root__body { grid-row: 3; }
-    .hero-root__ctas { grid-row: 4; align-self: start; }
-    .hero-root__media {
-      z-index: auto;
-      grid-column: 2;
-      grid-row: 1 / 5;
-      min-height: clamp(500px, 43vw, 620px);
-      margin: 0;
-      aspect-ratio: auto;
-    }
-    .hero-root__media::after { display: none; }
-    .hero-root__media :global(img) { object-position: 65% 52%; }
   }
 </style>

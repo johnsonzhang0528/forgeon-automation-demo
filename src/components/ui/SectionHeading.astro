@@ -5,13 +5,21 @@ export interface Props {
   description?: string;
   align?: 'left' | 'center';
   level?: 'h1' | 'h2' | 'h3';
+  /**
+   * Quiet, compact treatment for supporting sections that should not
+   * compete visually with the page's signature moments (Hero / mid-page
+   * signature / conversion ending). Smaller title, no leading datum mark,
+   * tighter spacing. Opt-in only — every existing call site keeps its
+   * current full-weight rendering unless it explicitly passes this.
+   */
+  compact?: boolean;
 }
 
-const { eyebrow, title, description, align = 'left', level = 'h2' } = Astro.props;
+const { eyebrow, title, description, align = 'left', level = 'h2', compact = false } = Astro.props;
 const Tag = level;
 ---
 
-<div class:list={['section-heading', { 'section-heading--center': align === 'center' }]}>
+<div class:list={['section-heading', { 'section-heading--center': align === 'center', 'section-heading--compact': compact }]}>
   {eyebrow && <p class="section-heading__eyebrow">{eyebrow}</p>}
   <Tag class="section-heading__title">{title}</Tag>
   {description && <p class="section-heading__desc measure">{description}</p>}
@@ -48,6 +56,22 @@ const Tag = level;
   }
   .section-heading--center .section-heading__desc {
     margin-inline: auto;
+  }
+  .section-heading--compact {
+    gap: 0.55em;
+    margin-bottom: var(--space-xl);
+    padding-top: var(--space-xs);
+  }
+  .section-heading--compact::before {
+    width: 1.5rem;
+  }
+  .section-heading--compact .section-heading__title {
+    font-size: clamp(1.25rem, 1.7vw, 1.55rem);
+    font-weight: 700;
+    max-width: 40ch;
+  }
+  .section-heading--compact .section-heading__desc {
+    font-size: var(--fs-sm);
   }
   .section-heading__eyebrow {
     font-family: var(--font-mono);

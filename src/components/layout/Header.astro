@@ -417,13 +417,27 @@ const noJsLangHref = otherLocalePath ?? switchLocalePath(path, noJsLangTarget);
   .site-header__cta {
     display: none;
   }
+  /*
+   * Art direction pass (docs/uiux-upgrade/08-fullpage-composition.md):
+   * the header CTA read as a generic SaaS "pill" — rounded-full-ish
+   * corners plus a saturated fill competing with the wordmark. Squaring
+   * the radius and dropping to a bordered/text treatment (filled only on
+   * hover) keeps it a real, findable action without the marketing-button
+   * weight. Only :global(.btn--primary)'s color/radius/fill tokens are
+   * touched here — no change to size, padding, or Button.astro itself,
+   * so every other primary button sitewide (Hero, CTABanner, etc.) is
+   * unaffected.
+   */
   .site-header__cta > :global(.btn--primary) {
-    background: var(--color-action-primary);
-    border-color: var(--color-action-primary);
+    background: transparent;
+    color: var(--color-action-primary);
+    border-color: var(--color-ink);
+    border-radius: 0;
   }
   .site-header__cta > :global(.btn--primary:hover) {
-    background: var(--color-action-primary-hover);
-    border-color: var(--color-action-primary-hover);
+    background: var(--color-ink);
+    color: var(--color-invert-text, #fff);
+    border-color: var(--color-ink);
   }
   /*
    * Touch-target remediation (CC-02I-02 review, HIGH-03): the 24px svg +
