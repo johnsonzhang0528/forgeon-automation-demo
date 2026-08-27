@@ -59,16 +59,21 @@ const copy = getDictionary(locale).industrialReality;
  * object-position/crop so they can be reused at other breakpoints if the
  * crop ever changes (though it does not in this pass).
  */
-const markers = [
-  { key: 'arm', top: 40, left: 33 },
-  { key: 'fixture', top: 52, left: 55 },
-  { key: 'conveyor', top: 62, left: 20 },
-  { key: 'control', top: 40, left: 84 },
+const equipment = [
+  { key: 'arm', code: 'A', anchorX: 33, anchorY: 40, labelX: 5, labelY: 40, leader: 'M 20 42 H 28 V 40 H 33' },
+  { key: 'fixture', code: 'B', anchorX: 55, anchorY: 52, labelX: 65, labelY: 56, leader: 'M 65 58 H 60 V 52 H 55' },
+  { key: 'conveyor', code: 'C', anchorX: 18, anchorY: 54, labelX: 4, labelY: 68, leader: 'M 19 70 H 15 V 54 H 18' },
+  { key: 'control', code: 'D', anchorX: 84, anchorY: 29, labelX: 76, labelY: 25, leader: 'M 76 29 H 84' },
 ] as const;
 ---
 
 <section class="ir" aria-labelledby="ir-heading">
   <div class="ir-frame">
+    <div class="ir-frame__top">
+      <p class="ir-frame__eyebrow mono">{copy.eyebrow}</p>
+      <h2 id="ir-heading" class="ir-frame__statement">{copy.statement}</h2>
+    </div>
+
     <figure class="ir-frame__media">
       <Picture
         src={industrialImage}
@@ -82,20 +87,36 @@ const markers = [
       />
     </figure>
 
-    <div class="ir-frame__top">
-      <p class="ir-frame__eyebrow mono">{copy.eyebrow}</p>
-      <h2 id="ir-heading" class="ir-frame__statement">{copy.statement}</h2>
-    </div>
-
-    <div class="ir-frame__markers" aria-hidden="true">
-      {markers.map((m) => (
-        <span class="ir-marker" style={`top:${m.top}%; left:${m.left}%;`}>
-          <span class="ir-marker__dot"></span>
-          <span class="ir-marker__label mono">{copy.labels[m.key]}</span>
-        </span>
+    <div class="ir-identifications">
+      <svg class="ir-identifications__leaders" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        {equipment.map((item) => <path d={item.leader} vector-effect="non-scaling-stroke" />)}
+      </svg>
+      {equipment.map((item) => (
+        <div
+          class="ir-identification"
+          data-equipment={item.key}
+          data-anchor-x={item.anchorX}
+          data-anchor-y={item.anchorY}
+          style={`--anchor-x:${item.anchorX}%; --anchor-y:${item.anchorY}%; --label-x:${item.labelX}%; --label-y:${item.labelY}%;`}
+        >
+          <span class="ir-identification__anchor mono" aria-hidden="true">{item.code}</span>
+          <span class="ir-identification__label">
+            <span class="ir-identification__code mono" aria-hidden="true">{item.code}</span>
+            <span>{copy.labels[item.key]}</span>
+          </span>
+        </div>
       ))}
     </div>
   </div>
+
+  <dl class="ir-equipment-key">
+    {equipment.map((item) => (
+      <div class="ir-equipment-key__item" data-equipment-key={item.key}>
+        <dt class="mono">{item.code}</dt>
+        <dd>{copy.labels[item.key]}</dd>
+      </div>
+    ))}
+  </dl>
 
   <p class="ir-closing">{copy.closing}</p>
 </section>
@@ -103,50 +124,36 @@ const markers = [
 <style>
   .ir {
     background: var(--color-ink-950);
+    color: var(--color-invert-text, #fff);
   }
 
   .ir-frame {
     position: relative;
     width: 100%;
-    min-height: 420px;
-    height: 70svh;
-    max-height: 760px;
+    max-width: 1535px;
+    margin-inline: auto;
     overflow: hidden;
   }
-  .ir-frame__media,
-  .ir-frame__media :global(picture) {
-    position: absolute;
-    inset: 0;
+  .ir-frame__media {
     margin: 0;
+    aspect-ratio: 1535 / 1024;
+  }
+  .ir-frame__media :global(picture) {
+    display: block;
+    width: 100%;
+    height: 100%;
   }
   .ir-frame__media :global(img) {
     display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    /* Keeps the robotic arm + fixture cluster (the frame's real subject)
-       in view while trimming the left-side safety fencing first as the
-       viewport narrows. Object-position only — same source asset at
-       every breakpoint. */
-    object-position: 42% 45%;
+    object-position: center;
   }
 
   .ir-frame__top {
-    position: absolute;
-    z-index: 1;
-    top: 0;
-    left: 0;
-    right: 0;
-    padding: var(--space-6) var(--page-gutter-mobile) var(--space-10);
-    /* Localized scrim only behind the opening statement — the rest of
-       the real factory photograph stays naturally lit, per this
-       section's own "no sitewide dark wash" rule (see file header). */
-    background: linear-gradient(
-      180deg,
-      rgba(0, 0, 0, 0.72) 0%,
-      rgba(0, 0, 0, 0.4) 55%,
-      rgba(0, 0, 0, 0) 100%
-    );
+    padding: var(--space-6) var(--page-gutter-mobile) var(--space-5);
+    background: var(--color-ink-950);
   }
   .ir-frame__eyebrow {
     margin: 0 0 var(--space-2);
@@ -164,53 +171,65 @@ const markers = [
     font-weight: 600;
     line-height: 1.4;
     text-wrap: balance;
-    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.4);
   }
   :lang(zh-Hant-TW) .ir-frame__statement {
     font-family: 'Noto Sans TC', var(--font-display);
   }
 
-  /*
-   * Physical-location markers: a small dot at the equipment's real
-   * position plus a short label — no crosshair, no box, no HUD frame,
-   * no scanning motion, no measured value. This is the only path this
-   * ticket allows for reintroducing any datum/coordinate-style visual
-   * language (DESIGN.md v2 §0/Rule 07): content-specific, naming real
-   * visible equipment, never a decorative overlay.
-   */
-  .ir-frame__markers {
+  .ir-identifications {
     position: absolute;
-    inset: 0;
-    z-index: 1;
+    inset: auto 0 0;
+    aspect-ratio: 1535 / 1024;
+    pointer-events: none;
+  }
+  .ir-identifications__leaders,
+  .ir-identification__label {
     display: none;
   }
-  .ir-marker {
+  .ir-identification__anchor {
     position: absolute;
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
+    left: var(--anchor-x);
+    top: var(--anchor-y);
+    display: grid;
+    place-items: center;
+    width: 1.35rem;
+    height: 1.35rem;
     transform: translate(-50%, -50%);
-  }
-  .ir-marker__dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.22);
-    flex-shrink: 0;
-  }
-  .ir-marker__label {
-    font-size: 0.6875rem;
-    letter-spacing: 0.04em;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    background: rgba(11, 31, 58, 0.82);
     color: #fff;
-    background: rgba(0, 0, 0, 0.55);
-    padding: 2px 6px;
-    white-space: nowrap;
+    font-size: 0.625rem;
+    font-weight: 600;
+  }
+
+  .ir-equipment-key {
+    display: grid;
+    margin: 0;
+    padding: 0 var(--page-gutter-mobile);
+    background: var(--color-ink-950);
+  }
+  .ir-equipment-key__item {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 3.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .ir-equipment-key__item dt {
+    color: rgba(255, 255, 255, 0.58);
+    font-size: 0.6875rem;
+  }
+  .ir-equipment-key__item dd {
+    margin: 0;
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 500;
   }
 
   .ir-closing {
     margin: 0;
-    padding: var(--space-8) var(--page-gutter-mobile);
+    padding: var(--space-7) var(--page-gutter-mobile) var(--space-8);
     max-width: 42em;
     color: rgba(255, 255, 255, 0.72);
     font-size: 0.9375rem;
@@ -224,31 +243,77 @@ const markers = [
     .ir-closing {
       padding-inline: var(--page-gutter-tablet);
     }
+    .ir-equipment-key {
+      padding-inline: var(--page-gutter-tablet);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--space-6);
+    }
   }
 
   @media (min-width: 900px) {
-    .ir-frame {
-      height: 78svh;
-      max-height: 820px;
+    .ir-identifications {
+      inset: 0;
+      aspect-ratio: auto;
     }
     .ir-frame__top {
-      padding: var(--space-10) var(--page-gutter-desktop) var(--space-16);
+      position: absolute;
+      z-index: 2;
+      top: 0;
+      left: 0;
+      width: min(43rem, 50%);
+      padding: var(--space-8) var(--page-gutter-desktop) var(--space-12);
+      background: linear-gradient(180deg, rgba(5, 14, 27, 0.9), rgba(5, 14, 27, 0.58) 68%, transparent);
     }
     .ir-frame__statement {
       max-width: 26ch;
       font-size: clamp(1.5rem, 2.2vw, 1.875rem);
     }
-    /* Markers only at desktop/tablet widths where the frame is tall/wide
-       enough for each label to sit clearly on its own piece of
-       equipment without crowding — at narrow mobile widths the same
-       four items would overlap illegibly on a much smaller image, so
-       mobile relies on the opening/closing statements alone rather than
-       forcing the same overlay onto a cramped crop. */
-    .ir-frame__markers {
+    .ir-identifications__leaders {
       display: block;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+    .ir-identifications__leaders path {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.72);
+      stroke-width: 1px;
+    }
+    .ir-identification__anchor {
+      width: 0.55rem;
+      height: 0.55rem;
+      border: 2px solid #fff;
+      background: var(--color-ink-950);
+      color: transparent;
+    }
+    .ir-identification__label {
+      position: absolute;
+      left: var(--label-x);
+      top: var(--label-y);
+      display: inline-flex;
+      align-items: baseline;
+      gap: var(--space-2);
+      min-width: 10rem;
+      padding: var(--space-2) var(--space-3);
+      border-top: 1px solid rgba(255, 255, 255, 0.82);
+      background: rgba(5, 14, 27, 0.76);
+      color: #fff;
+      font-size: clamp(0.75rem, 1vw, 0.875rem);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .ir-identification__code {
+      color: rgba(255, 255, 255, 0.58);
+      font-size: 0.625rem;
+    }
+    .ir-equipment-key {
+      display: none;
     }
     .ir-closing {
-      padding: var(--space-10) var(--page-gutter-desktop);
+      max-width: 100%;
+      padding: var(--space-8) var(--page-gutter-desktop) var(--space-9);
       font-size: 1rem;
     }
   }
