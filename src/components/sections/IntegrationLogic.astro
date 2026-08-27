@@ -66,7 +66,7 @@ const copy = getDictionary(locale).integrationLogic;
 
     <ol class="il-sequence">
       {steps.map((step, i) => (
-        <li class="il-stage" data-stage={i + 1} style={`--stage-i: ${i};`}>
+        <li class="il-stage" data-stage={i + 1} style={`--stage-i: ${i}; --stage-progress: ${(i + 1) / steps.length};`}>
           <div class="il-stage__rail" aria-hidden="true">
             <span class="il-stage__index mono">{String(i + 1).padStart(2, '0')}</span>
           </div>
@@ -102,7 +102,7 @@ const copy = getDictionary(locale).integrationLogic;
   }
 
   .il-intro {
-    margin-bottom: var(--space-xl);
+    margin-bottom: var(--space-lg);
   }
   .il-intro__eyebrow {
     margin: 0 0 var(--space-2xs);
@@ -139,7 +139,7 @@ const copy = getDictionary(locale).integrationLogic;
    */
   .il-sequence {
     list-style: none;
-    margin: 0 0 var(--space-xl);
+    margin: 0;
     padding: 0;
   }
   .il-stage {
@@ -147,22 +147,23 @@ const copy = getDictionary(locale).integrationLogic;
     display: grid;
     grid-template-columns: 2rem 1fr;
     gap: var(--space-3);
-    padding-block: var(--space-4);
-    margin-left: calc(var(--stage-i, 0) * var(--space-sm));
+    padding-block: calc(var(--space-3) + var(--stage-i, 0) * 0.08rem);
+    margin-left: calc(var(--stage-i, 0) * var(--space-xs));
   }
   .il-stage::before {
-    /* the handoff rail: one continuous vertical line down the marker
-       column, broken only by the index badges sitting on top of it */
+    /* A segmented datum spine, not a continuous timeline rule. Each
+       transfer gains density as the project approaches commissioning. */
     content: '';
     position: absolute;
-    top: 0;
-    bottom: calc(-1 * var(--space-4));
+    top: 2rem;
+    bottom: calc(-1 * var(--space-3));
     left: 1rem;
-    width: 1px;
+    width: calc(1px + var(--stage-progress, 0.2) * 1px);
     background: var(--color-border-strong);
+    opacity: calc(0.28 + var(--stage-progress, 0.2) * 0.58);
   }
   .il-stage:last-child::before {
-    bottom: 50%;
+    bottom: calc(-1 * var(--space-lg));
   }
   .il-stage__rail {
     position: relative;
@@ -177,22 +178,40 @@ const copy = getDictionary(locale).integrationLogic;
     width: 2rem;
     height: 2rem;
     background: var(--color-surface);
-    border: 1px solid var(--color-accent);
+    border: calc(1px + var(--stage-i, 0) * 0.2px) solid var(--color-accent);
     color: var(--color-accent);
     font-size: 0.7rem;
-    font-weight: 600;
+    font-weight: calc(520 + var(--stage-i, 0) * 60);
+  }
+  .il-stage[data-stage='2'] .il-stage__index,
+  .il-stage[data-stage='3'] .il-stage__index,
+  .il-stage[data-stage='4'] .il-stage__index {
+    background: color-mix(in srgb, var(--color-accent) calc(var(--stage-i) * 5%), var(--color-surface));
   }
   .il-stage:last-child .il-stage__index {
     background: var(--color-accent);
     color: var(--color-surface);
   }
   .il-stage__body {
+    position: relative;
     padding-top: 0.3em;
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-accent) calc(12% + var(--stage-i, 0) * 7%), transparent);
+  }
+  .il-stage__body::before {
+    content: '';
+    position: absolute;
+    top: 0.95rem;
+    right: calc(100% + var(--space-3));
+    width: calc(var(--space-2) + var(--stage-i, 0) * var(--space-1));
+    height: calc(1px + var(--stage-progress, 0.2) * 1px);
+    background: var(--color-accent);
+    opacity: calc(0.35 + var(--stage-progress, 0.2) * 0.55);
   }
   .il-stage__title {
     margin: 0 0 var(--space-1);
-    font-size: calc(var(--fs-md) + var(--stage-i, 0) * 0.015rem);
-    font-weight: 600;
+    font-size: calc(var(--fs-md) + var(--stage-i, 0) * 0.025rem);
+    font-weight: calc(570 + var(--stage-i, 0) * 45);
     line-height: 1.35;
   }
   .il-stage__desc {
@@ -210,10 +229,22 @@ const copy = getDictionary(locale).integrationLogic;
    * alongside it for the whole section.
    */
   .il-endpoint {
-    margin: 0;
+    position: relative;
+    margin: var(--space-lg) 0 0;
+    border-top: 3px solid var(--color-accent);
     aspect-ratio: 16 / 7;
     overflow: hidden;
     background: var(--color-steel-900, #151a1e);
+  }
+  .il-endpoint::before {
+    content: '';
+    position: absolute;
+    z-index: 2;
+    top: -1.35rem;
+    left: calc(4 * var(--space-xs) + 1rem);
+    width: 2px;
+    height: 1.35rem;
+    background: var(--color-accent);
   }
   .il-endpoint__media {
     width: 100%;
@@ -241,7 +272,7 @@ const copy = getDictionary(locale).integrationLogic;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       align-items: end;
       gap: var(--space-2xl);
-      margin-bottom: var(--space-2xl);
+      margin-bottom: var(--space-xl);
     }
     .il-intro__title {
       max-width: none;
@@ -253,21 +284,44 @@ const copy = getDictionary(locale).integrationLogic;
     }
 
     .il-sequence {
-      max-width: 52em;
+      max-width: 58em;
       margin-inline: auto;
-      margin-bottom: var(--space-2xl);
     }
     .il-stage {
       grid-template-columns: 2.25rem 1fr;
       gap: var(--space-lg);
-      margin-left: calc(var(--stage-i, 0) * var(--space-lg));
+      margin-left: calc(var(--stage-i, 0) * clamp(1.5rem, 3vw, 2.75rem));
+      padding-block: calc(var(--space-3) + var(--stage-i, 0) * 0.12rem);
+    }
+    .il-stage::before {
+      left: 1.125rem;
+    }
+    .il-stage__body {
+      padding-bottom: var(--space-3);
+    }
+    .il-stage__body::before {
+      right: calc(100% + var(--space-lg));
     }
     .il-stage__title {
-      font-size: calc(var(--fs-md) + var(--stage-i, 0) * 0.03rem);
+      font-size: calc(var(--fs-md) + var(--stage-i, 0) * 0.045rem);
     }
 
     .il-endpoint {
+      margin-top: var(--space-xl);
       aspect-ratio: 21 / 8;
+    }
+    .il-endpoint::before {
+      left: calc(50% - 29rem + 4 * clamp(1.5rem, 3vw, 2.75rem) + 1.125rem);
+    }
+  }
+
+  @media (max-width: 899px) {
+    .il-stage::before,
+    .il-stage__body::before {
+      opacity: calc(0.2 + var(--stage-progress, 0.2) * 0.42);
+    }
+    .il-stage__body {
+      border-bottom-color: transparent;
     }
   }
 </style>
