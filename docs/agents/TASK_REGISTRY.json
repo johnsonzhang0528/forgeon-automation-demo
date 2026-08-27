@@ -322,6 +322,35 @@
           "required_tests": []
         }
       ]
+    },
+    "HP-REC": {
+      "title": "Homepage Visual Recovery",
+      "claimable": true,
+      "external_reviewer": "ChatGPT",
+      "tickets": [
+        {
+          "id": "HP-REC-05",
+          "title": "Industrial Context Callout Visual Recovery",
+          "status": "ready",
+          "allowed_files": [
+            "src/components/sections/IndustrialReality.astro",
+            "tests/e2e/hp-rec-05-industrial-reality.spec.ts",
+            "docs/screenshots/hp-rec-05-industrial-context-gate/**"
+          ],
+          "required_tests": [
+            "pnpm build",
+            "pnpm check:h1",
+            "pnpm check:links",
+            "pnpm test:e2e -- tests/e2e/hp-rec-05-industrial-reality.spec.ts",
+            "pnpm test:e2e -- tests/e2e/responsive-overflow.spec.ts",
+            "pnpm test:e2e -- tests/e2e/header.spec.ts",
+            "pnpm test:e2e -- tests/e2e/cc02i-hero.spec.ts",
+            "pnpm test:e2e -- tests/e2e/axe.spec.ts",
+            "pnpm test:e2e -- tests/e2e/production-imagery.spec.ts"
+          ],
+          "depends_on": []
+        }
+      ]
     }
   }
 }
