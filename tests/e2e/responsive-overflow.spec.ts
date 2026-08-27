@@ -57,10 +57,15 @@ test.describe('CC-02-01: /en/ 360px overflow regression', () => {
     expect(offenders, `Elements extending past the 360px viewport: ${offenders.join(', ')}`).toEqual([]);
   });
 
-  test('/en/ CTA banner buttons remain visible and within bounds at 360px', async ({ page }) => {
+  test('/en/ Final CTA buttons remain visible and within bounds at 360px', async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 800 });
     await page.goto('/en/');
-    const banner = page.locator('.cta-banner');
+    // Phase 5G: the Homepage's Final CTA is now HomeFinalCTA.astro (.hfc),
+    // not the shared CTABanner.astro (.cta-banner) — CTABanner itself is
+    // untouched and still used verbatim on 13+ inner pages, so this
+    // selector update is scoped to the homepage-only regression this test
+    // actually checks (buttons fit within the 360px viewport).
+    const banner = page.locator('.hfc');
     await banner.scrollIntoViewIfNeeded();
     const buttons = banner.locator('.btn');
     const count = await buttons.count();

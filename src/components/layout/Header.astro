@@ -15,6 +15,23 @@ export interface Props {
 const { locale, path, otherLocalePath } = Astro.props;
 const dict = getDictionary(locale);
 
+/*
+ * Phase 5B-R1 §B/A: the desktop top-level nav previously rendered all 6
+ * navItems (solutions/products/industries/about/insights/contact), which
+ * measured 612px wide at 1440px and had no slack left at 1120px — the
+ * production blocker where "聯絡我們" wrapped to a second row. Rather than
+ * shrink type or compress spacing to force 6 items to fit, the desktop
+ * primary row is narrowed to the 4 highest-value entry points; "技術資源"
+ * (insights) and "聯絡我們" (contact) are dropped from THIS row only —
+ * both remain fully reachable via the mobile drawer, the no-JS fallback,
+ * and Footer.astro (already links both), so no site functionality is
+ * removed, only re-prioritized for the desktop first-level row. Contact
+ * also semantically overlaps the Primary CTA here (both route to
+ * /contact/), which is the brief's own justification for not forcing it
+ * into top-level nav a second time.
+ */
+const desktopNavItems = navItems.filter((item) => item.labelKey !== 'insights' && item.labelKey !== 'contact');
+
 function isActive(itemPath: string) {
   return path === itemPath || path.startsWith(itemPath);
 }
@@ -36,7 +53,7 @@ const noJsLangHref = otherLocalePath ?? switchLocalePath(path, noJsLangTarget);
 
     <nav class="desktop-nav" aria-label={locale === 'zh-tw' ? '主要導覽' : 'Main navigation'}>
       <ul>
-        {navItems.map((item) => (
+        {desktopNavItems.map((item) => (
           <li>
             <a
               href={item.path(locale)}
@@ -162,6 +179,17 @@ const noJsLangHref = otherLocalePath ?? switchLocalePath(path, noJsLangTarget);
     background: color-mix(in srgb, var(--color-surface) 92%, transparent);
     backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--color-border);
+
+    /*
+     * Scoped Direction-B accent (DESIGN.md v2 §0/§10) — same override as
+     * Hero.astro, kept in sync so the nav-link underline and header CTA
+     * read as one system with the Hero photograph below, not a
+     * separately-styled toolbar. See Hero.astro's own comment for why this
+     * is scoped locally rather than repointing the sitewide token.
+     */
+    --color-accent: #3d5a6c;
+    --color-accent-dark: #24404f;
+    --color-accent-contrast: #f6f4f0;
   }
   /*
    * Zoom-safe height (R1-08): min-block-size, not a fixed block-size that
@@ -260,35 +288,6 @@ const noJsLangHref = otherLocalePath ?? switchLocalePath(path, noJsLangTarget);
     min-width: 0;
   }
   /*
-   * .site-header__datum targets DatumOrigin's own rendered <svg> root, not
-   * an element authored directly in Header.astro's template — same
-   * scope-hash issue documented above for .site-header__cta/.mobile-nav__cta
-   * (Astro's data-astro-cid-* scoping attribute stamps the CHILD
-   * component's own hash onto its root, not the parent's), so this
-   * selector needs :global() to actually match, exactly like the
-   * `.mobile-nav__cta > :global(.btn)` case below.
-   *
-   * The Datum mark is a desktop-only addition to the brand composition
-   * (same responsive pattern this file already uses for .desktop-nav and
-   * .site-header__cta): at mobile widths, the header row is logo + lang
-   * switch + hamburger only, matching the pre-existing mobile content
-   * budget. Adding the mark's 28px + gap unconditionally regressed the
-   * 360px/320px no-horizontal-overflow acceptance criteria (ticket §14) —
-   * hiding it below 1120px keeps that criterion intact without touching
-   * any spacing/gutter token.
-   */
-  .site-header__brand > :global(.site-header__datum) {
-    display: none;
-  }
-  @media (min-width: 1120px) {
-    .site-header__brand > :global(.site-header__datum) {
-      display: block;
-      flex-shrink: 0;
-      inline-size: 28px;
-      block-size: 28px;
-    }
-  }
-  /*
    * Zoom-safety fix (CC-02I-02 review, HIGH-02): at 200%-equivalent
    * font-size, the nav list's un-wrapped intrinsic width overflowed the
    * viewport, pushing the CTA fully off-screen and overlapping the brand
@@ -334,7 +333,7 @@ const noJsLangHref = otherLocalePath ?? switchLocalePath(path, noJsLangTarget);
     bottom: 0;
     width: 16px;
     height: 2px;
-    background: var(--color-action-primary);
+    background: var(--color-accent);
     transform: scaleX(0);
     transform-origin: left;
     transition: transform var(--duration-ui) var(--ease-standard);
@@ -430,7 +429,7 @@ const noJsLangHref = otherLocalePath ?? switchLocalePath(path, noJsLangTarget);
    */
   .site-header__cta > :global(.btn--primary) {
     background: transparent;
-    color: var(--color-action-primary);
+    color: var(--color-accent);
     border-color: var(--color-ink);
     border-radius: 0;
   }

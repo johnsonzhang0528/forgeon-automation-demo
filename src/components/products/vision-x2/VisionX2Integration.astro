@@ -1,0 +1,98 @@
+---
+/**
+ * VISION-X2 Product Detail — Integration (PD-VX2-05).
+ *
+ * Fifth stage of the dedicated VISION-X2 Product Detail composition
+ * (VisionX2ProductDetail.astro), approved at the Phase 5C-R2 (desktop) /
+ * Phase 5D-R2 (mobile) Product/Mockup Gates and the PD-VX2-05 Ticket
+ * Definition Gate. Quiet, text-only light section — two independent
+ * explanatory rows, narrow content measure, no cards/icons/image/HUD/
+ * table. Deliberately quieter than Optical/Lighting Logic, not a second
+ * technical-decoration moment.
+ *
+ * Content: both rows are presentation-layer restatements of existing
+ * canonical vision-x2.md fields — row 1 from `specs`'s "通訊介面"
+ * ("標準工業通訊介面") combined with the standalone-vs-integrated
+ * deployment framing already established by Core Capabilities/Whole
+ * Product; row 2 is a direct paraphrase of `features[4]` ("檢測結果可
+ * 匯出供品質追溯"), matching the Core Capabilities item 05 derived label
+ * already approved in PD-VX2-02. No protocol name, I/O count, data
+ * format, or performance value is introduced — "標準工業通訊介面"
+ * remains intentionally generic. vision-x2.md is not modified by this
+ * component.
+ */
+import { getDictionary } from '../../../utils/i18n';
+import type { Locale } from '../../../config/site';
+
+export interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = getDictionary(locale).productDetailVisionX2Integration;
+---
+
+<section class="vx-pd-integration" aria-labelledby="vx-pd-integration-heading">
+  <div class="container container--narrow">
+    <div class="vx-pd-integration__intro">
+      <p class="vx-pd-integration__eyebrow mono">{copy.eyebrow}</p>
+      <h2 id="vx-pd-integration-heading" class="vx-pd-integration__title">{copy.title}</h2>
+    </div>
+
+    <div class="vx-pd-integration__rows">
+      {copy.rows.map((row: string) => (
+        <div class="vx-pd-integration__row">
+          <p class="vx-pd-integration__text">{row}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .vx-pd-integration {
+    background: var(--color-surface);
+    padding-block: var(--section-standard);
+  }
+  .container--narrow {
+    max-width: 860px;
+  }
+
+  .vx-pd-integration__intro {
+    margin-bottom: var(--space-lg);
+  }
+  .vx-pd-integration__eyebrow {
+    margin: 0 0 var(--space-2xs);
+    color: var(--color-accent);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .vx-pd-integration__title {
+    margin: 0;
+    color: var(--color-ink);
+    font-size: clamp(1.375rem, 2.2vw, 1.75rem);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .vx-pd-integration__rows {
+    display: flex;
+    flex-direction: column;
+  }
+  .vx-pd-integration__row {
+    padding-block: var(--space-sm);
+    border-top: 1px solid var(--color-border);
+  }
+  .vx-pd-integration__row:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+  .vx-pd-integration__text {
+    margin: 0;
+    max-width: 34em;
+    color: var(--color-muted);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-body-lg);
+  }
+</style>

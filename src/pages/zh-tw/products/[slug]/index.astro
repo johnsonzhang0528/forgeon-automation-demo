@@ -10,8 +10,23 @@ import Button from '../../../../components/ui/Button.astro';
 import SolutionCard from '../../../../components/ui/SolutionCard.astro';
 import CTABanner from '../../../../components/sections/CTABanner.astro';
 import StructuredData from '../../../../components/seo/StructuredData.astro';
+import VisionX2ProductDetail from '../../../../components/products/vision-x2/VisionX2ProductDetail.astro';
 import { getSortedProducts, getSortedSolutions } from '../../../../utils/content';
 import { demoDataNoticeZh } from '../../../../config/site';
+
+/*
+ * PD-VX2-02 — LOCKED ARCHITECTURE INVARIANT: exactly ONE VISION-X2
+ * route-level dispatch below (`isVisionX2 ? <VisionX2ProductDetail /> :
+ * ...`). VISION-X2 renders its own dedicated composition
+ * (src/components/products/vision-x2/VisionX2ProductDetail.astro), which
+ * owns the ordering of every VISION-X2-specific section; AXM-400/
+ * FLEXCELL-M keep rendering the generic template below unchanged. Future
+ * approved VISION-X2 sections are added inside VisionX2ProductDetail.astro
+ * — never as a second `isVisionX2` / `entrySlug === 'vision-x2'`
+ * conditional in this route file. (PD-VX2-01 originally split this into
+ * two separate conditionals — one for the Hero, one suppressing the
+ * generic body — which PD-VX2-02 consolidates back into one.)
+ */
 
 export async function getStaticPaths() {
   const products = await getSortedProducts();
@@ -26,6 +41,7 @@ const relatedSolutions = allSolutions.filter((s) => d.relatedSolutions.includes(
 
 const path = `/zh-tw/products/${d.entrySlug}/`;
 const otherLocalePath = `/en/products/${d.entrySlug}/`;
+const isVisionX2 = d.entrySlug === 'vision-x2';
 ---
 
 <BaseLayout locale={locale} path={path} otherLocalePath={otherLocalePath} title={d.seoTitle['zh-tw']} description={d.seoDescription['zh-tw']}>
@@ -38,65 +54,71 @@ const otherLocalePath = `/en/products/${d.entrySlug}/`;
     <Breadcrumb locale={locale} items={[{ label: '產品', path: '/zh-tw/products/' }, { label: d.name, path }]} />
   </div>
 
-  <section class="section section--tight">
-    <div class="container product-hero">
-      <div class="product-hero__media">
-        <ProductVisual
-          locale={locale}
-          product={d.entrySlug as 'axm-400' | 'vision-x2' | 'flexcell-m'}
-          placement="hero"
-          priority
-        />
-      </div>
-      <div class="product-hero__copy">
-        <Badge variant="demo">概念展示資料</Badge>
-        <h1 class="product-hero__name mono">{d.name}</h1>
-        <p class="product-hero__positioning">{d.positioning['zh-tw']}</p>
-        <p class="product-hero__desc measure">{d.shortDescription['zh-tw']}</p>
-        <div class="product-hero__actions">
-          <Button href="/zh-tw/contact/" trackEvent="cta_click">提交專案需求</Button>
-          {d.datasheetPath && (
-            <Button href={d.datasheetPath} variant="secondary" trackEvent="spec_download">
-              下載規格 PDF（示範檔案）
-            </Button>
-          )}
+  {isVisionX2 ? (
+    <VisionX2ProductDetail locale={locale} />
+  ) : (
+    <Fragment>
+      <section class="section section--tight">
+        <div class="container product-hero">
+          <div class="product-hero__media">
+            <ProductVisual
+              locale={locale}
+              product={d.entrySlug as 'axm-400' | 'vision-x2' | 'flexcell-m'}
+              placement="hero"
+              priority
+            />
+          </div>
+          <div class="product-hero__copy">
+            <Badge variant="demo">概念展示資料</Badge>
+            <h1 class="product-hero__name mono">{d.name}</h1>
+            <p class="product-hero__positioning">{d.positioning['zh-tw']}</p>
+            <p class="product-hero__desc measure">{d.shortDescription['zh-tw']}</p>
+            <div class="product-hero__actions">
+              <Button href="/zh-tw/contact/" trackEvent="cta_click">提交專案需求</Button>
+              {d.datasheetPath && (
+                <Button href={d.datasheetPath} variant="secondary" trackEvent="spec_download">
+                  下載規格 PDF（示範檔案）
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  </section>
+      </section>
 
-  <section class="section section--tight section--alt">
-    <div class="container container--narrow">
-      <SectionHeading eyebrow="產品特性" title="特性" />
-      <FeatureList items={d.features['zh-tw']} />
-    </div>
-  </section>
+      <section class="section section--tight section--alt">
+        <div class="container container--narrow">
+          <SectionHeading eyebrow="產品特性" title="特性" />
+          <FeatureList items={d.features['zh-tw']} />
+        </div>
+      </section>
 
-  <section class="section section--tight">
-    <div class="container container--narrow">
-      <SectionHeading eyebrow="適用情境" title="適合的應用場景" />
-      <FeatureList items={d.useCases['zh-tw']} />
-    </div>
-  </section>
+      <section class="section section--tight">
+        <div class="container container--narrow">
+          <SectionHeading eyebrow="適用情境" title="適合的應用場景" />
+          <FeatureList items={d.useCases['zh-tw']} />
+        </div>
+      </section>
 
-  <section class="section section--tight section--alt">
-    <div class="container container--narrow">
-      <SectionHeading eyebrow="技術規格" title="規格表" />
-      <SpecificationTable
-        caption={`${d.name} 技術規格`}
-        rows={d.specs.map((s) => ({ label: s.label['zh-tw'], value: s.value['zh-tw'] }))}
-      />
-      <p class="demo-disclaimer">{demoDataNoticeZh}</p>
-    </div>
-  </section>
+      <section class="section section--tight section--alt">
+        <div class="container container--narrow">
+          <SectionHeading eyebrow="技術規格" title="規格表" />
+          <SpecificationTable
+            caption={`${d.name} 技術規格`}
+            rows={d.specs.map((s) => ({ label: s.label['zh-tw'], value: s.value['zh-tw'] }))}
+          />
+          <p class="demo-disclaimer">{demoDataNoticeZh}</p>
+        </div>
+      </section>
 
-  {d.options && (
-    <section class="section section--tight">
-      <div class="container container--narrow">
-        <SectionHeading eyebrow="可選配項目" title="選配" />
-        <FeatureList items={d.options['zh-tw']} />
-      </div>
-    </section>
+      {d.options && (
+        <section class="section section--tight">
+          <div class="container container--narrow">
+            <SectionHeading eyebrow="可選配項目" title="選配" />
+            <FeatureList items={d.options['zh-tw']} />
+          </div>
+        </section>
+      )}
+    </Fragment>
   )}
 
   {relatedSolutions.length > 0 && (

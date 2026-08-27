@@ -1,16 +1,23 @@
 ---
 /**
- * Homepage Hero — Engineering Editorial Sheet with a photographic focal
- * point. Copy remains semantic HTML so it stays selectable, translatable,
- * accessible and independent from the image asset.
+ * Homepage Hero — Precision Instrument Editorial (DESIGN.md v2 §5/§9/§18).
  *
- * The Final Master is imported through Astro's asset pipeline. This keeps
- * its intrinsic dimensions in the markup and produces responsive AVIF/WebP
- * derivatives at build time. Desktop uses an editorial overlay; smaller
- * viewports keep the same DOM order and place copy above the image.
+ * Full-bleed FORGEON-HERO-MASTER-v1 photograph with copy overlaid directly
+ * on the image, anchored low-left — not a text-column-beside-image split.
+ * This replaces the previous "text column + boxed photo" Precision Datum
+ * layout: DESIGN.md v2 §0 supersedes that system, and the Phase 5A-R Visual
+ * Gate specifically rejected the split-column hero as reading like a
+ * generic B2B template.
+ *
+ * The hero image itself is locked production art (FINAL PRODUCTION
+ * ACCEPTED, Phase 5A-R2) — this component only frames it responsively; it
+ * must never crop out the vision module / ring illumination / fixture /
+ * workpiece relationship, add overlays, or recolor it (see the object-fit
+ * rules below, which shift crop focus per breakpoint via object-position
+ * only, never a different image).
  */
 import { Picture } from 'astro:assets';
-import heroImage from '../../assets/images/home/forgeon-automation-hero-final-master.png';
+import heroImage from '../../assets/images/forgeon/home/forgeon-hero-master-v1.png';
 import { getDictionary } from '../../utils/i18n';
 import type { Locale } from '../../config/site';
 import Button from '../ui/Button.astro';
@@ -21,134 +28,94 @@ export interface Props {
 
 const { locale } = Astro.props;
 const hero = getDictionary(locale).hero;
-
 ---
 
 <section class="hero-root" data-hero-motion-root data-motion-state="settled">
-  <div class="hero-root__datum" aria-hidden="true"></div>
-
-  <p class="hero-root__eyebrow mono">{hero.eyebrow}</p>
-
-  <h1 class="hero-root__headline">{hero.headline}</h1>
-
-  <p class="hero-root__body">{hero.body}</p>
-
-  <div class="hero-root__ctas">
-    <Button
-      href={`/${locale}/contact/?intent=project`}
-      size="lg"
-      trackEvent="cta_click"
-      data-intent="project"
-      data-source="home-hero"
-    >
-      {hero.ctaPrimary}
-    </Button>
-    <Button
-      href={`/${locale}/contact/?intent=technical-advice`}
-      variant="ghost"
-      size="lg"
-      trackEvent="cta_click"
-      data-intent="technical-advice"
-      data-source="home-hero"
-    >
-      {hero.ctaSecondary}
-    </Button>
-  </div>
-
   <figure class="hero-root__media" data-hero-image="final-master">
     <Picture
       src={heroImage}
       formats={['avif', 'webp']}
-      widths={[480, 768, 1024, 1448]}
-      sizes="(min-width: 1024px) min(100vw - 64px, 1440px), (min-width: 768px) calc(100vw - 48px), calc(100vw - 32px)"
+      widths={[480, 768, 1024, 1440, 1920]}
+      sizes="100vw"
       alt={hero.imageAlt}
       loading="eager"
       fetchpriority="high"
       decoding="async"
       quality={82}
     />
-    <figcaption class="hero-root__disclosure mono">{hero.imageDisclosure}</figcaption>
   </figure>
 
+  <div class="hero-root__scrim" aria-hidden="true"></div>
+
+  <div class="hero-root__content">
+    <p class="hero-root__eyebrow mono">{hero.eyebrow}</p>
+    <h1 class="hero-root__headline">{hero.headline}</h1>
+    <p class="hero-root__body">{hero.body}</p>
+    <div class="hero-root__ctas">
+      <Button
+        href={`/${locale}/contact/?intent=project`}
+        variant="secondary-invert"
+        size="md"
+        trackEvent="cta_click"
+        data-intent="project"
+        data-source="home-hero"
+        class="hero-root__cta-primary"
+      >
+        {hero.ctaPrimary}
+      </Button>
+      <Button
+        href={`/${locale}/products/`}
+        variant="ghost"
+        size="md"
+        trackEvent="cta_click"
+        data-intent="browse-products"
+        data-source="home-hero"
+        class="hero-root__cta-secondary"
+      >
+        {hero.ctaSecondary}
+        <span aria-hidden="true">&rarr;</span>
+      </Button>
+    </div>
+  </div>
 </section>
 
 <style>
   .hero-root {
     position: relative;
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-7, 1.75rem);
-    max-width: var(--container-wide);
-    margin-inline: auto;
-    padding: var(--space-6) var(--page-gutter-mobile) var(--space-16);
-  }
-
-  .hero-root__datum {
-    width: 2.5rem;
-    height: 2px;
-    margin-bottom: var(--space-4);
-    background: var(--color-action-primary);
-  }
-
-  .hero-root__eyebrow {
-    margin: 0;
-    color: var(--color-action-primary);
-    font-size: var(--fs-technical);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .hero-root__headline {
-    max-width: 720px;
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: clamp(2rem, 8vw, 2.5rem);
-    font-weight: 600;
-    line-height: 1.3;
-    letter-spacing: var(--ls-h1);
-    white-space: pre-line;
-    text-wrap: balance;
-  }
-
-  :lang(zh-Hant-TW) .hero-root__headline {
-    font-family: 'Noto Sans TC', var(--font-display);
-    letter-spacing: 0;
-  }
-
-  :lang(en) .hero-root__headline {
-    font-size: clamp(1.5rem, 6vw, 2rem);
-    font-weight: 600;
-  }
-
-  .hero-root__body {
-    max-width: var(--measure-zh);
-    margin: 0;
-    color: var(--color-steel-700);
-    font-size: var(--fs-small);
-    line-height: var(--lh-body, 1.6);
-    white-space: pre-line;
-  }
-
-  .hero-root__ctas {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-  }
-
-  .hero-root__media {
-    position: relative;
-    min-width: 0;
-    margin: var(--space-2) 0 0;
-    overflow: hidden;
-    border: 1px solid color-mix(in srgb, var(--color-steel-600) 72%, transparent);
-    background: var(--color-steel-900);
-    aspect-ratio: 4 / 3;
-  }
-
-  .hero-root__media :global(picture) {
-    display: block;
+    /* Full-bleed: intentionally breaks out of the page's max-width
+       container (DESIGN.md v2 §5/§18 — the hero image controls the
+       viewport, not a card inside a gutter). */
     width: 100%;
-    height: 100%;
+    min-height: 560px;
+    height: 78svh;
+    max-height: 860px;
+    overflow: hidden;
+    background: var(--color-ink-950);
+
+    /*
+     * Scoped Direction-B accent (DESIGN.md v2 §0/§10): the sitewide
+     * --color-accent/--color-copper-* tokens in tokens.css still belong to
+     * the superseded Precision Datum System (and --color-copper-600 is
+     * literally a blue hex despite its name — see DESIGN.md v2 §0). This
+     * phase's scope is Header + Hero only, so rather than repoint the
+     * global token (which would silently reskin every Button/Card/Footer
+     * sitewide, far outside this ticket), the override lives here and
+     * cascades only to descendants of .hero-root — Button.astro itself is
+     * untouched, and every other page/section keeps the current sitewide
+     * accent until a later phase migrates them deliberately.
+     */
+    --color-accent: #3d5a6c;
+    --color-accent-dark: #24404f;
+    --color-accent-contrast: #f6f4f0;
+    --radius-md: 2px;
+  }
+
+  .hero-root__media,
+  .hero-root__media :global(picture) {
+    position: absolute;
+    inset: 0;
+    margin: 0;
   }
 
   .hero-root__media :global(img) {
@@ -156,153 +123,181 @@ const hero = getDictionary(locale).hero;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: 66% 52%;
+    /* Keeps the VISION-X2 module + ring illumination + fixture column
+       (the right two-thirds of the source frame) in view while trimming
+       the darkest, least informative left edge first as the viewport
+       narrows. Breakpoints only ever shift object-position on this one
+       image — never swap in a different crop or asset. */
+    object-position: 62% 42%;
   }
 
-  .hero-root__disclosure {
+  .hero-root__scrim {
     position: absolute;
-    inset-inline-end: var(--space-3);
-    inset-block-end: var(--space-3);
-    margin: 0;
-    padding: 0;
-    color: rgb(255 255 255 / 82%);
-    font-family: var(--font-mono);
+    inset: 0;
+    /* Left-anchored falloff so body copy stays readable without turning
+       the whole frame into a dark card (DESIGN.md v2 §5: "black must
+       reveal form, not erase form" applies to UI treatment same as the
+       photography itself). Right two-thirds of the image stay clear. */
+    background: linear-gradient(
+      100deg,
+      rgba(10, 13, 15, 0.78) 0%,
+      rgba(10, 13, 15, 0.52) 24%,
+      rgba(10, 13, 15, 0.12) 46%,
+      rgba(10, 13, 15, 0) 62%
+    );
+  }
+
+  .hero-root__content {
+    position: relative;
+    z-index: 1;
+    align-self: end;
+    max-width: 26em;
+    margin-inline-start: var(--page-gutter-mobile);
+    margin-block-end: var(--space-6);
+    padding-inline-end: var(--page-gutter-mobile);
+  }
+
+  /*
+   * Phase 5D-R1 P0: the "品牌概念影像"/"Concept brand imagery" per-image
+   * disclosure label is removed sitewide from Hero and VISION-X2
+   * Signature (see VisionX2Signature.astro's matching note) — it read as
+   * demo/concept-project language leaking onto FORGEON's own public
+   * surface (DESIGN.md v2 §1: the site must never self-identify as a
+   * portfolio/demo). Claims Integrity is unaffected: the site's real
+   * disclosure mechanism is the sitewide Demo Mode footer notice
+   * (Footer.astro's `legalNotice`), not a per-image caption.
+   */
+  .hero-root__eyebrow {
+    margin: 0 0 var(--space-2);
+    color: rgba(255, 255, 255, 0.72);
     font-size: 0.6875rem;
-    line-height: 1.25;
-    letter-spacing: 0.04em;
-    text-shadow: 0 1px 3px rgb(0 0 0 / 55%);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
   }
 
-  .hero-root__ledger :global(.eval-ledger) {
-    max-width: var(--measure-zh);
+  .hero-root__headline {
+    max-width: 15ch;
+    margin: 0 0 var(--space-3);
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: clamp(1.625rem, 6.4vw, 2rem);
+    font-weight: 600;
+    line-height: 1.32;
+    letter-spacing: -0.005em;
+    white-space: pre-line;
+    text-wrap: balance;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.35);
   }
 
-  .hero-root__rail {
-    margin-top: var(--space-5);
-    padding-top: var(--space-8);
-    border-top: 1px solid var(--color-steel-600);
+  :lang(zh-Hant-TW) .hero-root__headline {
+    font-family: 'Noto Sans TC', var(--font-display);
+    font-weight: 600;
+  }
+
+  .hero-root__body {
+    max-width: 26em;
+    margin: 0 0 var(--space-5);
+    color: rgba(255, 255, 255, 0.76);
+    font-size: 0.875rem;
+    line-height: 1.65;
+    white-space: pre-line;
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .hero-root__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-5);
+  }
+
+  /*
+   * CTA weight correction (Phase 5B-R1 §C): the previous pair rendered as
+   * two same-size filled/bordered rectangles — generic "landing page
+   * button row." Primary keeps a real, findable action (bordered, not
+   * filled, sized to its own text via inline-flex + tightened padding)
+   * without the SaaS block weight; secondary drops to a text+arrow ghost
+   * action a clear level below it. Button.astro itself is untouched
+   * (§11) — both overrides are scoped call-site rules on Button's already
+   *-public classes, the same pattern Header.astro uses for its own CTA.
+   */
+  .hero-root__ctas :global(.hero-root__cta-primary.btn) {
+    padding: 0.62em 1.35em;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border-color: var(--color-accent-contrast, #f6f4f0);
+    color: var(--color-accent-contrast, #f6f4f0);
+  }
+  .hero-root__ctas :global(.hero-root__cta-primary.btn:hover) {
+    background: var(--color-accent-contrast, #f6f4f0);
+    color: var(--color-ink-950);
+    border-color: var(--color-accent-contrast, #f6f4f0);
+  }
+
+  .hero-root__ctas :global(.hero-root__cta-secondary.btn) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.82);
+  }
+  .hero-root__ctas :global(.hero-root__cta-secondary.btn) span {
+    display: inline-block;
+    transition: transform var(--duration-ui) var(--ease-standard);
+  }
+  .hero-root__ctas :global(.hero-root__cta-secondary.btn:hover) {
+    color: #fff;
+  }
+  .hero-root__ctas :global(.hero-root__cta-secondary.btn:hover) span {
+    transform: translateX(3px);
   }
 
   @media (max-width: 400px) {
-    .hero-root__ctas :global(.btn) {
-      flex: 1 1 100%;
-      white-space: normal;
-      text-align: center;
+    .hero-root__ctas {
+      gap: var(--space-4);
     }
   }
 
-  @media (min-width: 768px) {
-    .hero-root {
-      padding-inline: var(--page-gutter-tablet);
-    }
-
-    .hero-root__media {
-      aspect-ratio: 16 / 9;
-    }
-
-    .hero-root__media :global(img) {
-      object-position: 64% 52%;
+  @media (min-width: 640px) {
+    .hero-root__headline {
+      max-width: none;
+      font-size: clamp(1.875rem, 4vw, 2.25rem);
     }
   }
 
   @media (min-width: 1024px) {
     .hero-root {
-      grid-template-columns: repeat(12, minmax(0, 1fr));
-      grid-template-rows: auto auto auto auto auto auto auto;
-      column-gap: var(--space-6);
-      row-gap: 0;
-      align-items: start;
-      padding: var(--space-12) var(--page-gutter-desktop) var(--space-16);
-      isolation: isolate;
+      height: 80svh;
+      max-height: 880px;
     }
 
-    .hero-root__media {
-      grid-column: 1 / 13;
-      grid-row: 1 / 7;
-      align-self: stretch;
-      min-height: clamp(620px, 52vw, 720px);
-      margin: 0;
-      aspect-ratio: auto;
-      z-index: -1;
-    }
-
-    .hero-root__media::after {
-      position: absolute;
-      inset: 0;
-      content: '';
-      pointer-events: none;
-      background: linear-gradient(
-        90deg,
-        rgb(246 245 239 / 98%) 0%,
-        rgb(246 245 239 / 96%) 30%,
-        rgb(246 245 239 / 75%) 40%,
-        rgb(246 245 239 / 18%) 54%,
-        transparent 68%
-      );
-    }
-
-    .hero-root__media :global(img) {
-      object-position: 64% 52%;
-    }
-
-    .hero-root__datum,
-    .hero-root__eyebrow,
-    .hero-root__headline,
-    .hero-root__body,
-    .hero-root__ctas,
-    .hero-root__ledger {
-      position: relative;
-      z-index: 1;
-      grid-column: 1 / 6;
-      margin-inline-start: var(--space-6);
-    }
-
-    .hero-root__datum {
-      grid-row: 1;
-      margin-top: var(--space-8);
-      margin-bottom: var(--space-4);
+    .hero-root__content {
+      max-width: 32em;
+      margin-inline-start: var(--page-gutter-desktop);
+      margin-block-end: var(--space-14);
     }
 
     .hero-root__eyebrow {
-      grid-row: 2;
       margin-bottom: var(--space-3);
     }
 
     .hero-root__headline {
-      grid-row: 3;
-      max-width: 100%;
-      margin-bottom: var(--space-6);
-      font-size: clamp(2.25rem, 2.6vw, 3rem);
-      font-weight: 600;
-      line-height: 1.28;
-    }
-
-    :lang(en) .hero-root__headline {
-      font-size: clamp(2rem, 2.3vw, 2.75rem);
-      font-weight: 600;
+      margin-bottom: var(--space-4);
+      font-size: clamp(2.25rem, 2.9vw, 2.875rem);
+      line-height: 1.3;
     }
 
     .hero-root__body {
-      grid-row: 4;
       margin-bottom: var(--space-6);
-      font-size: var(--fs-body);
+      font-size: 0.9375rem;
     }
+  }
 
-    .hero-root__ctas {
-      grid-row: 5;
-    }
-
-    .hero-root__ledger {
-      grid-row: 6;
-      align-self: end;
-      margin-top: var(--space-8);
-      margin-bottom: var(--space-8);
-    }
-
-    .hero-root__rail {
-      grid-column: 1 / 13;
-      grid-row: 7;
-      margin-top: var(--space-10);
+  @media (min-width: 1440px) {
+    .hero-root__media :global(img) {
+      object-position: 60% 40%;
     }
   }
 

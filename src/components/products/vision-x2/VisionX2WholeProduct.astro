@@ -1,0 +1,163 @@
+---
+/**
+ * VISION-X2 Product Detail — Whole Product / System Context (PD-VX2-03).
+ *
+ * Third stage of the dedicated VISION-X2 Product Detail composition
+ * (VisionX2ProductDetail.astro), approved at the Phase 5C-R2 (desktop) /
+ * Phase 5D-R2 (mobile) Product/Mockup Gates and the PD-VX2-03 Ticket
+ * Definition Gate. Second dark signature-image moment after Precision
+ * Detail Hero — image/content split (desktop) or stacked (mobile),
+ * establishing product/system recognition, not a repeat Hero or another
+ * Core Capabilities list.
+ *
+ * Reuses the existing approved Whole Product Master
+ * (vision-x2-whole-product-master-v1.png) — the same file already used by
+ * the Homepage's VisionX2Signature.astro Signature Moment. Imported here
+ * directly (same pattern as VisionX2Hero.astro), not shared through
+ * VisionX2Signature.astro or ProductVisual.astro — this component and the
+ * Homepage's own use of the image are independent, so neither can regress
+ * the other.
+ *
+ * Content: the three supporting points are verbatim canonical
+ * vision-x2.md `features[0]`, `features[1]`, `features[3]` (the same
+ * curated three-item subset the approved Mockup already used — features
+ * [2] "條碼與特徵辨識"/barcode-feature-recognition and [4] "檢測結果匯出"/
+ * inspection-result-export are intentionally not repeated here, matching
+ * the approved Mockup exactly). vision-x2.md itself is not modified.
+ */
+import { Picture } from 'astro:assets';
+import wholeProductImage from '../../../assets/images/forgeon/products/vision-x2/vision-x2-whole-product-master-v1.png';
+import { getDictionary } from '../../../utils/i18n';
+import type { Locale } from '../../../config/site';
+
+export interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = getDictionary(locale).productDetailVisionX2WholeProduct;
+---
+
+<section class="vx-pd-whole" aria-labelledby="vx-pd-whole-heading">
+  <figure class="vx-pd-whole__media" data-vx-image="whole-product-master">
+    <Picture
+      src={wholeProductImage}
+      formats={['avif', 'webp']}
+      widths={[480, 768, 1024, 1440, 1920]}
+      sizes="(min-width: 900px) 58vw, 100vw"
+      alt={copy.imageAlt}
+      loading="lazy"
+      decoding="async"
+      quality={82}
+    />
+  </figure>
+  <div class="vx-pd-whole__content">
+    <div class="vx-pd-whole__rule" aria-hidden="true"></div>
+    <p class="vx-pd-whole__eyebrow mono">{copy.eyebrow}</p>
+    <h2 id="vx-pd-whole-heading" class="vx-pd-whole__title">{copy.title}</h2>
+    <ul class="vx-pd-whole__list">
+      {copy.points.map((point: string) => <li>{point}</li>)}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .vx-pd-whole {
+    background: rgb(12, 12, 12);
+  }
+  .vx-pd-whole__media {
+    position: relative;
+    margin: 0;
+    aspect-ratio: 4 / 3.1;
+  }
+  .vx-pd-whole__media :global(picture) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .vx-pd-whole__media :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 38%;
+  }
+  .vx-pd-whole__content {
+    padding: var(--space-lg) var(--page-gutter-mobile) var(--space-xl);
+    color: rgba(255, 255, 255, 0.92);
+  }
+  .vx-pd-whole__rule {
+    width: 28px;
+    height: 1px;
+    margin-bottom: var(--space-md);
+    background: rgba(255, 255, 255, 0.4);
+  }
+  .vx-pd-whole__eyebrow {
+    margin: 0 0 var(--space-2xs);
+    color: rgba(255, 255, 255, 0.55);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.06em;
+  }
+  .vx-pd-whole__title {
+    margin: 0 0 var(--space-sm);
+    color: rgba(255, 255, 255, 0.94);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .vx-pd-whole__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  .vx-pd-whole__list li {
+    position: relative;
+    padding-inline-start: 1.1em;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-body-lg);
+  }
+  .vx-pd-whole__list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 5px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.42);
+  }
+
+  @media (min-width: 900px) {
+    .vx-pd-whole {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    }
+    .vx-pd-whole__media {
+      aspect-ratio: auto;
+      min-height: 600px;
+    }
+    .vx-pd-whole__media :global(img) {
+      object-position: 50% 40%;
+    }
+    .vx-pd-whole__content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: var(--space-2xl) var(--space-2xl) var(--space-2xl) var(--space-xl);
+    }
+    .vx-pd-whole__rule {
+      width: 32px;
+      margin-bottom: var(--space-lg);
+    }
+    .vx-pd-whole__title {
+      font-size: var(--fs-lg);
+      margin-bottom: var(--space-md);
+    }
+    .vx-pd-whole__list {
+      gap: var(--space-sm);
+    }
+  }
+</style>

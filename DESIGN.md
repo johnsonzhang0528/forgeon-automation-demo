@@ -2,244 +2,558 @@
 
 <!-- impeccable:design-schema 1 -->
 
-## Adaptation Note
+# DESIGN.md v2 — Production Design Contract
 
-This project's Impeccable workflow was run without a live browser session or
-image-generation subagents (non-interactive background session, no display).
-`new-work.md`'s decision framework (color strategy, face calibration, AI-look
-avoidance) was applied by hand rather than through `concept-seed.mjs` /
-`serve-question.mjs` / the finish-reviewer subagent chain. See
-`docs/SKILL_USAGE_LOG.md` §3 for the full explanation of what ran versus what
-was adapted, and why.
+**Status: Approved by Human / ChatGPT Design Contract Gate (Phase 4), with
+required fixes applied.** This is the sole canonical design document. The
+prior v1 ("Precision Datum System") has been moved in full to
+`docs/design-history/DESIGN-v1-precision-datum.md` — read that file only for
+historical context, never as active guidance. Keeping current and superseded
+instructions in one file risked a future agent reading both as live; they
+are now physically separated.
 
-## CC-01 Addendum (2026-08-05): Precision Datum System
+This document is the production contract for FORGEON's next visual
+iteration. It governs the Phase 5 Mockup sequence (§18) and — once mockups
+pass their own gates — Taste Redesign / Impeccable / implementation work. It
+is not an inspiration note; every rule here is something a reviewer can
+check a mockup or a build against.
 
-**The Color Strategy and Typography sections below describe the original
-build's world and are kept as historical record — the site's live design
-world as of CC-01 is the Precision Datum System, and the values below no
-longer match `src/styles/tokens.css`.** This addendum states what
-actually shipped; do not treat the sections that follow as current.
+---
 
-Full audit rationale for the redesign is in
-`docs/redesign/forgeon_full_audit_and_redesign.md` (§17-19) and
-`docs/redesign/forgeon_claude_code_redesign_tasks.md`; token-by-token
-implementation detail is in `docs/DESIGN_SYSTEM.md`; every specific
-correction made to the redesign spec's literal proposed values (and why)
-is in `docs/DATUM_DECISION_LOG.md`'s CC-01 entry; WCAG math for every
-color pairing is in `docs/CONTRAST_AUDIT.md`.
+## 0. CONTEXT_CONFLICT — RESOLVED
 
-**THESIS (unchanged, made more literal):** precision is a process you can
-watch, not a claim you take on faith. The Precision Datum System commits
-this idea to a specific visual grammar rather than leaving it as a
-description: datum origin marks (a horizontal/vertical axis pair with a
-copper intersection point — not a crosshair), tolerance bands (parallel
-boundary lines with an acceptable-range zone, not a progress bar), vision
-lock frames (four-corner registration marks, not a scanning reticle),
-assembly spines (a main axis with connectable module nodes), process
-stamps (engineering-workflow status markers, deliberately not shaped like
-a certification seal), and cutaway windows (angled clip-path reveals of
-product/system media). Six components, `src/components/brand/`, each with
-its own accessibility semantics and reduced-motion behavior documented in
-its own file header.
+Phase 4 flagged a real conflict between the previously-shipped visual system
+and the Direction B research (Phase 3 / 3B). The Human / ChatGPT Design
+Contract Gate has now ruled on it directly.
 
-**Color: five roles, not one accent.** Paper (55% target, primary
-background), Ink (25%, primary text/dark sections), Steel (12%, technical
-lines/secondary text — now three role-specific steps,
-`--color-steel-700`/`600`/`500`, after WCAG verification found the
-redesign spec's single steel value failed as light-background text/border),
-Copper (6%, restricted to Datum Origin/primary CTA/active states — now
-including `--color-copper-700` for the paper-100/higher-margin case), plus
-2% functional colors (signal-green, error, focus). Copper is deliberately
-NOT used for all headings, all icons, all card borders, large backgrounds,
-or decorative gradients — the redesign task book's own explicit
-constraint, carried forward from the original build's "one saturated
-accent" principle but now role-scoped rather than universal.
+**OLD:** Precision Datum System = Global Brand Grammar. Copper-accent
+identity, coordinate-system/engineering-drawing visual metaphor, six Brand
+Primitive components (`DatumOrigin`, `ToleranceBand`, `VisionLockFrame`,
+`AssemblySpine`, `ProcessStamp`, `CutawayWindow` in `src/components/brand/`)
+applied sitewide as chrome/decoration.
 
-**Typography: real self-hosted webfonts, not the system-stack fallback
-this file previously documented.** The original Typography section below
-(and the "2026-08 revision" addendum inside it) accurately describes why
-CC-00-era passes fell back to system fonts — no verified network access to
-fetch real font binaries. CC-01 re-verified npm registry access worked and
-installed Noto Sans TC / Space Grotesk / IBM Plex Mono via `@fontsource/*`
-(all SIL OFL 1.1), self-hosted as WOFF2 with `font-display: swap`, only
-the weights actually used. Chinese headings/body force Noto Sans TC ahead
-of the Latin-first `--font-display` stack via a `:lang(zh)` CSS override,
-so Traditional Chinese never shapes against a Latin-only Space Grotesk
-first and never inherits its negative Latin display tracking. Full detail
-in `docs/ASSET_LICENSES.md` and `docs/DESIGN_SYSTEM.md`.
+**NEW (ruling):** **Precision Instrument Editorial = Global Brand Grammar.**
+The Precision Datum System, as a *sitewide* visual grammar, is
+**SUPERSEDED**. This includes: sitewide datum grammar, copper identity,
+blueprint UI, engineering-drawing decoration, and coordinate decoration as
+default page chrome. None of the six existing Brand Primitives are carried
+into Phase 5 by default, and their prior existence as working code is not
+by itself a reason to reuse them.
 
-**Explicit avoidances carried forward and reinforced this stage:** no
-purple/blue AI gradients, no hexagon/circuit-board backgrounds, no glowing
-lines as primary visual language, no uniform large-radius cards (radius
-caps at 12px, same as before), no reducing "industrial feel" to plain
-black+grid. New avoidances specific to the six brand components: no
-persistent/looping scan animation on VisionLockFrame (lock-on plays once),
-no certification-seal silhouette on ProcessStamp (rectangular chip with a
-datum-notch, not a circular/shield seal), no SVG-mask-only implementation
-on CutawayWindow (uses `clip-path: polygon()`, verified cross-browser safe
-per the file's own header comment, with an `@supports` fallback to a plain
-rounded-rect crop).
+**Functional technical overlay = content-specific only.** If VISION-X2 or
+the Homepage genuinely need a detection box, measurement line, datum,
+alignment marker, coordinate, or pass/fail indicator, it must be designed
+fresh from the actual technical behavior it represents, under Rule 07 (§5).
+Reusing an existing Brand Primitive component *because it already exists in
+the codebase* is explicitly not sufficient justification — the shape, motion,
+and role must be re-derived from what Rule 07 actually requires for that
+specific piece of content.
 
-**What this stage did NOT touch:** homepage information architecture,
-Hero, any page-level content — those are CC-02/CC-03 territory per the
-task book, and CC-01's own dispatch brief names them as explicit
-hard-stops.
+Full background on the conflict and the superseded system is preserved in
+`docs/design-history/DESIGN-v1-precision-datum.md`. Note also (unresolved,
+not blocking, informational only): that archived file records that
+`tokens.css` currently defines `--color-copper-600` as a blue hex, not a
+copper one — an internal drift from before this Gate ruling, irrelevant now
+that copper is not the mandated accent, but worth knowing if `tokens.css` is
+inspected during Mockup-to-production translation later.
 
-## Mode
+---
 
-**Persuade.** This is a B2B marketing/corporate site (spec §2.2: explicitly
-NOT a Product Dashboard / SaaS Application). The visitor decides and acts;
-design is doing sales work, not task-completion work.
+## 1. Project Purpose
 
-## THESIS
+鋒岳自動化 / **FORGEON AUTOMATION** is a fictional precision industrial
+automation brand, built as a portfolio piece for design studio 頁構所. The
+website itself must read as a real, mature, credible, technically competent
+industrial automation company — portfolio/demo disclosure exists only in
+頁構所's own future case study, never inside the FORGEON site itself. Do not
+write "Portfolio Demo," "Concept Project," "Fictional Company," "頁構所
+作品," or "Experimental Project" anywhere in FORGEON-facing content.
 
-The site owns one idea: **precision is a process you can watch, not a claim
-you take on faith.** It refuses the two category defaults — glossy "Industry
-4.0" tech-startup gradients, and dated, cluttered Taiwanese B2B-manufacturer
-template sites (dense top nav, stock photo hero, everything centered). This
-build instead treats the page itself like an engineering drawing: ordered,
-gridded, annotated, restrained.
+**Business priority order: D → C → B → A**
 
-## Color Strategy
+- **D (highest):** Prove 頁構所 is capable of premium-priced design/strategy/
+  development work.
+- **C:** Make FORGEON read as a real, credible, mature industrial company.
+- **B:** Prove capability handling complex engineering / technical
+  information.
+- **A (lowest):** Inquiry conversion. Never trade hierarchy, whitespace,
+  premium perception, or technical credibility for a CTA optimization.
 
-**Restrained** (neutrals plus one accent) — the correct choice per
-`new-work.md`'s own framework for a B2B technical-buyer surface where trust
-and scanability outrank spectacle, while still allowing the accent to carry
-real weight at CTA moments.
+---
 
-- **Ink / primary text & structure:** deep graphite-navy `#12181f` — not
-  pure black (spec explicitly bans pure-black/pure-white harshness).
-- **Surface (light):** warm-white `#f7f5f1` for page background — avoids the
-  cold blue-white "SaaS dashboard" default while staying legible and printable.
-- **Surface (elevated/cards):** `#ffffff` with a 1px hairline border in
-  `#e2e0da`, never a floating shadow-heavy card — shadows are used sparingly
-  and only at true elevation (nav on scroll, modals).
-- **Metallic gray (secondary structure, rules, muted text):** `#5b6470`.
-- **Accent — CTA / interactive color:** copper-bronze `#c1622b`. This is the
-  ONE saturated color in the system, deliberately chosen over the more
-  expected "electric blue" or "safety orange" B2B defaults, and over any
-  purple/violet (explicitly banned as an AI-gradient tell). Used only for
-  primary CTAs, active states, key data points, and link hover — never as a
-  background wash.
-- **Dark mode / inverted sections (footer, stat bands):** `#12181f`
-  background, `#f7f5f1` text, copper accent unchanged for contrast
-  consistency.
+## 2. Audience
 
-No gradients are used anywhere except a single, very restrained radial
-falloff behind the homepage hero SVG (a machined-metal vignette, not a
-color-transition gradient).
+- **Primary fictional persona — 製程工程師 / 自動化工程師 (process /
+  automation engineer):** needs to quickly answer — what does this do, what
+  process fits, what's the performance, can it integrate, what are the
+  specs/interfaces/compatibility/installation implications.
+- **Secondary fictional persona — 採購 / 工廠管理者 (procurement / plant
+  manager):** needs to quickly answer — who is this company, is the product
+  credible, what's the application value, is it worth contacting.
+- **Real audience (the one that actually matters for priority D):** an
+  enterprise prospect evaluating whether 頁構所 is worth premium pricing.
+  Every design decision should be checkable against: "would this make that
+  prospect believe 頁構所 can do premium-priced, technically literate design
+  work?"
 
-## Typography
+---
 
-**2026-08 revision (spec P1.2, option B — see `docs/REMEDIATION_PLAN.md`):**
-the original build declared Space Grotesk / IBM Plex Sans / JetBrains Mono
-by name in `tokens.css` but never actually loaded any font file, CDN link,
-or Fontsource package — every visitor's browser was silently falling
-through to whatever the next name in the stack resolved to. That is a real
-"documentation says X, code does Y" gap, not a cosmetic one. This sandbox
-has no network access to fetch and verify real font binaries, so rather
-than leave the mismatch in place, the token declarations were replaced with
-deliberately-chosen system font stacks that keep the calibration intent
-below (not Inter-default, some engineering-grade personality) without
-claiming a webfont that isn't actually shipped. The calibration reasoning
-this section originally documented is preserved below as the *intent*
-that the current system-stack tokens now honestly deliver on.
+## 3. Art Direction
 
-Calibration check applied: this subject (industrial/engineering) has its own
-default-cluster risk — generic "tech mono + Inter" — which was avoided in
-favor of faces with more editorial presence while remaining a legitimate fit
-for technical content (Operate/Read register inside a Persuade shell for the
-spec tables).
+**Locked direction: Precision Instrument Editorial / 精密儀器編輯感**
 
-- **Display / headings:** system sans-serif stack led by `-apple-system,
-  "Segoe UI", "Century Gothic", "Avenir Next"` — geometric-leaning options
-  that read as engineered rather than generic-corporate, without the
-  Inter-default trap. See `--font-display` in `src/styles/tokens.css`.
-- **Body & UI text:** system sans-serif stack led by `-apple-system,
-  "Segoe UI", "Helvetica Neue", Roboto` — sets long bilingual paragraphs
-  cleanly across platforms. See `--font-body`.
-- **Chinese body & headings:** system CJK stack (`"PingFang TC", "Noto Sans
-  TC", "Microsoft JhengHei"`) paired against the Latin stacks above — no
-  webfont CJK subset is shipped (file size), but weight/size scale is tuned
-  to visually match the Latin type rhythm.
-- **Monospace (spec values, model codes):** system monospace stack led by
-  `ui-monospace, "SF Mono", "SFMono-Regular", "Cascadia Code"` at small
-  sizes for spec tables and model numbers (AXM-400, VISION-X2) — gives
-  technical data a "measured" feel distinct from prose. See `--font-mono`.
-- **Scale:** modular scale ~1.25, base 16px/1rem. Headings never exceed
-  line-length-appropriate widths (`max-width: 62ch` on body copy blocks).
+- Ratio: **70% Precision Industrial Engineering + 30% Premium Minimalism.**
+  Not Apple-clone, not generic SaaS, not Awwwards-gimmick-first.
+- Portfolio intensity: **75% credible premium commercial website + 25%
+  signature WOW.** Credible-and-expensive first; impressive second — never
+  the reverse.
+- **Highest design principle: PREMIUM MUST COME FROM PRECISION, NOT
+  DECORATION.** Perceived value comes from product photography, composition,
+  proportion, whitespace, typography, information hierarchy, material
+  detail, engineering authenticity, motion timing, and consistency — never
+  from decorative effects, gimmicks, excessive animation, or generic luxury
+  styling.
 
-## Layout & Grid
+---
 
-- 12-column fluid grid, `max-width: 1280px` content container, `1440px` for
-  full-bleed section backgrounds.
-- Section rhythm: generous vertical spacing (`clamp(4rem, 8vw, 7rem)`
-  between major sections) — the "engineering drawing" feel comes from
-  whitespace discipline, not decoration.
-- Hero is NOT centered-text-over-photo (category default). It uses an
-  asymmetric split: headline + CTA left-aligned in a fixed text-safe column,
-  original SVG technical illustration right, on a subtle grid/blueprint
-  background pattern (CSS, not image).
-- Cards use a consistent but non-rigid rhythm: solution/product/industry
-  cards share a hairline-border, no-shadow-until-hover system — explicitly
-  avoiding "cards inside cards" and glassmorphism (both banned in spec §13.2).
-- Spec tables use a horizontal-rule row system (engineering datasheet
-  convention), not zebra-striped SaaS tables.
+## 4. Reference Responsibility (LOCKED — do not "mix all references")
 
-## Motion
+Confirmed by Phase 3B real-screenshot verification (52 screenshots,
+`docs/design-research/forgeon/04-visual-reference-verification.md`). Each
+reference has one clear scope. Do not blend beyond it.
 
-Minimal and purposeful only: fade/slide-up on scroll-into-view for section
-headers (CSS `@starting-style`/IntersectionObserver-driven class toggle,
-~200ms), underline-draw on nav/link hover, accordion expand/collapse.
-Everything respects `prefers-reduced-motion: reduce` (motion removed
-entirely, not just shortened). No parallax, no autoplay, no decorative
-looping animation.
+### Leica Camera — PRIMARY
 
-## Iconography & Imagery
+Controls: overall premium rhythm, whitespace, information-density attitude,
+product-first composition, typography restraint, product storytelling
+rhythm (detail ↔ whole-product alternation).
 
-All iconography is original inline SVG (stroke-based, 1.5px stroke,
-consistent corner radius) — no icon font, no third-party icon library. All
-photographic/CGI imagery in this build is either original SVG illustration
-or a clearly labeled concept/placeholder panel (see
-`docs/HIGGSFIELD_ASSET_PLAN.md` — paid photorealistic generation was planned
-but not executed this session).
+Do not copy: Leica branding, Leica red, exact layouts, camera-specific
+narrative ("photos this device produced" as proof of performance — rejected,
+see `REJECT-LEICA-01`), consumer retail structure.
 
-## Explicit Avoidances (per spec §13.2 and calibration check)
+### ZEISS Microscopy — TECHNICAL IA, NARROW SCOPE
 
-Confirmed NOT used anywhere in this build: Inter/system-default as the only
-face; purple-blue AI gradients; three-card generic feature grids as the
-default pattern (cards vary count intentionally — solutions ships 6, not a
-forced 3); cards-inside-cards; glassmorphism; purposeless glow effects;
-all-centered layouts; excessive border-radius (`--radius` tokens cap at 12px
-on cards, 8px on inputs/buttons — no pill-shaped buttons, no bubble UI);
-generic SaaS template look; floating decorative micro-icons; motion used to
-substitute for actual content; low-contrast gray-on-color text.
+**Phase 4 Gate fix:** `KEEP-ZEISS-01` (dual-track taxonomy) and
+`KEEP-ZEISS-02` (three-level breadcrumb) are **not** requirements for Phase
+5 — they remain valid Research Evidence / Future IA Capability, to draw on
+only if actual Phase 5 content genuinely needs a breadcrumb or a dual-track
+taxonomy. Do not add either pattern speculatively just because ZEISS
+demonstrated it.
 
-## Spacing, Radius, Shadow, Button, Form, Card tokens
+What ZEISS actually governs for Phase 5:
 
-Full token values are implemented in `src/styles/tokens.css` and mirrored in
-`docs/DESIGN_SYSTEM.md` for the portfolio deliverable (colors, spacing
-scale, radius scale, shadow levels, button variants, form field states, card
-anatomy, responsive breakpoints).
+- Technical information grouping.
+- Specification hierarchy.
+- Application/product relationship.
+- Progressive disclosure of complex technical information.
 
-## FINISH
+Must not control: overall visual style, homepage density, color, typography
+personality, card styling. **`KEEP-ZEISS-03` is dropped entirely** (not just
+narrowed) — its cited evidence screenshot (`zeiss-product-desktop-specs.png`)
+was verified during Phase 4 review to actually show a three-tile
+platform-comparison selector, not the "checkmark icon + bold heading +
+paragraph" Highlights pattern the entry described. The pattern was never
+actually observed and must not appear in any Mockup as a ZEISS-derived
+pattern.
 
-Unreviewed and undocumented is unfinished; this build ends with the finish
-review, the verdict, and DESIGN.md. Finish review for this project was
-conducted as a manual Impeccable Critique/Audit/Polish pass (Phase 6 and
-Phase 9 in `docs/PROJECT_BRIEF.md`'s execution order) rather than the
-subagent `impeccable-finish-reviewer` chain, because this session has no
-browser/screenshot capability. Findings and resolutions are logged in
-`docs/QA_CHECKLIST.md`.
+### Teenage Engineering — IMAGING ONLY
 
-**2026-08 real-browser finish review addendum**: a follow-up remediation
-pass ran Impeccable with an actual Playwright/Chromium browser for the
-first time (see `docs/IMPECCABLE_REVIEW_LOG.md`). It confirmed the design
-direction above still holds under real rendering, but surfaced three
-rendering-level defects static code review could not have caught: the
-mobile nav overlay's `backdrop-filter`-induced containing-block bug (left
-background content clickable while the menu was "open"), a footer logo
-text color hardcoded for light backgrounds showing at 2.97:1 contrast on
-the dark footer, and a CTABanner secondary button whose text color matched
-its own background (completely invisible). All three are fixed; none
-required revisiting the color/type/layout decisions recorded above.
+Controls: product lighting, material treatment, crop consistency, angle
+consistency, edge lighting, product-family image system.
+
+Must not be borrowed: typography, IA, playful brand tone, cultural
+references, retail UI, ticker/marquee elements, promotional language,
+consumer-electronics personality.
+
+### Terminal Industries — INDUSTRIAL REALITY CHECK
+
+Not a visual Primary. Controls: real industrial context, industrial
+photography, technology-overlay logic, section structural variety,
+functional visualization. Exists specifically to prevent FORGEON from
+reading as *"a premium consumer product brand wearing industrial copy."*
+
+Must not be borrowed: neon-green identity, glass nav, SaaS visual grammar,
+generic cards, exact typography, exact CTA system.
+
+---
+
+## 5. Core Visual Rules (LOCKED)
+
+### Rule 01 — Precision Detail First
+
+Product Detail Hero leads with a **precise close-up detail**, not the full
+product shown all at once. For VISION-X2: lens, optical module, sensor,
+lighting module, connector/machining detail. First impression must read as
+"precision instrument," not "generic industrial equipment."
+
+### Rule 02 — Product Story Rhythm
+
+Image narrative order: **DETAIL → WHOLE PRODUCT → INDUSTRIAL CONTEXT.**
+Detail establishes precision/material; whole product establishes
+recognition; context establishes industrial authenticity and use. Do not
+repeat the same full-product shot across every section.
+
+### Rule 03 — Controlled Information Density
+
+One viewport communicates **one primary concept.** Do not stack headline +
+long intro + 4 cards + stats + CTA + badges + extra notes into a single
+screen. High perceived value comes from whitespace, focus, and rhythm — not
+information stacking.
+
+### Rule 04 — Copy Restraint
+
+Forbidden as a default: Eyebrow → Heading → Intro paragraph → Explanation
+paragraph → Cards → CTA, repeated every section. Every section must answer
+"how much text does this actually need?" Delete copy with no function.
+Information already expressed by imagery, data, or a technical visual
+should not be repeated in a paragraph.
+
+### Rule 05 — Product Family Consistency
+
+AXM-400 / VISION-X2 / FLEXCELL-M must not be forced into a shared color
+scheme to read as a family. Use consistent camera angle, lighting direction,
+crop logic, background behavior, shadow system, and image scale instead.
+
+### Rule 06 — Signature Product Lighting
+
+VISION-X2 may use dark neutral background + controlled side lighting +
+subtle edge/rim lighting to foreground lens/glass/metal/machining/optical
+precision. **This is signature product imaging, scoped to specific product
+photography — it is explicitly not a global UI theme.** The site as a whole
+must not become a dark/black tech site.
+
+### Rule 07 — Industrial Context + Functional Overlay
+
+Industrial-context imagery should be believable/highly realistic real
+industrial scenes. Overlays (detection bounding box, inspection marker,
+alignment datum, measurement line, pass/fail state, coordinate, recognition
+region) must represent **real technical behavior** — never a decorative HUD,
+fake scanner line, random particles, arbitrary grid, or meaningless data
+visualization. This is the only path by which any datum/coordinate/alignment
+visual language may reappear after §0's ruling — content-specific,
+re-derived from real behavior, never a reused legacy component.
+
+### Rule 08 — Structural Rhythm
+
+Homepage section skeletons are decided **by content, not by quota.**
+Forbidden: three-cards / three-cards / three-cards / three-cards repeated
+for 3-4 consecutive sections. Also forbidden: forcing six visibly different
+layouts purely to look varied. Structural variation must have an
+information reason — different content deserves different structure, no
+more, no less.
+
+---
+
+## 6. Content Density Contract
+
+FORGEON's current largest defect is information overload. This section is a
+hard content contract, not a style suggestion.
+
+**Homepage objective:** not a company database. In ~15-30 seconds a visitor
+should understand (1) who FORGEON is, (2) what FORGEON does, (3) core
+product/capability, (4) why it's credible, (5) where to go next. Everything
+more detailed belongs on inner pages via progressive disclosure.
+
+**Homepage section count:** not locked to an exact number, but the target is
+**~5-6 major sections**, not the current large stack. Initial IA hypothesis
+(adjustable at Mockup stage): Hero → Core Capability → Featured Product/
+System → Engineering Evidence/Industrial Context → Integration/Deployment
+Logic → CTA.
+
+**Hero content budget:**
+- Desktop H1: ~1-2 lines. Mobile: max ~3 lines.
+- Supporting copy: target ~40-60 Traditional Chinese characters. The hero
+  is not an article.
+- CTA: max 1 primary + 1 secondary. If the secondary isn't necessary, drop
+  it and keep only the primary.
+
+**Section heading:** target ~10-18 Chinese characters — not a hard limit,
+but going over needs a specific reason.
+
+**Section intro:** target ~30-50 Chinese characters. Longer content belongs
+on an inner page, in expandable content, or in a technical section.
+
+**Body measure (zh-TW desktop):** comfortable reading length as the
+priority — initial target ~28-36 full-width Chinese characters per line.
+Do not run a full-width line across the entire desktop viewport.
+
+**Technical data:** use grouping, tables, definition lists, diagrams, or
+structured data layouts. Do not write specifications as marketing prose
+paragraphs.
+
+---
+
+## 7. Homepage IA Principles
+
+Current homepage IA is **NOT locked.** Up to ~40-60% of current homepage
+content may move — not be deleted, but relocated to Products, Product
+Detail, Solutions, Industries, Contact, or future technical pages. Preserve
+business truth; do not preserve a bad information architecture just because
+content already exists there.
+
+---
+
+## 8. Product Detail Principles (VISION-X2)
+
+VISION-X2 is the locked **First Showcase Product** (Phase 3B confirmed —
+best visual/technical-storytelling fit with Direction B, and the only one of
+the three products with no existing detail page, per
+`src/content/products/vision-x2.md`'s `hasDetailPage: false`).
+
+**Target: Marketing Website + Credible Engineering Datasheet** — not a full
+engineering manual, not a pretty landing page with no technical substance.
+
+**Suggested information hierarchy** (starting hypothesis for Mockup, not
+final):
+
+1. **Identity** — VISION-X2, product category, short positioning.
+2. **Product Story** — precision detail → whole product → engineering
+   rationale (Rule 02).
+3. **Core Capabilities** — positioning, defect inspection, barcode/code
+   recognition, feature recognition (from `vision-x2.md`'s existing
+   `features`).
+4. **Optical/Lighting Logic** — lighting options, material-dependent
+   selection, vision logic (existing `options` content: multi-lighting
+   module combination).
+5. **Integration** — controller, I/O, communication, data export, interface
+   (existing spec: 通訊介面/Communication Interface).
+6. **Technical Specification** — performance, system, integration,
+   environment (existing `specs` block).
+7. **Application Context** — real industrial scenario + functional detection
+   overlay (Rule 07).
+8. **Downloads/Contact** — if needed; do not invent a large data set that
+   isn't needed yet.
+
+---
+
+## 9. Typography
+
+Do not blindly copy Leica's typeface. This section defines **behavior**, not
+a font name (see §20 Open Decisions — exact family is a Mockup-stage
+decision).
+
+- **Display:** precise, neutral, contemporary, high legibility. No SaaS
+  personality, no luxury-fashion exaggeration.
+- **Chinese:** first-class typography, not an afterthought bolted onto an
+  English-first design. Must be checked for glyph density, line height,
+  punctuation, Latin/Chinese mixing behavior, technical numbers, and English
+  model names (AXM-400, VISION-X2, FLEXCELL-M) sitting inline with Chinese
+  text.
+- **Hierarchy:** built primarily from scale, weight, spacing, and measure —
+  not from random colors, pills, or card backgrounds.
+- **Technical labels:** short English technical labels may use uppercase
+  with modest tracking. Traditional Chinese must not be forced into large
+  tracking (large tracking on CJK glyphs reads as broken, not premium — this
+  was confirmed as a specific Leica risk in Phase 3B's REJECT list).
+- **Monospace:** only for genuine data/measurement/coordinate/technical
+  code. Not a decorative "industrial" flourish.
+
+---
+
+## 10. Color
+
+Do not copy Leica red, ZEISS blue, Teenage Engineering orange, or Terminal
+Industries' neon green — and, per §0's ruling, do not default back to the
+superseded Datum System's copper either. FORGEON must establish its own
+color identity for Direction B; none of the references or the prior system
+decide this for us.
+
+**Candidate color strategy (to be validated in Mockup, not locked):**
+neutral-dominant, an industrial material tone, one controlled accent, high
+contrast, accessible. The accent must carry real brand meaning (CTA/active
+state/key data point) — not be scattered around "to add design interest."
+
+---
+
+## 11. Image Art Direction
+
+FORGEON images may be cropped, recomposed, background-removed/reconstructed,
+relit, color-graded, regenerated, or AI-assisted/generated, including
+technical illustration, exploded-view-inspired visuals, and detection
+visualization. All of it must read as **one art direction system** — one
+brand, one photography team, one visual director — not each image looking
+good in isolation with no shared logic.
+
+**AI image rule:** AI is a production tool, not a shortcut around physical
+plausibility. Forbidden: impossible machine geometry, fake industrial
+detail, inconsistent hardware, impossible conveyor logic, impossible robot
+interaction, meaningless cable/sensor placement, incorrect product shape. If
+a product's full mechanical detail can't be generated credibly, prefer crop/
+abstraction/partial detail/controlled context over a fully generated fake
+machine.
+
+---
+
+## 12. Motion
+
+**Locked: 精緻微動態 (refined micro-motion).** Purpose: reveal hierarchy,
+guide attention, explain product, reinforce precision.
+
+Allowed: controlled image reveal, subtle product entrance, technical line
+animation, restrained hover, section transition, small scroll-linked effect
+when it's justified by content.
+
+Forbidden: long cinematic scroll, excessive sticky behavior, horizontal
+scroll gimmicks, flying text, custom cursors, particles, meaningless
+parallax, animation on every element.
+
+**Motion must not hide weak static design.** Every screen must hold up as a
+static screenshot with motion off.
+
+---
+
+## 13. Responsive
+
+Mobile is not Desktop scaled down.
+
+- **Priority to preserve:** hierarchy, product identity, readable
+  typography, image focal point, technical usability.
+- **Acceptable to sacrifice:** decorative whitespace, secondary visual
+  composition.
+- **Tabs/secondary nav:** not a blanket "all tabs become dropdowns" rule.
+  Collapse to disclosure/dropdown specifically when Traditional Chinese
+  label length, option count, or viewport width can't safely carry a
+  horizontal nav. Short labels with few options may stay as direct nav.
+  (Phase 3B verified this collapse pattern cross-site on Leica and ZEISS —
+  it's evidence-backed, not assumed.)
+- **Images:** must be re-cropped for mobile, not scaled via `width: 100%`
+  from the desktop composition.
+- **Tables:** technical tables need an explicit mobile strategy — structured
+  stack, horizontal scroll where semantically justified, or grouped
+  definition layout. Never let text get compressed into unreadability.
+
+---
+
+## 14. Components
+
+**Cards** must earn their existence — only when content genuinely needs
+grouping, comparison, a selectable option, a discrete entity, or a repeated
+dataset. A paragraph wrapped in a rounded rectangle for no structural reason
+is not a card, it's decoration — forbidden.
+
+**Border radius** is not a premium signal by default. Radius follows
+physical-object language, information grouping, or interaction state — not
+a uniform 20-32px applied to every section.
+
+**Icons** are for action, navigation, technical meaning, or status only.
+Do not attach an icon to every marketing sentence. If the text is already
+clear, skip the icon.
+
+---
+
+## 15. Claims Integrity
+
+FORGEON is fictional, so plausible fictional product specifications are
+fine — but they must be internally consistent, plausible, clearly treated
+as project-demo truth, and must never include: fake certification, fake
+customer, fake award, fake patent, fake compliance certificate, fake sales
+number, or fake installation count. This matches `PRODUCT.md`'s existing
+"Never fake a signal" principle and `Capabilities and Constraints` section —
+this document does not loosen that, only restates it for design-decision
+context.
+
+**Client Logo Rule:** no client logo wall as Design DNA in this phase.
+Terminal Industries' grayscale logo wall (`KEEP-TERMINAL-03`) does not enter
+Phase 5 mockups — FORGEON is a fictional portfolio demo and must not
+fabricate client relationships to fill layout space, even in grayscale.
+
+---
+
+## 16. Anti-Slop / Forbidden Patterns
+
+Forbidden by default unless a specific content reason survives Design Gate
+review: generic SaaS hero; generic centered hero + gradient; three equal
+feature cards as the default solution; repeated rounded cards; pastel
+category cards; excessive pills/badges; glassmorphism; glow; decorative
+gradient; generic 3D blobs; random floating shapes; emoji; fake dashboard
+elements; fake HUD; fake technical overlay; random particles; crosshair
+decoration; every section using the same structure; every section using
+eyebrow+heading+paragraph; giant text with no information purpose; Apple
+clone; Awwwards interaction for interaction's sake; decorative monospace
+everywhere; unnecessary icon grids; blue-purple neon SaaS aesthetic;
+AI-generated generic industrial imagery with impossible machinery; generic
+stock photography; decorative charts with no real data.
+
+---
+
+## 17. Signature Moments (~25% of the site)
+
+Candidates, max 2-4 real memorable moments total — concentrated, not spread
+thin:
+
+1. Homepage Hero
+2. Featured Product Reveal
+3. VISION-X2 Product Hero
+4. Technical/Detection Visualization
+
+Everywhere else stays restrained. If every section tries to be a WOW moment,
+none of them actually is one.
+
+---
+
+## 18. Mockup Sequence (Phase 5)
+
+**Phase 4 Gate fix:** Phase 5 is no longer four mockups produced together.
+Each stage requires its own Human / ChatGPT Gate approval before the next
+stage starts.
+
+1. **Phase 5A** — Homepage Desktop (1440px) → Human / ChatGPT Gate
+2. **Phase 5B** — Homepage Mobile (390px) → Responsive Gate
+3. **Phase 5C** — VISION-X2 Product Detail Desktop (1440px) → Product Gate
+4. **Phase 5D** — VISION-X2 Product Detail Mobile (390px) → Final Mockup Gate
+
+No stage begins before the prior stage is explicitly approved.
+
+Mockups must use realistic content, realistic text length, real/approved
+product imagery, and actual technical information density — not wireframes,
+placeholders, Lorem Ipsum, or gray boxes. No production Astro/CSS work
+happens before all four mockup stages pass their gates.
+
+**Mockup Gate question (each stage):** can a human say, without hedging,
+*"this quality level is one I'm willing to have represent 頁構所's
+portfolio"*? If the answer isn't a clear yes, the next stage does not start.
+
+**Design system debt rule:** future implementation replaces, it does not
+append. No stacking old CSS + override + patch + refinement. Once a new
+direction is approved, superseded visual rules (§0) get removed, not
+layered under.
+
+---
+
+## 19. Design QA Checklist
+
+- Does this look like a credible industrial company?
+- Does this look premium without decoration?
+- Is one viewport trying to say too many things?
+- Can copy be removed?
+- Are cards actually necessary?
+- Does product imagery feel consistent across AXM-400/VISION-X2/FLEXCELL-M?
+- Is the image physically/industrially believable?
+- Does the page still work without animation?
+- Is the Chinese typography first-class, not an English-first afterthought?
+- Does mobile preserve hierarchy, not just shrink desktop?
+- Is any element copied too literally from a reference (Leica/ZEISS/TE/
+  Terminal)?
+- Does this feel like FORGEON, not like Leica / ZEISS / Teenage Engineering
+  / Terminal Industries?
+- Would a prospective enterprise client perceive this as premium work?
+
+---
+
+## 20. Open Decisions for Mockup Stage
+
+**LOCKED (this document, do not re-litigate without a new Gate):** business
+priority order; personas; Direction B as sole Global Art Direction (§0);
+reference responsibility assignment (§4); the 8 Core Visual Rules (§5); the
+Content Density Contract's qualitative principles (§6); Homepage IA
+flexibility (§7); VISION-X2 as showcase product; the Anti-Slop list (§16);
+Signature Moment count (§17); the Phase 5A→5B→5C→5D gated sequence (§18).
+
+**TO BE VALIDATED IN MOCKUP (not decided yet, do not treat as final):**
+exact font family; exact font sizes; exact color hex values; exact spacing
+tokens; exact grid values; exact border radius values; exact Hero
+composition; exact homepage section count (5-6 is a target, not a lock);
+exact motion durations; exact VISION-X2 specification layout; whether any
+content-specific technical overlay under Rule 07 is needed at all for the
+Homepage or VISION-X2 mockups.

@@ -10,8 +10,15 @@ import Button from '../../../../components/ui/Button.astro';
 import SolutionCard from '../../../../components/ui/SolutionCard.astro';
 import CTABanner from '../../../../components/sections/CTABanner.astro';
 import StructuredData from '../../../../components/seo/StructuredData.astro';
+import VisionX2ProductDetail from '../../../../components/products/vision-x2/VisionX2ProductDetail.astro';
 import { getSortedProducts, getSortedSolutions } from '../../../../utils/content';
 import { demoDataNoticeEn } from '../../../../config/site';
+
+/*
+ * PD-VX2-02 — LOCKED ARCHITECTURE INVARIANT: exactly ONE VISION-X2
+ * route-level dispatch. See zh-tw/products/[slug]/index.astro's
+ * equivalent comment for the full rationale.
+ */
 
 export async function getStaticPaths() {
   const products = await getSortedProducts();
@@ -26,6 +33,7 @@ const relatedSolutions = allSolutions.filter((s) => d.relatedSolutions.includes(
 
 const path = `/en/products/${d.entrySlug}/`;
 const otherLocalePath = `/zh-tw/products/${d.entrySlug}/`;
+const isVisionX2 = d.entrySlug === 'vision-x2';
 ---
 
 <BaseLayout locale={locale} path={path} otherLocalePath={otherLocalePath} title={d.seoTitle.en} description={d.seoDescription.en}>
@@ -38,65 +46,71 @@ const otherLocalePath = `/zh-tw/products/${d.entrySlug}/`;
     <Breadcrumb locale={locale} items={[{ label: 'Products', path: '/en/products/' }, { label: d.name, path }]} />
   </div>
 
-  <section class="section section--tight">
-    <div class="container product-hero">
-      <div class="product-hero__media">
-        <ProductVisual
-          locale={locale}
-          product={d.entrySlug as 'axm-400' | 'vision-x2' | 'flexcell-m'}
-          placement="hero"
-          priority
-        />
-      </div>
-      <div class="product-hero__copy">
-        <Badge variant="demo">Concept Demonstration Data</Badge>
-        <h1 class="product-hero__name mono">{d.name}</h1>
-        <p class="product-hero__positioning">{d.positioning.en}</p>
-        <p class="product-hero__desc measure">{d.shortDescription.en}</p>
-        <div class="product-hero__actions">
-          <Button href="/en/contact/" trackEvent="cta_click">Discuss Your Project</Button>
-          {d.datasheetPath && (
-            <Button href={d.datasheetPath} variant="secondary" trackEvent="spec_download">
-              Download Datasheet PDF (sample file)
-            </Button>
-          )}
+  {isVisionX2 ? (
+    <VisionX2ProductDetail locale={locale} />
+  ) : (
+    <Fragment>
+      <section class="section section--tight">
+        <div class="container product-hero">
+          <div class="product-hero__media">
+            <ProductVisual
+              locale={locale}
+              product={d.entrySlug as 'axm-400' | 'vision-x2' | 'flexcell-m'}
+              placement="hero"
+              priority
+            />
+          </div>
+          <div class="product-hero__copy">
+            <Badge variant="demo">Concept Demonstration Data</Badge>
+            <h1 class="product-hero__name mono">{d.name}</h1>
+            <p class="product-hero__positioning">{d.positioning.en}</p>
+            <p class="product-hero__desc measure">{d.shortDescription.en}</p>
+            <div class="product-hero__actions">
+              <Button href="/en/contact/" trackEvent="cta_click">Discuss Your Project</Button>
+              {d.datasheetPath && (
+                <Button href={d.datasheetPath} variant="secondary" trackEvent="spec_download">
+                  Download Datasheet PDF (sample file)
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  </section>
+      </section>
 
-  <section class="section section--tight section--alt">
-    <div class="container container--narrow">
-      <SectionHeading eyebrow="Features" title="Features" />
-      <FeatureList items={d.features.en} />
-    </div>
-  </section>
+      <section class="section section--tight section--alt">
+        <div class="container container--narrow">
+          <SectionHeading eyebrow="Features" title="Features" />
+          <FeatureList items={d.features.en} />
+        </div>
+      </section>
 
-  <section class="section section--tight">
-    <div class="container container--narrow">
-      <SectionHeading eyebrow="Use Cases" title="Applicable Scenarios" />
-      <FeatureList items={d.useCases.en} />
-    </div>
-  </section>
+      <section class="section section--tight">
+        <div class="container container--narrow">
+          <SectionHeading eyebrow="Use Cases" title="Applicable Scenarios" />
+          <FeatureList items={d.useCases.en} />
+        </div>
+      </section>
 
-  <section class="section section--tight section--alt">
-    <div class="container container--narrow">
-      <SectionHeading eyebrow="Technical Specifications" title="Specifications" />
-      <SpecificationTable
-        caption={`${d.name} technical specifications`}
-        rows={d.specs.map((s) => ({ label: s.label.en, value: s.value.en }))}
-      />
-      <p class="demo-disclaimer">{demoDataNoticeEn}</p>
-    </div>
-  </section>
+      <section class="section section--tight section--alt">
+        <div class="container container--narrow">
+          <SectionHeading eyebrow="Technical Specifications" title="Specifications" />
+          <SpecificationTable
+            caption={`${d.name} technical specifications`}
+            rows={d.specs.map((s) => ({ label: s.label.en, value: s.value.en }))}
+          />
+          <p class="demo-disclaimer">{demoDataNoticeEn}</p>
+        </div>
+      </section>
 
-  {d.options && (
-    <section class="section section--tight">
-      <div class="container container--narrow">
-        <SectionHeading eyebrow="Optional Configurations" title="Options" />
-        <FeatureList items={d.options.en} />
-      </div>
-    </section>
+      {d.options && (
+        <section class="section section--tight">
+          <div class="container container--narrow">
+            <SectionHeading eyebrow="Optional Configurations" title="Options" />
+            <FeatureList items={d.options.en} />
+          </div>
+        </section>
+      )}
+    </Fragment>
   )}
 
   {relatedSolutions.length > 0 && (

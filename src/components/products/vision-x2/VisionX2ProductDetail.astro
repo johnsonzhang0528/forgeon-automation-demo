@@ -1,0 +1,41 @@
+---
+/**
+ * VISION-X2 Product Detail — composition shell (PD-VX2-02, extended
+ * PD-VX2-03, PD-VX2-04, PD-VX2-05, PD-VX2-06).
+ *
+ * LOCKED ARCHITECTURE INVARIANT (PD-VX2-02 Ticket Definition Gate):
+ * the shared [slug] product route performs exactly ONE VISION-X2
+ * route-level dispatch (`isVisionX2 ? <VisionX2ProductDetail /> : ...`).
+ * Every VISION-X2-specific section lives inside this file's render order,
+ * never as an additional `isVisionX2` / `entrySlug === 'vision-x2'`
+ * conditional in the route itself. Future approved sections (Options,
+ * Industrial Context, Final CTA) are added here, one line each, in their
+ * approved order — the route file must not grow a second VISION-X2
+ * branch as a result.
+ *
+ * PD-VX2-06 populates only Hero -> Core Capabilities -> Whole Product ->
+ * Optical/Lighting Logic -> Integration -> Technical Specification. No
+ * later section is pre-implemented or stubbed with visitor-visible
+ * placeholder content.
+ */
+import VisionX2Hero from './VisionX2Hero.astro';
+import VisionX2CoreCapabilities from './VisionX2CoreCapabilities.astro';
+import VisionX2WholeProduct from './VisionX2WholeProduct.astro';
+import VisionX2OpticalLighting from './VisionX2OpticalLighting.astro';
+import VisionX2Integration from './VisionX2Integration.astro';
+import VisionX2TechnicalSpecification from './VisionX2TechnicalSpecification.astro';
+import type { Locale } from '../../../config/site';
+
+export interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+---
+
+<VisionX2Hero locale={locale} />
+<VisionX2CoreCapabilities locale={locale} />
+<VisionX2WholeProduct locale={locale} />
+<VisionX2OpticalLighting locale={locale} />
+<VisionX2Integration locale={locale} />
+<VisionX2TechnicalSpecification locale={locale} />

@@ -1,0 +1,128 @@
+---
+/**
+ * VISION-X2 Product Detail — Optical / Lighting Logic (PD-VX2-04).
+ *
+ * Fourth stage of the dedicated VISION-X2 Product Detail composition
+ * (VisionX2ProductDetail.astro), approved at the Phase 5C-R2 (desktop) /
+ * Phase 5D-R2 (mobile) Product/Mockup Gates and the PD-VX2-04 Ticket
+ * Definition Gate. Light `section--alt` editorial section — three
+ * technical concepts (coaxial light / ring light / selection basis),
+ * horizontally distributed on desktop, single-column editorial rows on
+ * mobile (matching the PD-VX2-02 Core Capabilities row grammar, not the
+ * desktop three-column layout compressed narrow). No image, no cards, no
+ * icons, no HUD.
+ *
+ * Content: the eyebrow/heading/statement and three item label+description
+ * pairs are the already Human/ChatGPT-approved Phase 5C-R2/5D-R2 Mockup
+ * presentation copy, reused verbatim. This is a technical explanation of
+ * vision-x2.md's existing canonical "光源類型" spec ("依材質選配（同軸光、
+ * 環形光等）") and `features[3]` ("可依材質特性選配光源模組") — the
+ * per-item descriptions themselves are presentation-layer elaboration of
+ * that same canonical material-based lighting-selection concept, not a
+ * new specification, wavelength, angle, precision, or performance claim.
+ * vision-x2.md is not modified by this component.
+ */
+import { getDictionary } from '../../../utils/i18n';
+import type { Locale } from '../../../config/site';
+
+export interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = getDictionary(locale).productDetailVisionX2OpticalLighting;
+---
+
+<section class="vx-pd-optical" aria-labelledby="vx-pd-optical-heading">
+  <div class="container">
+    <div class="vx-pd-optical__intro">
+      <p class="vx-pd-optical__eyebrow mono">{copy.eyebrow}</p>
+      <h2 id="vx-pd-optical-heading" class="vx-pd-optical__title">{copy.title}</h2>
+      <p class="vx-pd-optical__statement">{copy.statement}</p>
+    </div>
+
+    <div class="vx-pd-optical__rows">
+      {copy.items.map((item: { label: string; description: string }) => (
+        <div class="vx-pd-optical__row">
+          <p class="vx-pd-optical__label">{item.label}</p>
+          <p class="vx-pd-optical__desc">{item.description}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .vx-pd-optical {
+    background: var(--color-surface-alt);
+    padding-block: var(--section-standard);
+  }
+
+  .vx-pd-optical__intro {
+    margin-bottom: var(--space-xl);
+  }
+  .vx-pd-optical__eyebrow {
+    margin: 0 0 var(--space-2xs);
+    color: var(--color-accent);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .vx-pd-optical__title {
+    margin: 0;
+    max-width: 26ch;
+    color: var(--color-ink);
+    font-size: clamp(1.375rem, 2.2vw, 1.75rem);
+    font-weight: 600;
+    line-height: 1.3;
+    text-wrap: balance;
+  }
+  .vx-pd-optical__statement {
+    margin: var(--space-sm) 0 0;
+    max-width: 34em;
+    color: var(--color-muted);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-body-lg);
+  }
+
+  .vx-pd-optical__rows {
+    display: flex;
+    flex-direction: column;
+  }
+  .vx-pd-optical__row {
+    padding-block: var(--space-md);
+    border-top: 1px solid var(--color-border);
+  }
+  .vx-pd-optical__row:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+  .vx-pd-optical__label {
+    margin: 0 0 0.3em;
+    color: var(--color-ink);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+  }
+  .vx-pd-optical__desc {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-body-lg);
+  }
+
+  @media (min-width: 900px) {
+    .vx-pd-optical__rows {
+      flex-direction: row;
+      gap: var(--space-xl);
+    }
+    .vx-pd-optical__row {
+      flex: 1;
+      padding-block: 0;
+      padding-top: var(--space-sm);
+      border-top: 2px solid var(--color-border-strong);
+    }
+    .vx-pd-optical__row:first-child {
+      padding-top: var(--space-sm);
+    }
+  }
+</style>

@@ -1,0 +1,373 @@
+---
+/**
+ * VISION-X2 Featured Product — Homepage Signature Moment (Phase 5D,
+ * refined Phase 5D-R1 per the Production Visual Gate: PASS WITH FIXES).
+ *
+ * The homepage's second signature moment after the Hero: a two-beat
+ * sequence using the two locked, approved production masters —
+ * VISION-X2 Macro Master (precision/desire close-up) and VISION-X2 Whole
+ * Product Master (system/context portrait) — neither image is
+ * regenerated, modified, or re-cropped from a different source asset
+ * here; only responsive object-position/sizing is applied.
+ *
+ * Beat A (Macro): image-dominant, minimal text, establishes object
+ * desire (Teenage Engineering / Leica responsibility per DESIGN.md §4).
+ * Beat B (Whole Product): answers "what is this physically, in context"
+ * with a small amount of real, Repository-sourced capability copy
+ * (ZEISS responsibility: technical clarity, not a spec dashboard) — no
+ * numeric claims are invented; all copy traces to
+ * src/content/products/vision-x2.md's `features`/`shortDescription`.
+ *
+ * Deliberately a different darkness from Hero.astro: Hero's scrim uses
+ * rgb(10,13,15) with a faint cool cast (industrial environment). This
+ * section uses a neutral near-black (rgb(12,12,12)) with no color cast —
+ * quieter, more photographic/studio, not a repeat of Hero's environment.
+ *
+ * Phase 5D-R1 changes:
+ * - P0: removed the "品牌概念影像"/"Concept brand imagery" per-image
+ *   disclosure label (also removed from Hero.astro in the same pass) —
+ *   it read as demo/concept-project language leaking onto FORGEON's own
+ *   public surface. Claims Integrity is unaffected: the sitewide Demo
+ *   Mode footer notice (Footer.astro's `legalNotice`) is the real
+ *   disclosure mechanism, not a per-image caption.
+ * - P0: Whole Product desktop composition rebalanced from ~57.5%/42.5%
+ *   to ~64%/36% image-to-information-field, and the information field
+ *   restyled to sit as a tight editorial annotation against the image's
+ *   left edge (thin rule + reduced padding) rather than a centered,
+ *   generously-padded text column that read as a conventional B2B
+ *   50/50 split.
+ * - P0: mobile vertical density reduced (~18%) via a shorter Macro crop
+ *   height and a shorter, wider Whole Product aspect ratio recomposed
+ *   specifically for narrow viewports — not by shrinking type.
+ * - P1: Macro eyebrow simplified to a single line (VISION-X2 only, no
+ *   sub-line) now that the disclosure clause is gone, tightening
+ *   baseline discipline.
+ */
+import { Picture } from 'astro:assets';
+import macroImage from '../../assets/images/forgeon/products/vision-x2/vision-x2-macro-master-v1.png';
+import wholeProductImage from '../../assets/images/forgeon/products/vision-x2/vision-x2-whole-product-master-v1.png';
+import { getDictionary } from '../../utils/i18n';
+import type { Locale } from '../../config/site';
+
+export interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = getDictionary(locale).visionSignature;
+const detailHref = `/${locale}/products/vision-x2/`;
+---
+
+<section class="vx-signature" aria-labelledby="vx-signature-heading">
+  <!-- Beat A — Macro / Precision Moment. Image-dominant, minimal copy. -->
+  <div class="vx-macro">
+    <figure class="vx-macro__media" data-vx-image="macro-master">
+      <Picture
+        src={macroImage}
+        formats={['avif', 'webp']}
+        widths={[480, 768, 1024, 1440, 1920]}
+        sizes="100vw"
+        alt={copy.macroImageAlt}
+        loading="lazy"
+        decoding="async"
+        quality={82}
+      />
+    </figure>
+    <div class="vx-macro__scrim" aria-hidden="true"></div>
+    <div class="vx-macro__content">
+      <p class="vx-macro__eyebrow mono">{copy.eyebrow}</p>
+      <p class="vx-macro__value">{copy.macroValue}</p>
+      <a href={detailHref} class="vx-macro__link">
+        {copy.macroCta} <span aria-hidden="true">&rarr;</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Beat B — Whole Product / System Context. Answers "what is this
+       physically" with a small, real capability list — not a spec table. -->
+  <div class="vx-whole">
+    <figure class="vx-whole__media" data-vx-image="whole-product-master">
+      <Picture
+        src={wholeProductImage}
+        formats={['avif', 'webp']}
+        widths={[480, 768, 1024, 1440, 1920]}
+        sizes="(min-width: 900px) 58vw, 100vw"
+        alt={copy.wholeImageAlt}
+        loading="lazy"
+        decoding="async"
+        quality={82}
+      />
+    </figure>
+    <div class="vx-whole__content">
+      <div class="vx-whole__rule" aria-hidden="true"></div>
+      <p class="vx-whole__model mono">VISION-X2</p>
+      <h3 id="vx-signature-heading" class="vx-whole__title">{copy.wholeTitle}</h3>
+      <p class="vx-whole__desc">{copy.wholeDesc}</p>
+      <ul class="vx-whole__features">
+        {copy.wholeFeatures.map((f: string) => <li>{f}</li>)}
+      </ul>
+      <a href={detailHref} class="vx-whole__cta">{copy.wholeCta}</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .vx-signature {
+    background: rgb(12, 12, 12);
+  }
+
+  /* ============ BEAT A — MACRO ============ */
+  .vx-macro {
+    position: relative;
+    width: 100%;
+    min-height: 400px;
+    /* Mobile height trimmed from the original 72svh (Phase 5D-R1 P0:
+       ~18% total section density reduction) — the lens/ring-light
+       relationship stays fully legible at this crop, verified against
+       object-position below; the reduction comes from cropping tighter,
+       not from shrinking type. */
+    height: 58svh;
+    max-height: 620px;
+    overflow: hidden;
+  }
+  .vx-macro__media,
+  .vx-macro__media :global(picture) {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+  }
+  .vx-macro__media :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Keeps the lens's optical glass + focus ring in view — the
+       image's most information-dense, desire-building region — while
+       trimming the darker upper-left camera-body corner first as the
+       viewport narrows. Object-position only; same source asset at
+       every breakpoint. */
+    object-position: 46% 74%;
+  }
+  .vx-macro__scrim {
+    position: absolute;
+    inset: 0;
+    /* Bottom-anchored falloff, distinct from Hero's left-anchored scrim
+       — content sits low-center here, not low-left, so the darkening
+       direction follows it rather than reusing Hero's exact gradient
+       geometry. */
+    background: linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.82) 0%,
+      rgba(0, 0, 0, 0.5) 22%,
+      rgba(0, 0, 0, 0.08) 42%,
+      rgba(0, 0, 0, 0) 58%
+    );
+  }
+  .vx-macro__content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    text-align: center;
+    max-width: 30em;
+    margin-inline: auto;
+    padding-inline: var(--page-gutter-mobile);
+    padding-block-end: var(--space-6);
+    height: 100%;
+    justify-content: flex-end;
+  }
+  /*
+   * Phase 5D-R1 P1: single-line signature now that the disclosure
+   * sub-line is gone (P0) — tight tracking, no wrap, reads as a
+   * precision-instrument nameplate rather than a campaign caption.
+   */
+  .vx-macro__eyebrow {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+  }
+  .vx-macro__value {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    text-wrap: balance;
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.4);
+  }
+  .vx-macro__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    margin-top: var(--space-1);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-decoration: none;
+    padding-block: var(--space-2xs);
+  }
+  .vx-macro__link span {
+    display: inline-block;
+    transition: transform var(--duration-ui) var(--ease-standard);
+  }
+  .vx-macro__link:hover {
+    color: #fff;
+  }
+  .vx-macro__link:hover span {
+    transform: translateX(3px);
+  }
+
+  /* ============ BEAT B — WHOLE PRODUCT ============ */
+  .vx-whole {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .vx-whole__media {
+    position: relative;
+    margin: 0;
+    /* Mobile crop recomposed shorter/wider than the prior 4:3 (Phase
+       5D-R1 P0 mobile density pass) — camera body, lens and ring light
+       stay fully legible at this ratio (verified against
+       object-position below); this is a genuine recomposition for
+       narrow viewports, not a scaled-down desktop panel. */
+    aspect-ratio: 4 / 3.1;
+  }
+  .vx-whole__media :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 42%;
+  }
+  .vx-whole__content {
+    position: relative;
+    padding: var(--space-xl) var(--page-gutter-mobile) var(--space-xl);
+    color: rgba(255, 255, 255, 0.92);
+  }
+  .vx-whole__rule {
+    width: 32px;
+    height: 1px;
+    margin-bottom: var(--space-3);
+    background: rgba(255, 255, 255, 0.4);
+  }
+  .vx-whole__model {
+    margin: 0 0 var(--space-2xs);
+    /* 0.55 opacity clears 6.29:1 against this section's #0c0c0c
+       background (axe-core measured) — 0.45 measured 4.49:1, just under
+       the 4.5:1 WCAG AA text floor. */
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+  }
+  .vx-whole__title {
+    margin: 0 0 var(--space-3);
+    color: rgba(255, 255, 255, 0.94);
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 2.6vw, 1.5rem);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  :lang(zh-Hant-TW) .vx-whole__title {
+    font-family: 'Noto Sans TC', var(--font-display);
+  }
+  .vx-whole__desc {
+    margin: 0 0 var(--space-4);
+    max-width: 30em;
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+  .vx-whole__features {
+    list-style: none;
+    margin: 0 0 var(--space-5);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-width: 30em;
+  }
+  .vx-whole__features li {
+    position: relative;
+    padding-inline-start: 1.1em;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8125rem;
+    line-height: 1.55;
+  }
+  .vx-whole__features li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 5px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.4);
+  }
+  .vx-whole__cta {
+    display: inline-block;
+    color: #fff;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+    padding-bottom: 2px;
+  }
+  .vx-whole__cta:hover {
+    border-color: #fff;
+  }
+
+  @media (min-width: 640px) {
+    .vx-macro__content {
+      max-width: 34em;
+    }
+    .vx-macro__value {
+      font-size: 1rem;
+    }
+  }
+
+  @media (min-width: 900px) {
+    .vx-macro {
+      height: 84svh;
+      max-height: 860px;
+    }
+    .vx-macro__media :global(img) {
+      object-position: 42% 60%;
+    }
+    .vx-macro__content {
+      max-width: 30em;
+      padding-block-end: var(--space-16);
+    }
+
+    /*
+     * Phase 5D-R1 P0: rebalanced from 1.15fr:0.85fr (~57.5%/42.5%) to
+     * 1.75fr:1fr (~63.6%/36.4%), landing inside the requested 60-64%
+     * image / 36-40% information-field target. The information field
+     * itself (below) drops its centered/generously-padded treatment for
+     * a tight, left-anchored editorial annotation — a thin rule marker
+     * and reduced padding, reading as a caption adjacent to the machine
+     * rather than a conventional website text column.
+     */
+    .vx-whole {
+      grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
+      align-items: stretch;
+    }
+    .vx-whole__media {
+      aspect-ratio: auto;
+      min-height: 640px;
+    }
+    .vx-whole__content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: var(--space-2xl) var(--space-2xl) var(--space-2xl) var(--space-xl);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vx-macro__link span {
+      transition: none;
+    }
+  }
+</style>

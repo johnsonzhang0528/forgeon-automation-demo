@@ -1,0 +1,223 @@
+---
+/**
+ * VISION-X2 Product Detail — Precision Detail Hero (PD-VX2-01).
+ *
+ * First production stage of the dedicated VISION-X2 Product Detail
+ * template, approved at Phase 5C-R2 (desktop) / Phase 5D-R2 (mobile)
+ * Product/Mockup Gates. Only the Breadcrumb -> Precision Detail Hero
+ * stage is implemented here — later approved stages (Core Capabilities,
+ * Whole Product, Optical/Lighting Logic, Integration, Technical
+ * Specification, Options, Application Context, Final CTA) are out of
+ * scope for this ticket and are added incrementally by later components
+ * under this same src/components/products/vision-x2/ namespace, not by
+ * growing this file or the shared [slug] route.
+ *
+ * Imports its own approved master image directly, same pattern as
+ * VisionX2Signature.astro (the Homepage Signature Moment) rather than
+ * routing through ProductVisual.astro — ProductVisual's per-product image
+ * map is shared with AXM-400/FLEXCELL-M card and hero placements, and
+ * leaving it untouched here keeps this ticket's regression surface to
+ * VISION-X2 only.
+ *
+ * Desktop crop (object-position 42%/58%, min-height 900px breakpoint) and
+ * mobile crop (object-position 58%/68%, base rules) both reproduce the
+ * approved Phase 5C-R2 / 5D-R2 mockup values exactly — this is not a new
+ * design decision, it's a direct port of what was already approved.
+ */
+import { Picture } from 'astro:assets';
+import macroImage from '../../../assets/images/forgeon/products/vision-x2/vision-x2-macro-master-v1.png';
+import { getDictionary } from '../../../utils/i18n';
+import type { Locale } from '../../../config/site';
+
+export interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = getDictionary(locale).productDetailVisionX2;
+const specHref = `/${locale}/products/vision-x2/#specification`;
+const contactHref = `/${locale}/contact/`;
+---
+
+<section class="vx-pd-hero" aria-labelledby="vx-pd-hero-heading">
+  <figure class="vx-pd-hero__media" data-vx-image="macro-master">
+    <Picture
+      src={macroImage}
+      formats={['avif', 'webp']}
+      widths={[480, 768, 1024, 1440, 1920]}
+      sizes="100vw"
+      alt={copy.heroMacroImageAlt}
+      loading="eager"
+      fetchpriority="high"
+      decoding="async"
+      quality={82}
+    />
+  </figure>
+  <div class="vx-pd-hero__scrim" aria-hidden="true"></div>
+  <div class="vx-pd-hero__content">
+    <p class="vx-pd-hero__eyebrow mono">{copy.heroEyebrow}</p>
+    <h1 id="vx-pd-hero-heading" class="vx-pd-hero__name mono">VISION-X2</h1>
+    <p class="vx-pd-hero__positioning">{copy.heroPositioning}</p>
+    <p class="vx-pd-hero__value">{copy.heroValue}</p>
+    <div class="vx-pd-hero__actions">
+      <a class="vx-pd-hero__btn vx-pd-hero__btn--primary" href={contactHref} data-track-event="cta_click">{copy.heroPrimaryCta}</a>
+      <a class="vx-pd-hero__link" href={specHref}>{copy.heroSecondaryCta} <span aria-hidden="true">&rarr;</span></a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .vx-pd-hero {
+    position: relative;
+    height: 62svh;
+    max-height: 460px;
+    min-height: 380px;
+    overflow: hidden;
+    background: rgb(12, 12, 12);
+  }
+  .vx-pd-hero__media,
+  .vx-pd-hero__media :global(picture) {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+  }
+  .vx-pd-hero__media :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Mobile crop — keeps the "VISION-X2" nameplate, focus ring, and ring
+       light in frame at narrow viewports (approved Phase 5D-R2). */
+    object-position: 58% 68%;
+  }
+  .vx-pd-hero__scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.88) 0%,
+      rgba(0, 0, 0, 0.58) 30%,
+      rgba(0, 0, 0, 0.1) 55%,
+      rgba(0, 0, 0, 0) 68%
+    );
+  }
+  .vx-pd-hero__content {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-inline: var(--page-gutter-mobile);
+    padding-block-end: var(--space-lg);
+    gap: var(--space-sm);
+  }
+  .vx-pd-hero__eyebrow {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.1em;
+  }
+  .vx-pd-hero__name {
+    margin: 0;
+    color: #fff;
+    font-size: clamp(1.625rem, 6vw, 2rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+  .vx-pd-hero__positioning {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: var(--fs-md);
+    font-weight: 500;
+  }
+  .vx-pd-hero__value {
+    margin: 0;
+    max-width: 34em;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-body-lg);
+  }
+  .vx-pd-hero__actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    margin-top: var(--space-xs);
+  }
+  .vx-pd-hero__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    padding: 0.85em 1.25em;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid transparent;
+    width: 100%;
+  }
+  .vx-pd-hero__btn--primary {
+    background: #fff;
+    color: #0b0f13;
+  }
+  .vx-pd-hero__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    padding-block: 0.4em;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.7);
+  }
+  .vx-pd-hero__link span {
+    display: inline-block;
+    transition: transform var(--duration-ui) var(--ease-standard);
+  }
+  .vx-pd-hero__link:hover {
+    color: #fff;
+  }
+  .vx-pd-hero__link:hover span {
+    transform: translateX(3px);
+  }
+
+  @media (min-width: 640px) {
+    .vx-pd-hero__content {
+      max-width: 30em;
+    }
+  }
+
+  @media (min-width: 900px) {
+    .vx-pd-hero {
+      height: 620px;
+      max-height: none;
+    }
+    .vx-pd-hero__media :global(img) {
+      /* Desktop crop — approved Phase 5C-R2 composition. */
+      object-position: 42% 58%;
+    }
+    .vx-pd-hero__content {
+      padding-inline: var(--page-gutter-desktop);
+      padding-block-end: var(--space-2xl);
+      max-width: 30em;
+    }
+    .vx-pd-hero__name {
+      font-size: clamp(1.875rem, 3vw, 2.25rem);
+    }
+    .vx-pd-hero__actions {
+      flex-direction: row;
+      align-items: center;
+    }
+    .vx-pd-hero__btn {
+      width: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vx-pd-hero__link span {
+      transition: none;
+    }
+  }
+</style>

@@ -1,27 +1,42 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import SectionHeading from '../../components/ui/SectionHeading.astro';
-import Button from '../../components/ui/Button.astro';
 import Hero from '../../components/sections/Hero.astro';
-import AutomationIntegrationVisual from '../../components/sections/AutomationIntegrationVisual.astro';
-import FieldCommissioningVisual from '../../components/sections/FieldCommissioningVisual.astro';
-import SolutionCard from '../../components/ui/SolutionCard.astro';
-import ProductCard from '../../components/ui/ProductCard.astro';
-import IndustryCard from '../../components/ui/IndustryCard.astro';
-import ProcessTimeline from '../../components/ui/ProcessTimeline.astro';
-import CTABanner from '../../components/sections/CTABanner.astro';
-import { getSortedSolutions, getSortedProducts, getSortedIndustries } from '../../utils/content';
+import VisionX2Signature from '../../components/sections/VisionX2Signature.astro';
+import IndustrialReality from '../../components/sections/IndustrialReality.astro';
+import IntegrationLogic from '../../components/sections/IntegrationLogic.astro';
+import HomeFinalCTA from '../../components/sections/HomeFinalCTA.astro';
+import { getSortedProducts } from '../../utils/content';
 import '../../styles/home-refinement.css';
 
 const locale = 'zh-tw' as const;
 
-const solutions = (await getSortedSolutions()).slice(0, 3);
 const products = await getSortedProducts();
-const industries = await getSortedIndustries();
-const [productAnchor, ...productPair] = products;
-if (!productAnchor) {
-  throw new Error('Products collection is empty — the Product Editorial Plate requires at least one product.');
-}
+
+/*
+ * Phase 5C — Core Capability Production Reconstruction.
+ * The three canonical capabilities each anchor to their real product
+ * entry (Canonical Project Truth from src/content/products/*.md —
+ * `positioning` and `shortDescription`, not invented copy). Pulled from
+ * the already-loaded `products` collection rather than hardcoded strings,
+ * so this stays in sync if product content changes. FLEXCELL-M has no
+ * detail page yet (hasDetailPage: false) — its row links to /products/
+ * (the listing) instead of a nonexistent detail route, same fallback
+ * ProductCard already uses elsewhere on this page.
+ */
+const capabilityIndex = ['axm-400', 'vision-x2', 'flexcell-m'] as const;
+const capabilities = capabilityIndex.map((slug) => {
+  const product = products.find((p) => p.data.entrySlug === slug);
+  if (!product) {
+    throw new Error(`Core Capability index expects a "${slug}" product entry — none found.`);
+  }
+  return {
+    slug,
+    name: product.data.name,
+    positioning: product.data.positioning['zh-tw'],
+    description: product.data.shortDescription['zh-tw'],
+    hasDetailPage: product.data.hasDetailPage,
+  };
+});
 
 const processSteps = [
   { title: '需求釐清', description: '了解製程背景、現有設備介面與導入目標，確認初步可行性。' },
@@ -29,13 +44,6 @@ const processSteps = [
   { title: '設計與報價', description: '完成機構與系統設計，提供正式技術方案與報價。' },
   { title: '製作與測試', description: '模組製作、系統整合與內部功能測試，確認符合設計條件。' },
   { title: '導入與驗收', description: '現場安裝、調整與驗收，並提供操作與維護說明。' },
-];
-
-const whyReasons = [
-  { title: '工程導向流程', desc: '每個方案都從實際製程問題出發，先確認可行性再進入設計，不做無根據的承諾。' },
-  { title: '模組化產品線', desc: '運動、視覺與組裝模組可單獨導入或組合使用，依專案規模彈性配置。' },
-  { title: '結構化技術文件', desc: '規格、選配與導入條件均以文件化方式呈現，方便工程團隊內部評估與比較。' },
-  { title: '中英文技術溝通', desc: '以中英文整理規格、介面與導入條件，方便跨地區團隊確認需求與責任邊界。' },
 ];
 ---
 
@@ -50,217 +58,59 @@ const whyReasons = [
   <!-- Hero -->
   <Hero locale={locale} />
 
-  <!-- Capability overview: quiet supporting section, not a second Hero. -->
-  <section class="section section-compact">
+  <!-- Core Capability — Engineering Capability Chain (HP-REC-02, revising
+       Phase 5C). The three capabilities are no longer three equal-weight
+       rows read top-to-bottom like a spec table — they are staged left to
+       right (desktop) / top to bottom (mobile) as one connected chain:
+       motion establishes the base, vision adds a judgment layer on top of
+       it, integration synthesizes both into a deployable system. A single
+       connector line threads through all three stage markers so the
+       relationship is visible before any copy is read, not just asserted
+       in the intro paragraph. No cards, no icon grid, no dashboard
+       styling — still typography/grid/spacing only (DESIGN.md v2
+       Precision Instrument Editorial direction), same as the section it
+       replaces. -->
+  <section class="section-standard capability-section">
     <div class="container">
-      <SectionHeading
-        compact
-        eyebrow="核心能力"
-        title="從精密運動到系統整合"
-        description="鋒岳自動化的能力涵蓋運動模組設計、視覺定位檢測與整廠整合工程，讓客戶可以依專案規模選擇單一模組或完整方案。"
-      />
-      <AutomationIntegrationVisual locale={locale} presentation="wide" />
-      <div class="capability-grid">
-        <div class="capability-item">
-          <span class="capability-item__index mono">01</span>
-          <h3>精密線性運動模組</h3>
-          <p>高剛性結構搭配伺服傳動，提供加工、檢測與組裝站點所需的重複定位精度。</p>
-        </div>
-        <div class="capability-item">
-          <span class="capability-item__index mono">02</span>
-          <h3>視覺定位與檢測</h3>
-          <p>工業相機與影像演算法處理工件定位、瑕疵檢測與條碼特徵辨識。</p>
-        </div>
-        <div class="capability-item">
-          <span class="capability-item__index mono">03</span>
-          <h3>自動化組裝整合</h3>
-          <p>模組化組裝工作站搭配機械手臂與客製治具，適合中小批量多款式生產。</p>
-        </div>
-        <div class="capability-item">
-          <span class="capability-item__index mono">04</span>
-          <h3>既有產線升級</h3>
-          <p>針對瓶頸站點導入局部自動化，不需整線重建即可改善產能限制。</p>
-        </div>
+      <div class="capability-intro">
+        <p class="capability-intro__eyebrow mono">核心能力</p>
+        <h2 class="capability-intro__title">從精密運動到系統整合</h2>
       </div>
-    </div>
-  </section>
 
-  <!-- Solutions: quiet supporting section. -->
-  <section class="section section-compact">
-    <div class="container">
-      <SectionHeading
-        compact
-        eyebrow="解決方案"
-        title="依製程挑戰配置的自動化方案"
-        description="從精密定位到視覺檢測，每項方案都從實際製程問題出發。"
-      />
-      <div class="solution-index">
-        {solutions.map((s) => (
-          <SolutionCard
-            locale={locale}
-            slug={s.data.entrySlug}
-            name={s.data.name['zh-tw']}
-            description={s.data.shortDescription['zh-tw']}
-            hasDetailPage={s.data.hasDetailPage}
-          />
-        ))}
-      </div>
-      <div class="section-cta">
-        <Button href="/zh-tw/solutions/" variant="ghost">查看全部解決方案 →</Button>
-      </div>
-    </div>
-  </section>
-
-  <!-- Products: Mid-page Signature Composition (page moment B). Full
-       section-major rhythm and the page's second full-weight heading —
-       everything before it exists to arrive here. -->
-  <section class="section section-major section--alt product-signature">
-    <div class="container">
-      <SectionHeading
-        eyebrow="代表產品"
-        title="模組化產品線"
-        description="三款核心產品可獨立導入，也可組合為完整自動化站點。"
-      />
-      <div class="product-plate">
-        <div class="product-plate__anchor">
-          <ProductCard
-            locale={locale}
-            slug={productAnchor.data.entrySlug as 'axm-400' | 'vision-x2' | 'flexcell-m'}
-            name={productAnchor.data.name}
-            positioning={productAnchor.data.positioning['zh-tw']}
-            description={productAnchor.data.shortDescription['zh-tw']}
-            dominant
-          />
-        </div>
-        <div class="product-plate__pair">
-          {productPair.map((p) => (
-            <ProductCard
-              locale={locale}
-              slug={p.data.entrySlug as 'axm-400' | 'vision-x2' | 'flexcell-m'}
-              name={p.data.name}
-              positioning={p.data.positioning['zh-tw']}
-              description={p.data.shortDescription['zh-tw']}
-            />
-          ))}
-        </div>
-      </div>
-      <div class="section-cta">
-        <Button href="/zh-tw/products/" variant="ghost">比較完整產品規格 →</Button>
-      </div>
-    </div>
-  </section>
-
-  <!-- Industries: quiet supporting section. -->
-  <section class="section section-compact">
-    <div class="container">
-      <SectionHeading
-        compact
-        eyebrow="應用產業"
-        title="服務的產業範圍"
-        description="從半導體到包裝物流，依產業特性配置適合的自動化方案。"
-      />
-      <div class="industry-index">
-        {industries.map((ind) => (
-          <IndustryCard
-            locale={locale}
-            slug={ind.data.entrySlug as any}
-            name={ind.data.name['zh-tw']}
-            description={ind.data.shortDescription['zh-tw']}
-            hasDetailPage={ind.data.hasDetailPage}
-          />
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <!-- Fit assessment + browsing paths: one compact decision-support block,
-       not two separate generic two/four-item patterns. -->
-  <section class="section section-compact section--alt">
-    <div class="container">
-      <div class="assess-block">
-        <div class="assess-block__fit">
-          <p class="assess-block__eyebrow mono">適合評估</p>
-          <h2 class="assess-block__title">鋒岳自動化適合什麼情況，不適合什麼情況</h2>
-          <div class="fit-columns">
-            <div class="fit-col fit-col--yes">
-              <h3>適合的情況</h3>
-              <ul>
-                <li>加工、檢測或組裝站點需要穩定的重複定位精度，且已能描述工件尺寸與節拍需求</li>
-                <li>既有產線有明確瓶頸站點，希望局部自動化升級而非整線重建</li>
-                <li>需要視覺定位或瑕疵檢測，且製程條件（光源、工件表面特性）大致明確</li>
-                <li>專案規模足以支撐工程評估與客製設計（非單一標準品採購）</li>
-              </ul>
+      <ol class="capability-chain">
+        {capabilities.map((cap, i) => (
+          <li class="capability-stage" data-stage={i + 1}>
+            <div class="capability-stage__marker" aria-hidden="true">
+              <span class="capability-stage__index mono">{String(i + 1).padStart(2, '0')}</span>
             </div>
-            <div class="fit-col fit-col--no">
-              <h3>暫時不適合的情況</h3>
-              <ul>
-                <li>僅需採購單一標準零組件，不需要整合工程或客製設計</li>
-                <li>製程條件尚未確認（例如工件規格、節拍、現場空間都還在變動），建議先完成內部評估</li>
-                <li>時程要求在標準工程評估週期內無法完成（例如兩週內需要完整方案定案）</li>
-                <li>需要防爆、無塵室特殊等級或其他尚未經過工程確認的特殊環境認證</li>
-              </ul>
+            <div class="capability-stage__body">
+              <p class="capability-stage__role mono">
+                {i === 0 ? '基礎動作' : i === 1 ? '判斷依據' : '可部署系統'}
+              </p>
+              <h3 class="capability-stage__name">{cap.positioning}</h3>
+              <p class="capability-stage__desc">{cap.description}</p>
+              <a href={`/${locale}/products/${cap.slug}/`} class="capability-stage__link">
+                <span class="capability-stage__model mono">{cap.name}</span>
+                <span class="capability-stage__arrow" aria-hidden="true">&rarr;</span>
+              </a>
             </div>
-          </div>
-        </div>
-        <aside class="assess-block__paths">
-          <p class="assess-block__eyebrow mono">從這裡開始</p>
-          <a href="/zh-tw/industries/" class="path-link">
-            <span class="path-link__label">海外採購／工廠管理者</span>
-            <span class="path-link__desc">依產業別瀏覽常見製程問題與適合的解決方案 →</span>
-          </a>
-          <a href="/zh-tw/products/" class="path-link">
-            <span class="path-link__label">自動化／製程工程師</span>
-            <span class="path-link__desc">直接查看三款核心產品的完整規格表 →</span>
-          </a>
-        </aside>
-      </div>
-    </div>
-  </section>
-
-  <!-- Process: narrative pairing of the on-site photograph with the
-       delivery stages, not "image then a documentation list" — the
-       photograph stays visible beside every stage as the throughline. -->
-  <section class="section section-compact section--alt">
-    <div class="container">
-      <SectionHeading
-        compact
-        eyebrow="專案導入流程"
-        title="從需求釐清到現場驗收"
-        description="以五個階段呈現評估與交付框架，逐步確認需求、設計、測試與驗收條件。"
-      />
-      <div class="process-narrative">
-        <div class="process-narrative__media">
-          <FieldCommissioningVisual locale={locale} presentation="wide" />
-        </div>
-        <div class="process-narrative__steps">
-          <ProcessTimeline steps={processSteps} />
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Why us: quiet closing transition, not a third full-weight
-       declaration competing with Final CTA. -->
-  <section class="section why-strip">
-    <div class="container">
-      <p class="why-strip__label mono">合作理由</p>
-      <ul class="why-strip__list">
-        {whyReasons.map((r) => (
-          <li class="why-strip__item">
-            <h3>{r.title}</h3>
-            <p>{r.desc}</p>
           </li>
         ))}
-      </ul>
+      </ol>
     </div>
   </section>
 
-  <!-- Final CTA -->
-  <CTABanner
-    locale={locale}
-    title="準備好討論您的自動化需求了嗎？"
-    description="提交專案背景與需求，我們的技術團隊將協助評估可行的解決方案。"
-  />
+  <!-- VISION-X2 Featured Product / Signature Moment (Phase 5D). -->
+  <VisionX2Signature locale={locale} />
+
+  <!-- Industrial Reality Check — third Homepage Signature Moment (Phase 5E). -->
+  <IndustrialReality locale={locale} />
+
+  <!-- Integration / Deployment Logic (Phase 5F). -->
+  <IntegrationLogic locale={locale} steps={processSteps} />
+
+  <!-- Final CTA (Phase 5G). -->
+  <HomeFinalCTA locale={locale} />
 </BaseLayout>
 
 <style>
@@ -278,221 +128,214 @@ const whyReasons = [
     margin-top: 0;
   }
 
-  /* LC-02: --section-major's padding-bottom (clamp(120px, 12vw, 176px),
-     ~173px at 1440px) read as an accidental oversized gap after the "比較
-     完整產品規格" link — the top half (heading -> visual) is a normal
-     48px, so the section was front-light/bottom-heavy. Trimmed ~18% at
-     every width via the same clamp shape, scoped to this page's own
-     Products section only; utilities.css's shared .section-major class
-     and its consumers elsewhere are untouched. */
-  .product-signature {
-    padding-bottom: clamp(98px, 9.8vw, 145px);
+  /*
+   * Core Capability — Engineering Capability Chain (HP-REC-02).
+   * Scoped Direction-B accent, same pattern as Header.astro/Hero.astro:
+   * the sitewide --color-accent still belongs to the superseded Precision
+   * Datum System (DESIGN.md v2 §0), so this section defines its own
+   * locally-cascading override rather than touching tokens.css — every
+   * other section on this page keeps the current sitewide accent until a
+   * later ticket migrates it deliberately.
+   */
+  .capability-section {
+    --color-accent: #3d5a6c;
+    --color-accent-dark: #24404f;
   }
 
-  .section--alt {
-    background: var(--color-surface-alt);
+  .capability-intro {
+    margin-bottom: var(--space-2xl);
   }
-
-  .container--narrow {
-    max-width: 860px;
-  }
-
-  .process-narrative {
-    display: grid;
-    gap: var(--space-xl);
-    grid-template-columns: 1fr;
-  }
-  @media (min-width: 900px) {
-    .process-narrative {
-      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-      align-items: start;
-      gap: var(--space-2xl);
-    }
-    .process-narrative__media {
-      position: sticky;
-      top: calc(80px + var(--space-lg));
-    }
-  }
-
-  .capability-grid {
-    display: grid;
-    gap: var(--space-lg);
-    grid-template-columns: 1fr;
-  }
-  .capability-item {
-    padding-top: var(--space-md);
-    border-top: 1px solid var(--color-border);
-  }
-  .capability-item__index {
+  .capability-intro__eyebrow {
+    margin: 0 0 var(--space-2xs);
     color: var(--color-accent);
-    font-size: var(--fs-sm);
-    font-weight: 700;
-  }
-  .capability-item h3 {
-    margin: var(--space-2xs) 0;
-    font-size: var(--fs-md);
-  }
-  .capability-item p {
-    margin: 0;
-    color: var(--color-muted);
-    font-size: var(--fs-sm);
-  }
-
-  .section-cta {
-    margin-top: var(--space-xl);
-    display: flex;
-    justify-content: center;
-  }
-
-  /* Quiet closing transition — deliberately not another Section­Heading +
-     grid declaration; see docs/uiux-upgrade/08-fullpage-composition.md. */
-  .why-strip {
-    padding-block: var(--space-2xl);
-  }
-  .why-strip__label {
-    margin: 0 0 var(--space-md);
-    color: var(--color-muted);
     font-size: var(--fs-xs);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
   }
-  .why-strip__list {
+  .capability-intro__title {
+    margin: 0;
+    max-width: 20ch;
+    font-size: clamp(1.5rem, 2.4vw, 2rem);
+    font-weight: 600;
+    line-height: 1.3;
+    text-wrap: balance;
+  }
+
+  /*
+   * The chain: three stages connected by one continuous line, not three
+   * independent rows. Mobile-first — base rules are the vertical stack
+   * (connector runs top-to-bottom through each stage's index marker);
+   * the desktop enhancement below turns it horizontal. The connector is
+   * drawn once per stage as a border edge on the marker column so it
+   * reads as a single unbroken line across all three stages, not three
+   * separate short lines that happen to touch.
+   */
+  .capability-chain {
     list-style: none;
     margin: 0;
     padding: 0;
-    display: grid;
-    gap: var(--space-md) var(--space-xl);
-    grid-template-columns: 1fr;
-  }
-  .why-strip__item h3 {
-    margin: 0 0 0.2em;
-    font-size: var(--fs-sm);
-    font-weight: 700;
-  }
-  .why-strip__item p {
-    margin: 0;
-    color: var(--color-muted);
-    font-size: var(--fs-xs);
-    line-height: var(--lh-normal);
+    display: flex;
+    flex-direction: column;
   }
 
-  /* Fit assessment + browsing paths, merged into one compact
-     decision-support block rather than two symmetric two/four-item
-     sections (see docs/uiux-upgrade/08-fullpage-composition.md). */
-  .assess-block {
+  .capability-stage {
     display: grid;
-    gap: var(--space-2xl);
-    grid-template-columns: 1fr;
+    grid-template-columns: 2.5rem 1fr;
+    gap: 0 var(--space-lg);
   }
-  .assess-block__eyebrow {
-    margin: 0 0 var(--space-2xs);
+
+  .capability-stage__marker {
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+  .capability-stage__marker::before {
+    /* the connector line itself, running the full height of this stage */
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    background: var(--color-border-strong);
+  }
+  .capability-stage:first-child .capability-stage__marker::before {
+    top: 1.4em;
+  }
+  .capability-stage:last-child .capability-stage__marker::before {
+    bottom: calc(100% - 1.4em);
+  }
+  .capability-stage__index {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    margin-top: 0.15em;
+    background: var(--color-surface);
+    border: 1px solid var(--color-accent);
+    color: var(--color-accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .capability-stage__body {
+    padding-block: var(--space-lg);
+  }
+  .capability-stage:first-child .capability-stage__body {
+    padding-top: 0;
+  }
+  .capability-stage:last-child .capability-stage__body {
+    padding-bottom: 0;
+  }
+
+  .capability-stage__role {
+    margin: 0 0 0.35em;
     color: var(--color-muted);
     font-size: var(--fs-xs);
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
-  .assess-block__title {
-    margin: 0 0 var(--space-lg);
-    max-width: 34ch;
-    font-size: var(--fs-md);
+  .capability-stage__name {
+    margin: 0 0 var(--space-2xs);
+    font-size: var(--fs-lg);
     font-weight: 600;
-    text-wrap: balance;
+    line-height: 1.3;
   }
-  .fit-columns {
-    display: grid;
-    gap: var(--space-lg);
-    grid-template-columns: 1fr;
+  /* First stage anchors the chain — establishes the base, reads larger
+     than the two stages built on top of it. */
+  .capability-stage:first-child .capability-stage__name {
+    font-size: var(--fs-xl);
   }
-  .fit-col {
-    padding-top: var(--space-sm);
-    border-top: 2px solid var(--color-border-strong);
-  }
-  .fit-col--yes {
-    border-top-color: var(--color-success);
-  }
-  .fit-col--no {
-    border-top-color: var(--color-muted);
-  }
-  .fit-col h3 {
-    margin: 0 0 var(--space-xs);
+  .capability-stage__desc {
+    margin: 0 0 var(--space-sm);
+    max-width: 42em;
+    color: var(--color-muted);
     font-size: var(--fs-sm);
-    font-weight: 700;
-  }
-  .fit-col ul {
-    margin: 0;
-    padding-left: var(--space-md);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2xs);
-  }
-  .fit-col li {
-    color: var(--color-ink-soft);
-    font-size: var(--fs-xs);
-    line-height: var(--lh-normal);
+    line-height: var(--lh-body-lg);
   }
 
-  .assess-block__paths {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
-    padding-top: var(--space-sm);
-    border-top: 1px solid var(--color-border);
-  }
-  .path-link {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2em;
-    padding-block: var(--space-xs);
+  .capability-stage__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
     text-decoration: none;
-    color: inherit;
+    color: var(--color-ink);
   }
-  .path-link + .path-link {
-    border-top: 1px solid var(--color-border);
-  }
-  .path-link__label {
-    font-size: var(--fs-sm);
+  .capability-stage__model {
+    font-size: var(--fs-xs);
+    letter-spacing: 0.06em;
     font-weight: 600;
   }
-  .path-link__desc {
-    color: var(--color-muted);
-    font-size: var(--fs-xs);
+  .capability-stage__arrow {
+    color: var(--color-accent);
+    transition: transform var(--duration-ui) var(--ease-standard);
   }
-  .path-link:hover .path-link__label {
+  .capability-stage__link:hover {
     color: var(--color-accent-dark);
   }
-
-  @media (min-width: 720px) {
-    .capability-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    .fit-columns {
-      grid-template-columns: repeat(2, 1fr);
-      column-gap: var(--space-xl);
-    }
-    .fit-col--yes {
-      padding-right: var(--space-xl);
-      border-right: 1px solid var(--color-border);
-    }
-    .why-strip__list {
-      grid-template-columns: repeat(2, 1fr);
-    }
+  .capability-stage__link:hover .capability-stage__arrow {
+    transform: translateX(3px);
   }
-  @media (min-width: 960px) {
-    .assess-block {
-      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
-      gap: var(--space-3xl);
+
+  @media (min-width: 900px) {
+    .capability-intro {
+      max-width: 34em;
     }
-    .assess-block__paths {
-      padding-top: 0;
-      padding-left: var(--space-2xl);
-      border-top: 0;
-      border-left: 1px solid var(--color-border);
+
+    /*
+     * Desktop: the chain turns horizontal. Each stage becomes a column;
+     * the connector becomes ONE continuous horizontal rule drawn once on
+     * the .capability-chain container itself (not three per-stage
+     * segments broken up by the inter-stage gap) so it reads as a single
+     * unbroken line threading through all three index markers. Stage 1
+     * (motion) is deliberately the widest column and carries the largest
+     * type — it is the foundation the other two stages are staged on top
+     * of, not an equal partner.
+     */
+    .capability-chain {
+      position: relative;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: var(--space-xl);
     }
-    .capability-grid {
-      grid-template-columns: repeat(4, 1fr);
+    .capability-chain::before {
+      content: '';
+      position: absolute;
+      top: 1.25rem;
+      left: 1.25rem;
+      right: 1.25rem;
+      height: 1px;
+      background: var(--color-border-strong);
     }
-    .why-strip__list {
-      grid-template-columns: repeat(4, 1fr);
+    .capability-stage {
+      grid-template-columns: 1fr;
+      grid-template-rows: 2.5rem auto;
+      flex: 1;
+    }
+    .capability-stage:first-child {
+      flex: 1.15;
+    }
+
+    .capability-stage__marker {
+      justify-content: flex-start;
+    }
+    .capability-stage__marker::before {
+      display: none;
+    }
+    .capability-stage__index {
+      margin-top: 0;
+    }
+
+    .capability-stage__body {
+      padding-block: 0;
+      padding-top: var(--space-lg);
+    }
+    .capability-stage:first-child .capability-stage__body,
+    .capability-stage:last-child .capability-stage__body {
+      padding: var(--space-lg) 0 0;
     }
   }
 </style>

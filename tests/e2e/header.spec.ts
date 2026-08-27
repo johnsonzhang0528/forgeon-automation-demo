@@ -227,11 +227,18 @@ test.describe('Header production implementation (CC-02I-02)', () => {
     expect(box!.height, `toggle height was ${box!.height}px`).toBeGreaterThanOrEqual(44);
   });
 
-  test('Datum Origin mark renders beside the logo', async ({ page }) => {
+  // The Datum Origin mark was part of the Precision Datum System, which
+  // DESIGN.md v2 §0 explicitly supersedes (Human/ChatGPT Design Contract
+  // Gate ruling, Phase 4). Header.astro no longer renders it — this test
+  // now asserts its absence instead of its presence, plus that the logo
+  // alone still renders correctly without it.
+  test('Datum Origin mark (superseded Precision Datum System) is not rendered; logo renders alone', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/zh-tw/');
     const datum = page.locator('.site-header__brand .site-header__datum');
-    await expect(datum).toBeVisible();
+    await expect(datum).toHaveCount(0);
     const logo = page.locator('.site-header__brand a.logo');
     await expect(logo).toBeVisible();
   });
@@ -243,33 +250,43 @@ test.describe('Header production implementation (CC-02I-02)', () => {
     await expect(logo).toHaveAttribute('aria-label', '鋒岳自動化 FORGEON AUTOMATION');
   });
 
-  // Remediation (review §6.D): the previous assertion only checked that
-  // the CTA's background differs from an unstyled default — that passes
-  // even if the CTA resolved to some other, wrong color. This resolves
-  // --color-action-primary / --color-action-primary-hover via a live probe
-  // element (not a hardcoded hex) and asserts the CTA's own computed style
-  // matches exactly, for both the default and :hover state.
-  test('header CTA resolves to --color-action-primary (computed style, exact token match)', async ({ page }) => {
+  // Rewritten for DESIGN.md v2 §0/§10 (Phase 5A-R2): the header CTA is a
+  // bordered/transparent button whose ACCENT lives in its text `color`, not
+  // `background-color` (background stays transparent until :hover, when it
+  // switches to --color-ink — an unrelated dark-fill state, not an accent
+  // variant). The previous version of this test asserted background-color
+  // against --color-action-primary — that assertion was already incorrect
+  // against the property the CSS actually sets, independent of this
+  // phase's token change. It also predates the Header/Hero-scoped
+  // --color-accent override (Hero.astro/Header.astro's own comments) that
+  // replaces the superseded Precision Datum System's --color-action-primary
+  // for this phase's scope — see DESIGN.md v2 §0.
+  test('header CTA text resolves to the scoped --color-accent (computed style, exact token match)', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/zh-tw/');
     const cta = page.locator('.site-header__cta a.btn');
     await expect(cta).toBeVisible();
 
-    const { ctaBg, tokenBg } = await page.evaluate(() => {
+    const { ctaColor, tokenColor, ctaBg } = await page.evaluate(() => {
       const el = document.querySelector('.site-header__cta a.btn') as HTMLElement;
       const probe = document.createElement('div');
       probe.style.position = 'fixed';
       probe.style.left = '-9999px';
-      probe.style.background = 'var(--color-action-primary)';
-      document.body.appendChild(probe);
-      const tokenBg = getComputedStyle(probe).backgroundColor;
+      probe.style.color = 'var(--color-accent)';
+      el.appendChild(probe); // inside .site-header__cta's subtree so the scoped override applies
+      const tokenColor = getComputedStyle(probe).color;
       probe.remove();
-      return { ctaBg: getComputedStyle(el).backgroundColor, tokenBg };
+      return { ctaColor: getComputedStyle(el).color, tokenColor, ctaBg: getComputedStyle(el).backgroundColor };
     });
-    expect(ctaBg, `header CTA background (${ctaBg}) must equal --color-action-primary (${tokenBg})`).toBe(tokenBg);
+    expect(ctaColor, `header CTA text color (${ctaColor}) must equal scoped --color-accent (${tokenColor})`).toBe(
+      tokenColor,
+    );
+    expect(ctaBg, 'header CTA background must stay transparent until hover').toBe('rgba(0, 0, 0, 0)');
   });
 
-  test('header CTA hover resolves to --color-action-primary-hover (computed style, exact token match)', async ({ page }) => {
+  test('header CTA hover fills with --color-ink and inverts text to --color-invert-text', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/zh-tw/');
     const cta = page.locator('.site-header__cta a.btn');
@@ -280,30 +297,59 @@ test.describe('Header production implementation (CC-02I-02)', () => {
     // style only after the transition has settled, not mid-interpolation.
     await page.waitForTimeout(300);
 
-    const { ctaBg, tokenBg } = await page.evaluate(() => {
+    const { ctaBg, tokenBg, ctaColor, tokenColor } = await page.evaluate(() => {
       const el = document.querySelector('.site-header__cta a.btn') as HTMLElement;
       const probe = document.createElement('div');
       probe.style.position = 'fixed';
       probe.style.left = '-9999px';
-      probe.style.background = 'var(--color-action-primary-hover)';
+      probe.style.background = 'var(--color-ink)';
+      probe.style.color = 'var(--color-invert-text)';
       document.body.appendChild(probe);
       const tokenBg = getComputedStyle(probe).backgroundColor;
+      const tokenColor = getComputedStyle(probe).color;
       probe.remove();
-      return { ctaBg: getComputedStyle(el).backgroundColor, tokenBg };
+      return { ctaBg: getComputedStyle(el).backgroundColor, tokenBg, ctaColor: getComputedStyle(el).color, tokenColor };
     });
-    expect(ctaBg, `header CTA hover background (${ctaBg}) must equal --color-action-primary-hover (${tokenBg})`).toBe(tokenBg);
+    expect(ctaBg, `header CTA hover background (${ctaBg}) must equal --color-ink (${tokenBg})`).toBe(tokenBg);
+    expect(ctaColor, `header CTA hover text (${ctaColor}) must equal --color-invert-text (${tokenColor})`).toBe(
+      tokenColor,
+    );
   });
 
-  test('all 6 real nav items are present with valid hrefs', async ({ page }) => {
+  // Rewritten for Phase 5B-R1 §A/§B: the desktop top-level row was trimmed
+  // from 6 to 4 items (solutions/products/industries/about) to fix a real
+  // production blocker — the 5th/6th items ("技術資源"/"聯絡我們") wrapped
+  // to a second row at 1120px with no width budget left to fit them
+  // without cramming. Both dropped items remain real, reachable site
+  // navigation — just no longer duplicated into the desktop primary row —
+  // via the mobile drawer (unchanged, still renders all 6 from the same
+  // navItems config) and Footer.astro (already links both). This test now
+  // asserts the desktop row's new 4-item contract plus that the two
+  // relocated items are still genuinely reachable from the mobile drawer,
+  // rather than just asserting a raw count that would mask either an
+  // accidental over-trim or a silent loss of site functionality.
+  test('desktop nav shows the 4 primary entry points with valid hrefs; insights/contact remain reachable via mobile drawer', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/zh-tw/');
     const links = page.locator('.desktop-nav__link');
-    await expect(links).toHaveCount(6);
+    await expect(links).toHaveCount(4);
     const hrefs = await links.evaluateAll((els) => els.map((el) => el.getAttribute('href')));
     for (const href of hrefs) {
       expect(href, 'every nav link must have a real href').toBeTruthy();
       expect(href!.startsWith('#'), `nav link ${href} must not be a placeholder anchor`).toBe(false);
     }
+    expect(hrefs).toEqual(['/zh-tw/solutions/', '/zh-tw/products/', '/zh-tw/industries/', '/zh-tw/about/']);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/zh-tw/');
+    await page.locator('[data-mobile-nav-toggle]').click();
+    const mobileHrefs = await page
+      .locator('.mobile-nav__link')
+      .evaluateAll((els) => els.map((el) => el.getAttribute('href')));
+    expect(mobileHrefs).toContain('/zh-tw/insights/');
+    expect(mobileHrefs).toContain('/zh-tw/contact/');
   });
 
   // Remediation (review §6.C): `toBeFocused()` alone only proves the

@@ -1,0 +1,273 @@
+---
+/**
+ * Integration / Deployment Logic — Homepage fifth section (Phase 5F,
+ * redesigned HP-REC-06 "Engineering Handoff Sequence").
+ *
+ * Completes the DESIGN.md v2 §6 Homepage IA escalation: Hero (brand) ->
+ * Core Capability (component-level engineering) -> VISION-X2 Signature
+ * (one precision instrument) -> Industrial Reality (deployed system in a
+ * real environment) -> this section (the deployment PROCESS itself, as
+ * an engineered, credible sequence — not a generic "how it works" list).
+ *
+ * HP-REC-06 deliberately does NOT reuse Core Capability's capability-
+ * chain grammar (equal-width columns + one connector line = a
+ * relationship between three peer capabilities). This section is about
+ * a single directional HANDOFF sequence with increasing commitment
+ * toward one real-world delivery endpoint, so each stage's visual
+ * weight/indent grows toward the end instead of staying equal, and the
+ * sequence terminates in the commissioning photograph rather than
+ * running alongside it. The five stages and the photo now stack in one
+ * vertical reading order (intro -> stages -> photo), not a left-photo /
+ * right-list split — the photo is the field endpoint the sequence
+ * arrives at, not a decorative co-lead occupying 42% of the viewport
+ * for the whole section.
+ *
+ * The five steps reuse the site's existing, already-approved
+ * `processSteps` content (Requirements Discovery / Solution Evaluation /
+ * Design & Quotation / Build & Testing / Deployment & Acceptance) — no
+ * new durations, counts, or performance claims are introduced.
+ *
+ * The photograph (field-commissioning-collaboration-final-master.png,
+ * already used elsewhere via FieldCommissioningVisual.astro's bordered-
+ * card treatment, which is NOT reused here) is the only Signature
+ * Moment on the homepage featuring people — appropriate here since this
+ * section is specifically about the human process of commissioning and
+ * acceptance, not a product or system in isolation. FieldCommissioning-
+ * Visual.astro itself is untouched; this component imports the master
+ * image directly, matching the pattern IndustrialReality.astro already
+ * uses for automation-integration-final-master.png.
+ */
+import { Picture } from 'astro:assets';
+import fieldCommissioningImage from '../../assets/images/solutions/field-commissioning-collaboration-final-master.png';
+import { getDictionary } from '../../utils/i18n';
+import type { Locale } from '../../config/site';
+
+export interface Step {
+  title: string;
+  description: string;
+}
+
+export interface Props {
+  locale: Locale;
+  steps: Step[];
+}
+
+const { locale, steps } = Astro.props;
+const copy = getDictionary(locale).integrationLogic;
+---
+
+<section class="il">
+  <div class="container">
+    <div class="il-intro">
+      <p class="il-intro__eyebrow mono">{copy.eyebrow}</p>
+      <h2 class="il-intro__title">{copy.title}</h2>
+      <p class="il-intro__statement">{copy.statement}</p>
+    </div>
+
+    <ol class="il-sequence">
+      {steps.map((step, i) => (
+        <li class="il-stage" data-stage={i + 1} style={`--stage-i: ${i};`}>
+          <div class="il-stage__rail" aria-hidden="true">
+            <span class="il-stage__index mono">{String(i + 1).padStart(2, '0')}</span>
+          </div>
+          <div class="il-stage__body">
+            <h3 class="il-stage__title">{step.title}</h3>
+            <p class="il-stage__desc">{step.description}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+
+    <figure class="il-endpoint">
+      <div class="il-endpoint__media">
+        <Picture
+          src={fieldCommissioningImage}
+          formats={['avif', 'webp']}
+          widths={[640, 960, 1280, 1600, 1920]}
+          sizes="100vw"
+          alt={copy.imageAlt}
+          loading="lazy"
+          decoding="async"
+          quality={82}
+        />
+      </div>
+    </figure>
+  </div>
+</section>
+
+<style>
+  .il {
+    background: var(--color-surface);
+    padding-block: var(--section-standard);
+  }
+
+  .il-intro {
+    margin-bottom: var(--space-xl);
+  }
+  .il-intro__eyebrow {
+    margin: 0 0 var(--space-2xs);
+    color: var(--color-accent);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .il-intro__title {
+    margin: 0 0 var(--space-md);
+    max-width: 18ch;
+    font-size: clamp(1.5rem, 2.4vw, 2rem);
+    font-weight: 600;
+    line-height: 1.3;
+    text-wrap: balance;
+  }
+  .il-intro__statement {
+    margin: 0;
+    max-width: 34em;
+    color: var(--color-muted);
+    font-size: var(--fs-md);
+    line-height: var(--lh-body-lg);
+  }
+
+  /*
+   * ENGINEERING HANDOFF SEQUENCE (HP-REC-06) — deliberately NOT the
+   * Core Capability capability-chain grammar (equal-width columns, one
+   * connector line, peer relationship). This is one directional rail
+   * running down the left edge of every stage — a handoff line, not a
+   * capability connector — and each stage's indent and title weight
+   * grow slightly toward the end (--stage-i-driven) so the sequence
+   * visually gains commitment as it approaches delivery, rather than
+   * presenting five equal-weight rows.
+   */
+  .il-sequence {
+    list-style: none;
+    margin: 0 0 var(--space-xl);
+    padding: 0;
+  }
+  .il-stage {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: var(--space-3);
+    padding-block: var(--space-4);
+    margin-left: calc(var(--stage-i, 0) * var(--space-sm));
+  }
+  .il-stage::before {
+    /* the handoff rail: one continuous vertical line down the marker
+       column, broken only by the index badges sitting on top of it */
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: calc(-1 * var(--space-4));
+    left: 1rem;
+    width: 1px;
+    background: var(--color-border-strong);
+  }
+  .il-stage:last-child::before {
+    bottom: 50%;
+  }
+  .il-stage__rail {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+  }
+  .il-stage__index {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-accent);
+    color: var(--color-accent);
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+  .il-stage:last-child .il-stage__index {
+    background: var(--color-accent);
+    color: var(--color-surface);
+  }
+  .il-stage__body {
+    padding-top: 0.3em;
+  }
+  .il-stage__title {
+    margin: 0 0 var(--space-1);
+    font-size: calc(var(--fs-md) + var(--stage-i, 0) * 0.015rem);
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .il-stage__desc {
+    margin: 0;
+    max-width: 42em;
+    color: var(--color-muted);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-body-lg);
+  }
+
+  /*
+   * The commissioning photo is the sequence's real-world endpoint, not
+   * a co-lead beside the list — it sits after the last handoff stage,
+   * full-width, so the reading order arrives at it rather than running
+   * alongside it for the whole section.
+   */
+  .il-endpoint {
+    margin: 0;
+    aspect-ratio: 16 / 7;
+    overflow: hidden;
+    background: var(--color-steel-900, #151a1e);
+  }
+  .il-endpoint__media {
+    width: 100%;
+    height: 100%;
+  }
+  .il-endpoint__media :global(picture) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .il-endpoint__media :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 42%;
+  }
+
+  @media (min-width: 900px) {
+    .il {
+      --color-accent: #3d5a6c;
+    }
+    .il-intro {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: end;
+      gap: var(--space-2xl);
+      margin-bottom: var(--space-2xl);
+    }
+    .il-intro__title {
+      max-width: none;
+      margin-bottom: 0;
+    }
+    .il-intro__statement {
+      justify-self: end;
+      text-align: left;
+    }
+
+    .il-sequence {
+      max-width: 52em;
+      margin-inline: auto;
+      margin-bottom: var(--space-2xl);
+    }
+    .il-stage {
+      grid-template-columns: 2.25rem 1fr;
+      gap: var(--space-lg);
+      margin-left: calc(var(--stage-i, 0) * var(--space-lg));
+    }
+    .il-stage__title {
+      font-size: calc(var(--fs-md) + var(--stage-i, 0) * 0.03rem);
+    }
+
+    .il-endpoint {
+      aspect-ratio: 21 / 8;
+    }
+  }
+</style>

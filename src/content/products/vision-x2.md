@@ -45,6 +45,14 @@ specs:
     value: { zh-tw: 依運算配置評估（Demo 數值）, en: Evaluated per compute configuration (demo value) }
   - label: { zh-tw: 通訊介面, en: Communication Interface }
     value: { zh-tw: 標準工業通訊介面, en: Standard industrial communication interface }
+  - label: { zh-tw: 運算架構, en: Compute Architecture }
+    value: { zh-tw: 裝置端整合影像擷取與辨識運算，可依系統需求作為獨立檢測站點或整合至自動化系統, en: On-device integrated image capture and recognition processing, deployable as a standalone inspection station or integrated into an automated system }
+  - label: { zh-tw: 通訊整合, en: Communication Integration }
+    value: { zh-tw: 支援工業乙太網路通訊整合，實際通訊協定依專案需求與系統架構確認, en: Supports industrial Ethernet communication integration; actual protocol confirmed per project requirements and system architecture }
+  - label: { zh-tw: 觸發方式, en: Trigger Method }
+    value: { zh-tw: 支援硬體觸發訊號與軟體／PLC 觸發, en: Supports hardware trigger signals and software/PLC triggering }
+  - label: { zh-tw: 安裝環境, en: Installation Environment }
+    value: { zh-tw: 適用於固定式機台／治具整合；粉塵、油霧、溫濕度與其他環境防護需求依實際場域評估, en: Suited to fixed-machine/fixture integration; dust, oil mist, temperature/humidity, and other environmental protection needs evaluated per actual site conditions }
 options:
   zh-tw:
     - 高解析度相機升級

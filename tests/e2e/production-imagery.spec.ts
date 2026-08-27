@@ -44,6 +44,16 @@ const CONTROL_ENGINEERING_ROUTES = [
   },
 ] as const;
 
+/*
+ * PD-VX2-01: /products/vision-x2/ no longer renders YF-IMG-04 (the
+ * generic, unbranded machine-vision-inspection-final-master.png) in its
+ * Hero — that image never actually depicted the VISION-X2 product itself,
+ * only a similar-looking but different camera rig. VISION-X2's Hero now
+ * uses its own approved product master (see the VISION-X2_HERO_ROUTES /
+ * "VISION-X2 product master" contract below); AXM-400 and FLEXCELL-M are
+ * unaffected and keep asserting YF-IMG-05 / YF-IMG-07 via ProductVisual
+ * as before.
+ */
 const MACHINE_VISION_ROUTES = [
   {
     path: '/zh-tw/solutions/vision-inspection/',
@@ -59,19 +69,18 @@ const MACHINE_VISION_ROUTES = [
     priority: 'high',
     caption: 'Representative machine-vision inspection view: a fixed camera, lens and ring-light geometry aligned with fixtured workpieces.',
   },
+] as const;
+
+const VISION_X2_HERO_ROUTES = [
   {
     path: '/zh-tw/products/vision-x2/',
-    presentation: 'product-hero',
-    loading: 'eager',
-    priority: 'high',
-    caption: '代表性機器視覺檢測影像：相機、鏡頭、環形光源、治具與工件的固定檢測關係。',
+    heading: 'VISION-X2',
+    alt: 'VISION-X2 鏡頭特寫，深色背景中可見對焦環刻度、光學鍍膜與環形光源邊緣',
   },
   {
     path: '/en/products/vision-x2/',
-    presentation: 'product-hero',
-    loading: 'eager',
-    priority: 'high',
-    caption: 'Representative machine-vision inspection view: a fixed camera, lens and ring-light geometry aligned with fixtured workpieces.',
+    heading: 'VISION-X2',
+    alt: 'VISION-X2 lens close-up against a dark background, showing the focus-ring markings, optical coating, and the glowing edge of the ring light',
   },
 ] as const;
 
@@ -134,14 +143,13 @@ const PRODUCT_CARD_ROUTES = [
   { path: '/en/products/', imageId: 'YF-IMG-07', product: 'flexcell-m' },
 ] as const;
 
+/*
+ * PD-VX2-01: vision-x2 removed from this list — its Hero no longer routes
+ * through ProductVisual's product-hero crop contract (own dedicated crop
+ * geometry asserted separately below, matching the approved Phase 5C-R2/
+ * 5D-R2 mockup object-position values instead).
+ */
 const PRODUCT_HERO_CROPS = [
-  {
-    path: '/zh-tw/products/vision-x2/',
-    imageId: 'YF-IMG-04',
-    product: 'vision-x2',
-    objectPosition: '50% 52%',
-    desktopRatio: 4 / 3,
-  },
   {
     path: '/zh-tw/products/axm-400/',
     imageId: 'YF-IMG-05',
@@ -477,6 +485,52 @@ test.describe('YF-IMG-04 production image contract', () => {
       expect(geometry.left).toBeGreaterThanOrEqual(0);
       expect(geometry.right).toBeLessThanOrEqual(geometry.viewportWidth);
       expect(geometry.width).toBeGreaterThan(0);
+      expect(geometry.documentWidth).toBeLessThanOrEqual(geometry.viewportWidth);
+    });
+  }
+});
+
+/*
+ * PD-VX2-01: VISION-X2's own approved product master (vision-x2-macro-
+ * master-v1.png), used only by its dedicated Product Detail Hero
+ * (src/components/products/vision-x2/VisionX2Hero.astro). Identified via
+ * data-vx-image="macro-master" — the same attribute convention the
+ * Homepage VISION-X2 Signature Moment (VisionX2Signature.astro) already
+ * uses for this image, not the legacy YF-IMG-NN catalog.
+ */
+test.describe('VISION-X2 product master image contract', () => {
+  for (const route of VISION_X2_HERO_ROUTES) {
+    test(`${route.path} renders the approved VISION-X2 Macro Master hero`, async ({ page }) => {
+      await page.goto(route.path);
+
+      const figure = page.locator('[data-vx-image="macro-master"]');
+      const image = figure.locator('img');
+
+      await expect(figure).toHaveCount(1);
+      await expect(figure.locator('source[type="image/avif"]')).toHaveCount(1);
+      await expect(figure.locator('source[type="image/webp"]')).toHaveCount(1);
+      await expect(image).toHaveAttribute('loading', 'eager');
+      await expect(image).toHaveAttribute('fetchpriority', 'high');
+      await expect(image).toHaveAttribute('decoding', 'async');
+      await expect(image).not.toHaveAttribute('alt', '');
+      await expect(page.locator('h1')).toHaveText(route.heading);
+      await figure.scrollIntoViewIfNeeded();
+      await expect
+        .poll(() => image.evaluate((node: HTMLImageElement) => node.complete && node.naturalWidth > 0))
+        .toBe(true);
+    });
+  }
+
+  for (const width of [320, 390, 768, 1280, 1920]) {
+    test(`VISION-X2 Product Detail Hero remains contained at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/zh-tw/products/vision-x2/');
+
+      const geometry = await page.evaluate(() => ({
+        viewportWidth: document.documentElement.clientWidth,
+        documentWidth: document.documentElement.scrollWidth,
+      }));
+
       expect(geometry.documentWidth).toBeLessThanOrEqual(geometry.viewportWidth);
     });
   }

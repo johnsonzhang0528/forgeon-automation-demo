@@ -1,23 +1,36 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import SectionHeading from '../../components/ui/SectionHeading.astro';
-import Button from '../../components/ui/Button.astro';
 import Hero from '../../components/sections/Hero.astro';
-import AutomationIntegrationVisual from '../../components/sections/AutomationIntegrationVisual.astro';
-import FieldCommissioningVisual from '../../components/sections/FieldCommissioningVisual.astro';
-import SolutionCard from '../../components/ui/SolutionCard.astro';
-import ProductCard from '../../components/ui/ProductCard.astro';
-import IndustryCard from '../../components/ui/IndustryCard.astro';
-import ProcessTimeline from '../../components/ui/ProcessTimeline.astro';
-import CTABanner from '../../components/sections/CTABanner.astro';
-import { getSortedSolutions, getSortedProducts, getSortedIndustries } from '../../utils/content';
+import VisionX2Signature from '../../components/sections/VisionX2Signature.astro';
+import IndustrialReality from '../../components/sections/IndustrialReality.astro';
+import IntegrationLogic from '../../components/sections/IntegrationLogic.astro';
+import HomeFinalCTA from '../../components/sections/HomeFinalCTA.astro';
+import { getSortedProducts } from '../../utils/content';
 import '../../styles/home-refinement.css';
 
 const locale = 'en' as const;
 
-const solutions = (await getSortedSolutions()).slice(0, 3);
 const products = await getSortedProducts();
-const industries = await getSortedIndustries();
+
+/*
+ * Phase 5C — Core Capability Production Reconstruction (English mirror of
+ * zh-tw/index.astro's same block — see that file's comment for the full
+ * rationale: real product content, no invented copy).
+ */
+const capabilityIndex = ['axm-400', 'vision-x2', 'flexcell-m'] as const;
+const capabilities = capabilityIndex.map((slug) => {
+  const product = products.find((p) => p.data.entrySlug === slug);
+  if (!product) {
+    throw new Error(`Core Capability index expects a "${slug}" product entry — none found.`);
+  }
+  return {
+    slug,
+    name: product.data.name,
+    positioning: product.data.positioning.en,
+    description: product.data.shortDescription.en,
+    hasDetailPage: product.data.hasDetailPage,
+  };
+});
 
 const processSteps = [
   { title: 'Requirements Discovery', description: 'Understand the process background, existing equipment interfaces, and implementation goals to confirm initial feasibility.' },
@@ -25,13 +38,6 @@ const processSteps = [
   { title: 'Design & Quotation', description: 'Complete mechanical and system design, then deliver a formal technical proposal and quotation.' },
   { title: 'Build & Testing', description: 'Module fabrication, system integration, and internal functional testing against the design spec.' },
   { title: 'Deployment & Acceptance', description: 'On-site installation, commissioning, and acceptance testing, with operating and maintenance documentation.' },
-];
-
-const whyReasons = [
-  { title: 'Engineering-Led Process', desc: 'Every proposal starts from an actual process problem; feasibility is confirmed before design begins, not promised in advance.' },
-  { title: 'Modular Product Line', desc: 'Motion, vision, and assembly modules can be deployed standalone or combined, scaled to project size.' },
-  { title: 'Structured Technical Documentation', desc: 'Specifications, options, and prerequisites are documented for easy internal evaluation and comparison.' },
-  { title: 'Bilingual Technical Communication', desc: 'Specifications, interfaces, and deployment conditions are documented in Chinese and English for clear cross-regional review.' },
 ];
 ---
 
@@ -45,355 +51,236 @@ const whyReasons = [
   <!-- Hero -->
   <Hero locale={locale} />
 
-  <!-- Capability overview -->
-  <section class="section section--tight">
+  <!-- Core Capability — Engineering Capability Chain (HP-REC-02, revising
+       Phase 5C). See zh-tw/index.astro's equivalent block for the full
+       design rationale. -->
+  <section class="section-standard capability-section">
     <div class="container">
-      <SectionHeading
-        eyebrow="Core Capabilities"
-        title="From Precision Motion to Full Integration"
-        description="FORGEON AUTOMATION's capability spans motion module design, vision-guided inspection, and plant integration engineering, deployed as a single module or a complete solution."
-      />
-      <AutomationIntegrationVisual locale={locale} presentation="wide" />
-      <div class="capability-grid">
-        <div class="capability-item">
-          <span class="capability-item__index mono">01</span>
-          <h3>Precision Linear Motion Modules</h3>
-          <p>High-rigidity structures paired with servo drives deliver the repeatable accuracy machining, inspection, and assembly stations need.</p>
-        </div>
-        <div class="capability-item">
-          <span class="capability-item__index mono">02</span>
-          <h3>Vision Positioning & Inspection</h3>
-          <p>Industrial cameras and image algorithms handle workpiece positioning, defect detection, and barcode/feature recognition.</p>
-        </div>
-        <div class="capability-item">
-          <span class="capability-item__index mono">03</span>
-          <h3>Automated Assembly Integration</h3>
-          <p>Modular assembly cells with robotic arms and custom fixtures, suited to small-to-mid batch, multi-variant production.</p>
-        </div>
-        <div class="capability-item">
-          <span class="capability-item__index mono">04</span>
-          <h3>Existing Line Upgrades</h3>
-          <p>Targeted automation at bottleneck stations improves throughput without a full line rebuild.</p>
-        </div>
+      <div class="capability-intro">
+        <p class="capability-intro__eyebrow mono">Core Capability</p>
+        <h2 class="capability-intro__title">From Precision Motion to System Integration</h2>
       </div>
-    </div>
-  </section>
 
-  <!-- Solutions -->
-  <section class="section section--tight">
-    <div class="container">
-      <SectionHeading
-        eyebrow="Solutions"
-        title="Automation Configured Around Your Process Challenge"
-        description="From precision positioning to vision inspection, every solution starts from an actual process problem."
-      />
-      <div class="solution-index">
-        {solutions.map((s) => (
-          <SolutionCard
-            locale={locale}
-            slug={s.data.entrySlug}
-            name={s.data.name.en}
-            description={s.data.shortDescription.en}
-            hasDetailPage={s.data.hasDetailPage}
-          />
+      <ol class="capability-chain">
+        {capabilities.map((cap, i) => (
+          <li class="capability-stage" data-stage={i + 1}>
+            <div class="capability-stage__marker" aria-hidden="true">
+              <span class="capability-stage__index mono">{String(i + 1).padStart(2, '0')}</span>
+            </div>
+            <div class="capability-stage__body">
+              <p class="capability-stage__role mono">
+                {i === 0 ? 'Base Movement' : i === 1 ? 'Judgment Layer' : 'Deployable System'}
+              </p>
+              <h3 class="capability-stage__name">{cap.positioning}</h3>
+              <p class="capability-stage__desc">{cap.description}</p>
+              <a href={`/${locale}/products/${cap.slug}/`} class="capability-stage__link">
+                <span class="capability-stage__model mono">{cap.name}</span>
+                <span class="capability-stage__arrow" aria-hidden="true">&rarr;</span>
+              </a>
+            </div>
+          </li>
         ))}
-      </div>
-      <div class="section-cta">
-        <Button href="/en/solutions/" variant="ghost">View all solutions →</Button>
-      </div>
+      </ol>
     </div>
   </section>
 
-  <!-- Products -->
-  <section class="section section--tight section--alt">
-    <div class="container">
-      <SectionHeading
-        eyebrow="Featured Products"
-        title="A Modular Product Line"
-        description="Three core products that deploy standalone or combine into a complete automated station."
-      />
-      <div class="product-showcase">
-        {products.map((p) => (
-          <ProductCard
-            locale={locale}
-            slug={p.data.entrySlug as 'axm-400' | 'vision-x2' | 'flexcell-m'}
-            name={p.data.name}
-            positioning={p.data.positioning.en}
-            description={p.data.shortDescription.en}
-          />
-        ))}
-      </div>
-      <div class="section-cta">
-        <Button href="/en/products/" variant="ghost">Compare full product specs →</Button>
-      </div>
-    </div>
-  </section>
+  <!-- VISION-X2 Featured Product / Signature Moment (Phase 5D). -->
+  <VisionX2Signature locale={locale} />
 
-  <!-- Industries -->
-  <section class="section section--tight">
-    <div class="container">
-      <SectionHeading
-        eyebrow="Industries"
-        title="Industries We Serve"
-        description="From semiconductor to packaging and logistics, each industry gets an automation approach suited to its process."
-      />
-      <div class="industry-index">
-        {industries.map((ind) => (
-          <IndustryCard
-            locale={locale}
-            slug={ind.data.entrySlug as any}
-            name={ind.data.name.en}
-            description={ind.data.shortDescription.en}
-            hasDetailPage={ind.data.hasDetailPage}
-          />
-        ))}
-      </div>
-    </div>
-  </section>
+  <!-- Industrial Reality Check — third Homepage Signature Moment (Phase 5E). -->
+  <IndustrialReality locale={locale} />
 
-  <!-- Fit / not-fit -->
-  <section class="section section--tight section--alt">
-    <div class="container">
-      <SectionHeading
-        eyebrow="Fit Check"
-        title="What FORGEON Fits, and What It Doesn't"
-        description="Before submitting an RFQ, confirm your project actually falls in the range where we can add real value."
-      />
-      <div class="fit-grid">
-        <div class="fit-card fit-card--yes">
-          <h3>Good Fit</h3>
-          <ul>
-            <li>Machining, inspection, or assembly stations that need stable repeatable positioning, and you can already describe part dimensions and takt time</li>
-            <li>Existing lines with a clear bottleneck station, where a localized automation upgrade makes more sense than a full rebuild</li>
-            <li>Vision positioning or defect inspection needs where lighting and surface conditions are roughly defined</li>
-            <li>Project scope that can support engineering evaluation and custom design, not a single standard-part purchase</li>
-          </ul>
-        </div>
-        <div class="fit-card fit-card--no">
-          <h3>Not a Fit Yet</h3>
-          <ul>
-            <li>You only need a single standard component, with no integration engineering or custom design required</li>
-            <li>Process conditions aren't confirmed yet (part specs, takt time, and floor space are all still in flux); finish internal scoping first</li>
-            <li>Your timeline can't accommodate a standard engineering evaluation cycle (e.g. a final proposal needed within two weeks)</li>
-            <li>You need explosion-proof, cleanroom-grade, or other special environmental certification that hasn't been engineering-confirmed</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
+  <!-- Integration / Deployment Logic (Phase 5F). -->
+  <IntegrationLogic locale={locale} steps={processSteps} />
 
-  <!-- Two browsing paths -->
-  <section class="section section--tight">
-    <div class="container">
-      <SectionHeading
-        eyebrow="Start Here"
-        title="Pick a Path Based on Your Role"
-        description="Two common ways people arrive here, each with a different next step."
-        align="center"
-      />
-      <div class="path-grid">
-        <a href="/en/industries/" class="path-card">
-          <span class="path-card__label">Overseas Procurement / Plant Managers</span>
-          <h3>Confirm industry and capability fit first</h3>
-          <p>Browse common process problems and suitable solutions by industry to quickly judge whether it's worth going deeper.</p>
-          <span class="path-card__cta">Browse Industries →</span>
-        </a>
-        <a href="/en/products/" class="path-card">
-          <span class="path-card__label">Automation / Process Engineers</span>
-          <h3>Confirm product specs and system compatibility first</h3>
-          <p>Go straight to full specification tables, options, and compatible solutions for all three core products to assess technical feasibility.</p>
-          <span class="path-card__cta">Browse Products →</span>
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Process -->
-  <section class="section section--tight section--alt">
-    <div class="container container--narrow">
-      <SectionHeading
-        eyebrow="Implementation Process"
-        title="From Requirements to On-Site Acceptance"
-        description="A five-stage evaluation and delivery framework that confirms requirements, design, testing, and acceptance conditions step by step."
-      />
-      <FieldCommissioningVisual locale={locale} presentation="wide" />
-      <ProcessTimeline steps={processSteps} />
-    </div>
-  </section>
-
-  <!-- Why us -->
-  <section class="section section--tight">
-    <div class="container">
-      <SectionHeading eyebrow="Why FORGEON" title="Why Work With FORGEON AUTOMATION" align="center" />
-      <div class="principles-list">
-        {whyReasons.map((r, index) => (
-          <div class="why-item">
-            <span class="why-item__index mono">{String(index + 1).padStart(2, '0')}</span>
-            <h3>{r.title}</h3>
-            <p>{r.desc}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <!-- Final CTA -->
-  <div class="container">
-    <CTABanner
-      locale={locale}
-      title="Ready to discuss your automation project?"
-      description="Submit your project background and requirements, and our engineering team will help evaluate a workable solution."
-    />
-  </div>
+  <!-- Final CTA (Phase 5G). -->
+  <HomeFinalCTA locale={locale} />
 </BaseLayout>
 
 <style>
-  .section--alt {
-    background: var(--color-surface-alt);
+  /*
+   * Core Capability — Engineering Capability Chain (HP-REC-02). Scoped
+   * Direction-B accent, same pattern as Header.astro/Hero.astro/the
+   * zh-tw homepage's equivalent block — see zh-tw/index.astro's comment
+   * for the full rationale.
+   */
+  .capability-section {
+    --color-accent: #3d5a6c;
+    --color-accent-dark: #24404f;
   }
 
-  .container--narrow {
-    max-width: 860px;
+  .capability-intro {
+    margin-bottom: var(--space-2xl);
   }
-
-  .capability-grid {
-    display: grid;
-    gap: var(--space-lg);
-    grid-template-columns: 1fr;
-  }
-  .capability-item {
-    padding-top: var(--space-md);
-    border-top: 1px solid var(--color-border);
-  }
-  .capability-item__index {
+  .capability-intro__eyebrow {
+    margin: 0 0 var(--space-2xs);
     color: var(--color-accent);
-    font-size: var(--fs-sm);
-    font-weight: 700;
+    font-size: var(--fs-xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
   }
-  .capability-item h3 {
-    margin: var(--space-2xs) 0;
-    font-size: var(--fs-md);
-  }
-  .capability-item p {
+  .capability-intro__title {
     margin: 0;
-    color: var(--color-muted);
-    font-size: var(--fs-sm);
+    max-width: 24ch;
+    font-size: clamp(1.5rem, 2.4vw, 2rem);
+    font-weight: 600;
+    line-height: 1.3;
+    text-wrap: balance;
   }
 
-  .section-cta {
-    margin-top: var(--space-xl);
+  .capability-chain {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .capability-stage {
+    display: grid;
+    grid-template-columns: 2.5rem 1fr;
+    gap: 0 var(--space-lg);
+  }
+
+  .capability-stage__marker {
+    position: relative;
     display: flex;
     justify-content: center;
   }
+  .capability-stage__marker::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    background: var(--color-border-strong);
+  }
+  .capability-stage:first-child .capability-stage__marker::before {
+    top: 1.4em;
+  }
+  .capability-stage:last-child .capability-stage__marker::before {
+    bottom: calc(100% - 1.4em);
+  }
+  .capability-stage__index {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    margin-top: 0.15em;
+    background: var(--color-surface);
+    border: 1px solid var(--color-accent);
+    color: var(--color-accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
 
-  .why-item {
-    text-align: center;
-    padding: var(--space-lg);
+  .capability-stage__body {
+    padding-block: var(--space-lg);
   }
-  .why-item h3 {
-    font-size: var(--fs-md);
-    margin: 0 0 var(--space-2xs);
+  .capability-stage:first-child .capability-stage__body {
+    padding-top: 0;
   }
-  .why-item p {
-    margin: 0;
+  .capability-stage:last-child .capability-stage__body {
+    padding-bottom: 0;
+  }
+
+  .capability-stage__role {
+    margin: 0 0 0.35em;
     color: var(--color-muted);
-    font-size: var(--fs-sm);
-  }
-
-  .fit-grid {
-    display: grid;
-    gap: var(--space-lg);
-    grid-template-columns: 1fr;
-  }
-  .fit-card {
-    background: var(--color-card);
-    border-radius: var(--radius-lg);
-    padding: var(--space-lg);
-    border-top: 3px solid var(--color-border-strong);
-  }
-  .fit-card--yes {
-    border-top-color: var(--color-success);
-  }
-  .fit-card--no {
-    border-top-color: var(--color-muted);
-  }
-  .fit-card h3 {
-    margin: 0 0 var(--space-sm);
-    font-size: var(--fs-md);
-  }
-  .fit-card ul {
-    margin: 0;
-    padding-left: var(--space-md);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
-  }
-  .fit-card li {
-    color: var(--color-ink-soft);
-    font-size: var(--fs-sm);
-    line-height: var(--lh-normal);
-  }
-
-  .path-grid {
-    display: grid;
-    gap: var(--space-lg);
-    grid-template-columns: 1fr;
-  }
-  .path-card {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2xs);
-    background: var(--color-card);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-xl);
-    text-decoration: none;
-    color: inherit;
-    transition: border-color var(--duration-fast) var(--ease-standard),
-      box-shadow var(--duration-fast) var(--ease-standard);
-  }
-  .path-card:hover {
-    border-color: var(--color-accent);
-    box-shadow: var(--shadow-md);
-  }
-  .path-card__label {
-    font-family: var(--font-mono);
     font-size: var(--fs-xs);
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--color-accent);
-    font-weight: 600;
   }
-  .path-card h3 {
-    margin: var(--space-2xs) 0;
+  .capability-stage__name {
+    margin: 0 0 var(--space-2xs);
     font-size: var(--fs-lg);
+    font-weight: 600;
+    line-height: 1.3;
   }
-  .path-card p {
+  .capability-stage:first-child .capability-stage__name {
+    font-size: var(--fs-xl);
+  }
+  .capability-stage__desc {
     margin: 0 0 var(--space-sm);
+    max-width: 42em;
     color: var(--color-muted);
     font-size: var(--fs-sm);
-  }
-  .path-card__cta {
-    color: var(--color-accent);
-    font-weight: 600;
-    font-size: var(--fs-sm);
-    margin-top: auto;
+    line-height: var(--lh-body-lg);
   }
 
-  @media (min-width: 720px) {
-    .capability-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    .fit-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    .path-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
+  .capability-stage__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    text-decoration: none;
+    color: var(--color-ink);
   }
-  @media (min-width: 960px) {
-    .capability-grid {
-      grid-template-columns: repeat(4, 1fr);
+  .capability-stage__model {
+    font-size: var(--fs-xs);
+    letter-spacing: 0.06em;
+    font-weight: 600;
+  }
+  .capability-stage__arrow {
+    color: var(--color-accent);
+    transition: transform var(--duration-ui) var(--ease-standard);
+  }
+  .capability-stage__link:hover {
+    color: var(--color-accent-dark);
+  }
+  .capability-stage__link:hover .capability-stage__arrow {
+    transform: translateX(3px);
+  }
+
+  @media (min-width: 900px) {
+    .capability-intro {
+      max-width: 34em;
+    }
+
+    .capability-chain {
+      position: relative;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: var(--space-xl);
+    }
+    .capability-chain::before {
+      content: '';
+      position: absolute;
+      top: 1.25rem;
+      left: 1.25rem;
+      right: 1.25rem;
+      height: 1px;
+      background: var(--color-border-strong);
+    }
+    .capability-stage {
+      grid-template-columns: 1fr;
+      grid-template-rows: 2.5rem auto;
+      flex: 1;
+    }
+    .capability-stage:first-child {
+      flex: 1.15;
+    }
+
+    .capability-stage__marker {
+      justify-content: flex-start;
+    }
+    .capability-stage__marker::before {
+      display: none;
+    }
+    .capability-stage__index {
+      margin-top: 0;
+    }
+
+    .capability-stage__body {
+      padding-block: 0;
+      padding-top: var(--space-lg);
+    }
+    .capability-stage:first-child .capability-stage__body,
+    .capability-stage:last-child .capability-stage__body {
+      padding: var(--space-lg) 0 0;
     }
   }
 </style>

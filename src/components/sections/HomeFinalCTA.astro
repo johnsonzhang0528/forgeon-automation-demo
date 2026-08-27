@@ -1,0 +1,195 @@
+---
+/**
+ * Homepage Final CTA (Phase 5G).
+ *
+ * Closes the Homepage escalation narrative (Component -> System ->
+ * Environment -> Process -> Action). Deliberately its own dedicated
+ * component rather than a CSS override reaching into CTABanner.astro's
+ * internals: CTABanner is a shared primitive used on 13+ inner pages
+ * (every Solutions/Products/Industries/About/Insights listing and
+ * detail page) and still carries the superseded Precision Datum System
+ * accent (--color-copper-500, --border-datum, DESIGN.md v2 SS0) — a
+ * :global() patch against its class names would couple this homepage
+ * change to that legacy component's exact internal structure, and any
+ * future CTABanner refactor could silently break the homepage's Final
+ * CTA. CTABanner.astro itself is NOT modified here; reconstructing it
+ * (and the sitewide legacy accent it still carries) is recorded as
+ * separate downstream cleanup scope, not part of Phase 5G.
+ *
+ * Visually quiet on purpose: this is the resolution of the page, not a
+ * fourth Signature Moment competing with VISION-X2 / Industrial Reality
+ * for attention. Dark, restrained, single clear action — max one
+ * primary + one secondary CTA per DESIGN.md v2 SS6.
+ */
+import { getDictionary } from '../../utils/i18n';
+import type { Locale } from '../../config/site';
+import Button from '../ui/Button.astro';
+
+export interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const dict = getDictionary(locale);
+const copy = dict.homeFinalCta;
+---
+
+<section class="hfc">
+  <div class="container hfc__inner">
+    <div class="hfc__rule" aria-hidden="true"></div>
+    <p class="hfc__eyebrow mono">{copy.eyebrow}</p>
+    <h2 class="hfc__title">{copy.title}</h2>
+    <p class="hfc__desc">{copy.description}</p>
+    <div class="hfc__actions">
+      <Button
+        href={`/${locale}/contact/?intent=project`}
+        variant="secondary-invert"
+        size="lg"
+        trackEvent="cta_click"
+        data-intent="project"
+        data-source="home-final-cta"
+        class="hfc__cta-primary"
+      >
+        {dict.cta.primary}
+      </Button>
+      <Button
+        href={`/${locale}/contact/?intent=technical-advice`}
+        variant="ghost"
+        size="lg"
+        trackEvent="cta_click"
+        data-intent="technical-advice"
+        data-source="home-final-cta"
+        class="hfc__cta-secondary"
+      >
+        {dict.cta.secondary}
+      </Button>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hfc {
+    background: var(--color-ink-950);
+    /*
+     * P1 fix (Phase 5G-R1): --section-standard's full clamp (up to
+     * 120px/side at desktop) was tuned for sections with substantially
+     * more content — against this section's short, single-column close,
+     * it read as empty navy padding rather than deliberate breathing
+     * room. --section-compact keeps real closing-section weight without
+     * the excess.
+     */
+    padding-block: var(--section-compact);
+
+    /*
+     * Scoped Direction-B accent (DESIGN.md v2 SS0/SS10) — same pattern as
+     * Hero.astro/Header.astro/VisionX2Signature.astro/the Core
+     * Capability section: the sitewide --color-accent/--color-copper-*
+     * tokens still belong to the superseded Precision Datum System, so
+     * this section defines its own locally-cascading override rather
+     * than touching tokens.css or CTABanner.astro.
+     */
+    --color-accent: #3d5a6c;
+    --color-accent-dark: #24404f;
+    --color-accent-contrast: #f6f4f0;
+    /*
+     * Rectangular / engineering-control radius (P1 fix, Phase 5G-R1):
+     * Button.astro's default --radius-md (12px) read as a generic SaaS
+     * pill-adjacent control. Same override Hero.astro already applies
+     * for the identical reason — scoped locally, Button.astro itself
+     * untouched.
+     */
+    --radius-md: 2px;
+  }
+
+  .hfc__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+
+  /*
+   * Minimal editorial rule (P1 fix, Phase 5G-R1): the same short
+   * horizontal marker convention SectionHeading.astro already uses
+   * elsewhere on the site, anchoring this block as a deliberate
+   * structural close to the page rather than a centered-feeling CTA
+   * floating in a large navy field.
+   */
+  .hfc__rule {
+    width: 2.25rem;
+    height: 2px;
+    margin-bottom: var(--space-3);
+    background: var(--color-accent);
+  }
+
+  .hfc__eyebrow {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .hfc__title {
+    margin: 0;
+    max-width: 20ch;
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3.4vw, 2.25rem);
+    font-weight: 600;
+    line-height: 1.3;
+    text-wrap: balance;
+  }
+  :lang(zh-Hant-TW) .hfc__title {
+    font-family: 'Noto Sans TC', var(--font-display);
+  }
+
+  .hfc__desc {
+    margin: 0;
+    max-width: 42em;
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 0.9375rem;
+    line-height: 1.7;
+  }
+
+  .hfc__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-5);
+    margin-top: var(--space-2);
+  }
+
+  /*
+   * Same restrained CTA-weight pattern established in Hero.astro (Phase
+   * 5B-R1): a real, findable bordered primary action sized to its own
+   * text, not a filled SaaS block; secondary drops to a plain text link
+   * a clear level below it. Scoped call-site overrides on Button's
+   * already-public classes — Button.astro itself is untouched.
+   */
+  .hfc__actions :global(.hfc__cta-primary.btn) {
+    border-color: var(--color-accent-contrast);
+    color: var(--color-accent-contrast);
+  }
+  .hfc__actions :global(.hfc__cta-primary.btn:hover) {
+    background: var(--color-accent-contrast);
+    color: var(--color-ink-950);
+    border-color: var(--color-accent-contrast);
+  }
+  .hfc__actions :global(.hfc__cta-secondary.btn) {
+    padding: 0;
+    color: rgba(255, 255, 255, 0.7);
+  }
+  .hfc__actions :global(.hfc__cta-secondary.btn:hover) {
+    color: #fff;
+  }
+
+  @media (min-width: 900px) {
+    .hfc__inner {
+      max-width: 44em;
+    }
+    .hfc__title {
+      font-size: clamp(1.875rem, 2.6vw, 2.5rem);
+    }
+  }
+</style>

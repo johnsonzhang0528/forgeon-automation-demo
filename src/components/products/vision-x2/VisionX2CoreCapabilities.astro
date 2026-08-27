@@ -1,0 +1,176 @@
+---
+/**
+ * VISION-X2 Product Detail — Core Capabilities (PD-VX2-02).
+ *
+ * Second stage of the dedicated VISION-X2 Product Detail composition
+ * (VisionX2ProductDetail.astro), approved at the Phase 5C-R2 (desktop) /
+ * Phase 5D-R2 (mobile) Product/Mockup Gates and the PD-VX2-02 Ticket
+ * Definition Gate. Five editorial rows (index + title + description +
+ * application-context label) — no cards, no dashboard/SaaS treatment —
+ * matching the same row grammar the Homepage's own Core Capability
+ * section and Integration/Deployment Logic section already established.
+ *
+ * Content source (locked at the PD-VX2-02 Gate): items 01-04's
+ * `application` label is positionally sourced from vision-x2.md's
+ * `useCases[0..3]` (verbatim). Item 05's `application` label
+ * ("品質追溯與產線紀錄" / "Quality traceability and production-line
+ * records") is NOT a fifth canonical useCase — vision-x2.md's useCases
+ * array has only 4 entries and is intentionally NOT modified by this
+ * ticket. It is a locally-derived presentation label paraphrasing item
+ * 05's own already-canonical feature semantics ("檢測與辨識結果可匯出，
+ * 供品質追溯與產線紀錄使用"). All five items' title/description text is
+ * itself the site's existing canonical `features` copy, unchanged.
+ */
+import { getDictionary } from '../../../utils/i18n';
+import type { Locale } from '../../../config/site';
+
+export interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = getDictionary(locale).productDetailVisionX2CoreCapabilities;
+---
+
+<section class="vx-pd-cap" aria-labelledby="vx-pd-cap-heading">
+  <div class="container">
+    <div class="vx-pd-cap__intro">
+      <div>
+        <p class="vx-pd-cap__eyebrow mono">{copy.eyebrow}</p>
+        <h2 id="vx-pd-cap-heading" class="vx-pd-cap__title">{copy.title}</h2>
+      </div>
+      <p class="vx-pd-cap__statement">{copy.statement}</p>
+    </div>
+
+    <ol class="vx-pd-cap__list">
+      {copy.items.map((item: { title: string; description: string; application: string }, i: number) => (
+        <li class="vx-pd-cap__row">
+          <span class="vx-pd-cap__index mono">{String(i + 1).padStart(2, '0')}</span>
+          <div>
+            <h3 class="vx-pd-cap__row-title">{item.title}</h3>
+            <p class="vx-pd-cap__row-desc">{item.description}</p>
+          </div>
+          <div>
+            <span class="vx-pd-cap__app-label mono">{copy.applicationLabel}</span>
+            <p class="vx-pd-cap__app-value">{item.application}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
+
+<style>
+  .vx-pd-cap {
+    background: var(--color-surface);
+    padding-block: var(--section-standard);
+    /* Scoped Direction-B accent — same pattern as the Homepage Core
+       Capability / Integration Logic sections (DESIGN.md v2 §0): the
+       sitewide --color-accent still belongs to the superseded Precision
+       Datum System, so this section defines its own locally-cascading
+       override rather than touching tokens.css. */
+    --color-accent: #3d5a6c;
+    --color-accent-dark: #24404f;
+  }
+
+  .vx-pd-cap__intro {
+    display: grid;
+    gap: var(--space-lg);
+    padding-bottom: var(--space-2xl);
+    margin-bottom: var(--space-xl);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .vx-pd-cap__eyebrow {
+    margin: 0 0 var(--space-2xs);
+    color: var(--color-accent);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .vx-pd-cap__title {
+    margin: 0;
+    max-width: 18ch;
+    font-size: clamp(1.5rem, 2.4vw, 2rem);
+    font-weight: 600;
+    line-height: 1.3;
+    text-wrap: balance;
+  }
+  .vx-pd-cap__statement {
+    margin: 0;
+    max-width: 34em;
+    color: var(--color-muted);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-body-lg);
+  }
+
+  .vx-pd-cap__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .vx-pd-cap__row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-2xs) var(--space-lg);
+    padding-block: var(--space-lg);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .vx-pd-cap__row:first-child {
+    padding-top: var(--space-xl);
+  }
+  .vx-pd-cap__row:last-child {
+    border-bottom: none;
+  }
+
+  .vx-pd-cap__index {
+    color: var(--color-accent);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+  .vx-pd-cap__row-title {
+    margin: 0;
+    font-size: var(--fs-md);
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .vx-pd-cap__row-desc {
+    margin: var(--space-2xs) 0 0;
+    color: var(--color-muted);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-body-lg);
+  }
+
+  .vx-pd-cap__app-label {
+    display: block;
+    margin-bottom: 0.3em;
+    color: var(--color-muted);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .vx-pd-cap__app-value {
+    margin: 0;
+    color: var(--color-ink-soft);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-body-lg);
+  }
+
+  @media (min-width: 900px) {
+    .vx-pd-cap__intro {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: end;
+      gap: var(--space-2xl);
+    }
+    .vx-pd-cap__statement {
+      justify-self: end;
+      text-align: left;
+    }
+
+    .vx-pd-cap__row {
+      grid-template-columns: 3rem minmax(0, 1.1fr) minmax(0, 1fr);
+      align-items: baseline;
+      gap: var(--space-xl);
+    }
+  }
+</style>

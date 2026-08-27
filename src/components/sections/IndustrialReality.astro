@@ -1,0 +1,255 @@
+---
+/**
+ * Industrial Reality Check — Homepage Third Signature Moment (Phase 5E).
+ *
+ * No dedicated "Industrial Reality" master image was produced in the
+ * earlier imaging phase (only Hero, VISION-X2 Macro, VISION-X2 Whole
+ * Product exist) — per this ticket's own rule 1, this section instead
+ * uses existing production-approved imagery: automation-integration-
+ * final-master.png (already used on the Solutions page via
+ * AutomationIntegrationVisual.astro, with existing approved alt/caption
+ * copy in productionImagery.automationIntegration). That component's own
+ * bordered-card, small-caption treatment is NOT reused here — this
+ * section needs a full-bleed authored composition, not the generic
+ * factory-photo-block treatment the ticket explicitly warns against.
+ *
+ * Scale escalation from the prior two Signature Moments (Human/ChatGPT
+ * Phase 5D-R1 Gate direction): Hero establishes brand + a single
+ * precision motion moment; VISION-X2 Signature is one precision
+ * instrument in isolation; this section escalates to a complete
+ * integrated automation CELL (robot + conveyor + fixtures + control
+ * cabinet) inside a real production environment — proving FORGEON scales
+ * from component to deployable system. This is deliberately NOT another
+ * product showcase.
+ *
+ * Photographic treatment is deliberately different from both prior
+ * moments: this is a real, naturally-lit factory photograph (fluorescent
+ * overhead lighting, daylight-balanced), not a studio/controlled-
+ * darkness product shot — so unlike Hero's environmental scrim or
+ * VISION-X2's near-black studio background, this section does NOT wash
+ * the whole frame in a dark gradient (that would misrepresent real
+ * photography as a lit product shot and risk reading as "stock photo
+ * with text placed underneath," which this ticket explicitly forbids).
+ * Scrims here are small and localized, only where text sits on the
+ * image, not sitewide.
+ *
+ * Annotation rule (ticket rules 3-5): the four location labels below
+ * name real, visible physical equipment (robotic arm / locating fixture
+ * / conveyor / control cabinet) at their actual position in the frame —
+ * they are identification labels, not measurements. No numeric values,
+ * no PASS/FAIL state, no fabricated telemetry are attached to them.
+ */
+import { Picture } from 'astro:assets';
+import industrialImage from '../../assets/images/solutions/automation-integration-final-master.png';
+import { getDictionary } from '../../utils/i18n';
+import type { Locale } from '../../config/site';
+
+export interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = getDictionary(locale).industrialReality;
+
+/*
+ * Marker positions are authored against the actual pixel geometry of
+ * automation-integration-final-master.png (1535×1024) — each one sits on
+ * a real, visibly-identifiable piece of equipment in the frame, not an
+ * arbitrary grid. Percentages are of the full image, independent of
+ * object-position/crop so they can be reused at other breakpoints if the
+ * crop ever changes (though it does not in this pass).
+ */
+const markers = [
+  { key: 'arm', top: 40, left: 33 },
+  { key: 'fixture', top: 52, left: 55 },
+  { key: 'conveyor', top: 62, left: 20 },
+  { key: 'control', top: 40, left: 84 },
+] as const;
+---
+
+<section class="ir" aria-labelledby="ir-heading">
+  <div class="ir-frame">
+    <figure class="ir-frame__media">
+      <Picture
+        src={industrialImage}
+        formats={['avif', 'webp']}
+        widths={[480, 768, 1024, 1440, 1920]}
+        sizes="100vw"
+        alt={copy.imageAlt}
+        loading="lazy"
+        decoding="async"
+        quality={82}
+      />
+    </figure>
+
+    <div class="ir-frame__top">
+      <p class="ir-frame__eyebrow mono">{copy.eyebrow}</p>
+      <h2 id="ir-heading" class="ir-frame__statement">{copy.statement}</h2>
+    </div>
+
+    <div class="ir-frame__markers" aria-hidden="true">
+      {markers.map((m) => (
+        <span class="ir-marker" style={`top:${m.top}%; left:${m.left}%;`}>
+          <span class="ir-marker__dot"></span>
+          <span class="ir-marker__label mono">{copy.labels[m.key]}</span>
+        </span>
+      ))}
+    </div>
+  </div>
+
+  <p class="ir-closing">{copy.closing}</p>
+</section>
+
+<style>
+  .ir {
+    background: var(--color-ink-950);
+  }
+
+  .ir-frame {
+    position: relative;
+    width: 100%;
+    min-height: 420px;
+    height: 70svh;
+    max-height: 760px;
+    overflow: hidden;
+  }
+  .ir-frame__media,
+  .ir-frame__media :global(picture) {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+  }
+  .ir-frame__media :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Keeps the robotic arm + fixture cluster (the frame's real subject)
+       in view while trimming the left-side safety fencing first as the
+       viewport narrows. Object-position only — same source asset at
+       every breakpoint. */
+    object-position: 42% 45%;
+  }
+
+  .ir-frame__top {
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: var(--space-6) var(--page-gutter-mobile) var(--space-10);
+    /* Localized scrim only behind the opening statement — the rest of
+       the real factory photograph stays naturally lit, per this
+       section's own "no sitewide dark wash" rule (see file header). */
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.72) 0%,
+      rgba(0, 0, 0, 0.4) 55%,
+      rgba(0, 0, 0, 0) 100%
+    );
+  }
+  .ir-frame__eyebrow {
+    margin: 0 0 var(--space-2);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .ir-frame__statement {
+    margin: 0;
+    max-width: 22ch;
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 4vw, 1.625rem);
+    font-weight: 600;
+    line-height: 1.4;
+    text-wrap: balance;
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.4);
+  }
+  :lang(zh-Hant-TW) .ir-frame__statement {
+    font-family: 'Noto Sans TC', var(--font-display);
+  }
+
+  /*
+   * Physical-location markers: a small dot at the equipment's real
+   * position plus a short label — no crosshair, no box, no HUD frame,
+   * no scanning motion, no measured value. This is the only path this
+   * ticket allows for reintroducing any datum/coordinate-style visual
+   * language (DESIGN.md v2 §0/Rule 07): content-specific, naming real
+   * visible equipment, never a decorative overlay.
+   */
+  .ir-frame__markers {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: none;
+  }
+  .ir-marker {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    transform: translate(-50%, -50%);
+  }
+  .ir-marker__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.22);
+    flex-shrink: 0;
+  }
+  .ir-marker__label {
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.55);
+    padding: 2px 6px;
+    white-space: nowrap;
+  }
+
+  .ir-closing {
+    margin: 0;
+    padding: var(--space-8) var(--page-gutter-mobile);
+    max-width: 42em;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.9375rem;
+    line-height: 1.7;
+  }
+
+  @media (min-width: 640px) {
+    .ir-frame__top {
+      padding-inline: var(--page-gutter-tablet);
+    }
+    .ir-closing {
+      padding-inline: var(--page-gutter-tablet);
+    }
+  }
+
+  @media (min-width: 900px) {
+    .ir-frame {
+      height: 78svh;
+      max-height: 820px;
+    }
+    .ir-frame__top {
+      padding: var(--space-10) var(--page-gutter-desktop) var(--space-16);
+    }
+    .ir-frame__statement {
+      max-width: 26ch;
+      font-size: clamp(1.5rem, 2.2vw, 1.875rem);
+    }
+    /* Markers only at desktop/tablet widths where the frame is tall/wide
+       enough for each label to sit clearly on its own piece of
+       equipment without crowding — at narrow mobile widths the same
+       four items would overlap illegibly on a much smaller image, so
+       mobile relies on the opening/closing statements alone rather than
+       forcing the same overlay onto a cramped crop. */
+    .ir-frame__markers {
+      display: block;
+    }
+    .ir-closing {
+      padding: var(--space-10) var(--page-gutter-desktop);
+      font-size: 1rem;
+    }
+  }
+</style>

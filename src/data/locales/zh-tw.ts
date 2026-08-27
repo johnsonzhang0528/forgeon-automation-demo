@@ -213,26 +213,160 @@ export const zhTW = {
     },
   },
   hero: {
-    eyebrow: '虛構品牌概念展示 · 工業自動化系統整合',
-    headline: '把設備、控制與製程\n整合成可落地的自動化系統。',
-    body: '從工件、節拍與現場限制出發，整合機構、電控、感測與站點協作；\n讓方案在導入前可評估，在交付時有明確的驗收條件。',
-    ctaPrimary: '討論自動化需求',
-    ctaSecondary: '查看導入條件',
-    imageAlt: '自動化生產現場，右側為大型設備與黃色安全護欄，一名操作人員正在設備旁工作',
-    imageDisclosure: '品牌概念影像',
-    ledger: {
-      input: { heading: '需求輸入', detail: '工件圖、目標節拍、現場限制' },
-      evaluation: { heading: '評估範圍', detail: '定位、檢測、組裝與站點整合' },
-      output: { heading: '交付輸出', detail: '系統架構、模組配置、驗收條件' },
+    eyebrow: 'VISION-X2 · 精密視覺定位',
+    headline: '公差以微米計算，\n不是形容詞。',
+    body: '鋒岳將視覺定位、瑕疵檢測與精密運動整合為單一系統，讓每一次定位都有可驗證的依據。',
+    ctaPrimary: '提交專案需求',
+    ctaSecondary: '瀏覽產品線',
+    imageAlt: 'VISION-X2 視覺模組懸吊於機械手臂上方，環形光源照亮下方治具中的精密機械工件',
+  },
+  visionSignature: {
+    eyebrow: 'VISION-X2',
+    positioning: '視覺定位模組',
+    macroValue: '每一顆鏡片、每一圈對焦環，都是為了讓辨識結果經得起追溯。',
+    macroCta: '檢視完整規格',
+    macroImageAlt: 'VISION-X2 鏡頭特寫，深色背景中可見對焦環刻度、光學鍍膜與環形光源邊緣',
+    wholeTitle: '視覺定位模組',
+    wholeDesc: '用於工件定位、瑕疵檢測與條碼／特徵辨識，可獨立設站或整合於自動化組裝系統。',
+    wholeFeatures: [
+      '支援工件定位與角度偏移計算',
+      '可執行外觀瑕疵檢測',
+      '可依材質特性選配光源模組',
+    ],
+    wholeCta: '查看詳細內容 →',
+    wholeImageAlt: 'VISION-X2 相機與鏡頭安裝於機械手臂上方，環形光源照亮下方治具中排列整齊的精密機械工件',
+  },
+  industrialReality: {
+    eyebrow: '產線實裝',
+    statement: '從精密元件到完整產線系統，鋒岳的模組化設備在真實產線中協同運作。',
+    closing: '鋒岳不是只展示單一精密元件，而是能把精密運動、視覺定位與模組化設備帶進真正產線環境。',
+    imageAlt: '封閉式自動化工作站，機械手臂在輸送線、定位治具、感測站與控制櫃之間協同作業',
+    labels: {
+      arm: '六軸機械手臂',
+      fixture: '定位治具',
+      conveyor: '輸送線',
+      control: '控制櫃與人機介面',
     },
-    processRail: {
-      step1: '需求輸入',
-      step2: '方案評估',
-      step3: '模組配置',
-      step4: '驗證條件',
-      railLabel: '流程階段導覽',
-      stateLabels: { unconnected: '待處理', aligned: '準備中', connected: '進行中' },
-    },
+  },
+  integrationLogic: {
+    eyebrow: '導入流程',
+    title: '從需求釐清到現場驗收',
+    statement: '精密元件與產線系統之外，鋒岳同樣把導入流程本身當作工程項目管理——每個階段都有明確的輸入、判斷與交付條件。',
+    imageAlt: '兩名配戴安全帽與護目鏡的工程人員在自動化設備旁協作，一人操作控制面板與有線手持操作器，另一人檢視機台內部',
+  },
+  homeFinalCta: {
+    eyebrow: '從這裡開始',
+    title: '準備好討論您的自動化需求了嗎？',
+    description: '提交專案背景與需求，我們的技術團隊將協助評估可行的解決方案。',
+  },
+  productDetailVisionX2: {
+    breadcrumbProducts: '產品',
+    heroEyebrow: '產品 / 視覺定位模組',
+    heroPositioning: '視覺定位模組',
+    heroValue: '用於工件定位、瑕疵檢測與條碼／特徵辨識，可獨立設站或整合於自動化組裝系統。',
+    heroPrimaryCta: '提交專案需求',
+    heroSecondaryCta: '查看技術規格',
+    heroMacroImageAlt: 'VISION-X2 鏡頭特寫，深色背景中可見對焦環刻度、光學鍍膜與環形光源邊緣',
+  },
+  productDetailVisionX2CoreCapabilities: {
+    eyebrow: '核心能力',
+    title: '從定位到辨識的五項能力',
+    statement: '每項能力對應一個實際產線場景。',
+    applicationLabel: '應用場景',
+    items: [
+      {
+        title: '工件定位與角度偏移計算',
+        description: '確認工件在治具上的實際位置與角度，供後續機械手臂或運動模組據以修正路徑。',
+        application: '組裝前的工件定位確認',
+      },
+      {
+        title: '外觀瑕疵檢測',
+        description: '檢測工件表面的外觀異常，作為產線品質把關的判斷依據。',
+        application: '產線外觀檢測站',
+      },
+      {
+        title: '條碼與特徵辨識',
+        description: '讀取條碼或工件特徵，作為批次追溯與流程紀錄的依據。',
+        application: '條碼掃描與追溯記錄',
+      },
+      {
+        title: '依材質特性選配光源模組',
+        description: '依工件表面材質（反光、霧面、透明等）搭配同軸光、環形光等光源方案，維持辨識穩定度。',
+        application: '與運動模組整合的視覺引導組裝',
+      },
+      {
+        title: '檢測結果匯出',
+        description: '檢測與辨識結果可匯出，供品質追溯與產線紀錄使用。',
+        application: '品質追溯與產線紀錄',
+      },
+    ],
+  },
+  productDetailVisionX2WholeProduct: {
+    eyebrow: '系統情境',
+    title: '安裝於治具上方，面對真實產線工件',
+    imageAlt: 'VISION-X2 相機與鏡頭安裝於機械手臂上方，環形光源照亮下方治具中排列整齊的精密機械工件',
+    points: [
+      '支援工件定位與角度偏移計算',
+      '可執行外觀瑕疵檢測',
+      '可依材質特性選配光源模組',
+    ],
+  },
+  productDetailVisionX2OpticalLighting: {
+    eyebrow: '光學與光源邏輯',
+    title: '依材質特性選配光源，而非單一固定方案',
+    statement: '辨識穩定度取決於光源與工件表面的搭配，而非相機規格本身。',
+    items: [
+      {
+        label: '同軸光',
+        description: '用於反光金屬表面，減少表面反射造成的辨識干擾。',
+      },
+      {
+        label: '環形光',
+        description: '提供均勻照明角度，適合一般外觀檢測與定位場景。',
+      },
+      {
+        label: '選配依據',
+        description: '依工件材質特性（反光、霧面、透明等）於專案評估階段確認搭配方案。',
+      },
+    ],
+  },
+  productDetailVisionX2Integration: {
+    eyebrow: '系統整合',
+    title: '通訊與整合方式',
+    rows: [
+      'VISION-X2 支援標準工業通訊介面，可整合於既有自動化組裝系統，或作為獨立設站的檢測／定位站點運作。',
+      '辨識結果可匯出，供品質追溯與產線紀錄使用。',
+    ],
+  },
+  productDetailVisionX2TechnicalSpecification: {
+    eyebrow: '技術規格',
+    title: '規格表',
+    groups: [
+      {
+        label: '成像 / IMAGING',
+        rows: [
+          { label: '相機解析度', value: '依應用選配' },
+          { label: '辨識類型', value: '定位／瑕疵／條碼／特徵' },
+        ],
+      },
+      {
+        label: '照明 / LIGHTING',
+        rows: [
+          { label: '光源類型', value: '依材質選配（同軸光、環形光等）' },
+        ],
+      },
+      {
+        label: '處理與整合 / PROCESSING & INTEGRATION',
+        rows: [
+          { label: '處理速度', value: '依運算配置評估' },
+          { label: '通訊介面', value: '標準工業通訊介面' },
+          { label: '運算架構', value: '裝置端整合影像擷取與辨識運算，可依系統需求作為獨立檢測站點或整合至自動化系統' },
+          { label: '通訊整合', value: '支援工業乙太網路通訊整合，實際通訊協定依專案需求與系統架構確認' },
+          { label: '觸發方式', value: '支援硬體觸發訊號與軟體／PLC 觸發' },
+          { label: '安裝環境', value: '適用於固定式機台／治具整合；粉塵、油霧、溫濕度與其他環境防護需求依實際場域評估' },
+        ],
+      },
+    ],
   },
 };
 
