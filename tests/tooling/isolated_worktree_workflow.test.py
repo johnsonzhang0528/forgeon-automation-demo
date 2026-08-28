@@ -43,6 +43,7 @@ class Fixture:
         (self.repo / "docs/agents/CURRENT_TASK.json").write_text(json.dumps(state))
         spec = importlib.util.spec_from_file_location("fixture_aw", self.repo / "scripts/agent_workflow.py")
         module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        self.module = module
         (self.repo / "docs/agents/CURRENT_TASK.md").write_text(module.render_versioned(state))
         (self.repo / "work.txt").write_text("base\n")
         (self.repo / "docs/engineering/specs").mkdir(parents=True)
@@ -186,6 +187,78 @@ class IsolatedWorkflowTests(unittest.TestCase):
         self.f.run(wt,"complete","--agent","codex",ok=True)
         state=json.loads((self.f.common(wt)/"agent-state/current-task.json").read_text())
         self.assertEqual((state["status"],state["active_agent"],state["current_ticket"]),("paused_ready",None,None))
+
+    def test_exact_command_latest_evidence_and_explicit_adjudication(self):
+        def evidence(command, exit_code, sequence):
+            return {
+                "command": command, "exit_code": exit_code,
+                "started_at": f"2026-01-01T00:00:{sequence:02d}Z",
+                "finished_at": f"2026-01-01T00:00:{sequence + 1:02d}Z",
+                "head": f"{sequence:040x}", "output_digest": f"{sequence:064x}",
+            }
+        def passes(records, adjudications=()):
+            effective = self.f.module.latest_effective_test_evidence(records, list(adjudications))
+            return bool(effective) and all(item["exit_code"] == 0 for item in effective)
+
+        fail = evidence("same validation", 1, 1)
+        passed = evidence("same validation", 0, 3)
+        later_fail = evidence("same validation", 1, 5)
+        other_pass = evidence("other validation", 0, 7)
+        malformed = evidence("malformed command\\", 1, 9)
+        nonmatching = {**malformed, "output_digest": "f" * 64}
+
+        cases = (
+            ("fail then identical pass", [fail, passed], [], True),
+            ("pass then identical fail", [passed, later_fail], [], False),
+            ("unrelated fail remains", [fail, other_pass], [], False),
+            ("multiple successful reruns", [fail, passed, evidence("same validation", 0, 11)], [], True),
+            ("malformed without adjudication", [malformed, other_pass], [], False),
+            ("exact malformed adjudication", [malformed, other_pass], [malformed], True),
+            ("nonmatching adjudication", [malformed, other_pass], [nonmatching], False),
+            ("historical B then identical C", [fail, passed], [], True),
+            ("A adjudicated and B to C resolved", [malformed, fail, passed], [malformed], True),
+        )
+        for name, records, adjudications, expected in cases:
+            with self.subTest(name=name):
+                before = json.loads(json.dumps(records))
+                self.assertEqual(passes(records, adjudications), expected)
+                self.assertEqual(records, before)
+
+    def test_complete_uses_tracked_exact_record_adjudication_without_rewriting_history(self):
+        def evidence(command, exit_code, sequence):
+            return {
+                "command": command, "exit_code": exit_code,
+                "started_at": f"2026-01-01T00:00:{sequence:02d}Z",
+                "finished_at": f"2026-01-01T00:00:{sequence + 1:02d}Z",
+                "head": f"{sequence:040x}", "output_digest": f"{sequence:064x}",
+            }
+        malformed = evidence("malformed command\\", 1, 1)
+        historical_fail = evidence("canonical validation", 1, 3)
+        latest_pass = evidence("canonical validation", 0, 5)
+        sidecar = self.f.codex / "docs/agents/evidence-adjudications/S1-T1.json"
+        sidecar.parent.mkdir(parents=True)
+        sidecar.write_text(json.dumps({
+            "schema_version": 1, "stage": "S1", "ticket": "T1",
+            "classification": "NON_VALIDATION_COMMAND_ERROR",
+            "reason": "fixture command construction failure",
+            "authorization": "fixture human authorization", "record": malformed,
+        }))
+        proc(["git", "add", "--", str(sidecar.relative_to(self.f.codex))], self.f.codex)
+        proc(["git", "commit", "-qm", "test: adjudication"], self.f.codex)
+
+        wt = self.f.claim_step(); (wt / "work.txt").write_text("done\n")
+        self.f.run(wt, "test", "--agent", "codex", "--", "true", ok=True)
+        self.f.run(wt, "stage-ticket", "--agent", "codex", ok=True)
+        self.f.run(wt, "commit-ticket", "--agent", "codex", "--message", "test: ticket", ok=True)
+        self.f.run(wt, "checkpoint", "--agent", "codex", "--next-step", "finish", ok=True)
+        state_path = self.f.common(wt) / "agent-state/current-task.json"
+        state = json.loads(state_path.read_text()); history = [malformed, historical_fail, latest_pass]
+        state["test_evidence"] = history; state_path.write_text(json.dumps(state))
+        self.f.run(wt, "step-complete", "--agent", "codex", ok=True)
+        self.f.run(wt, "complete", "--agent", "codex", ok=True)
+        completed = json.loads(state_path.read_text())
+        self.assertEqual(completed["test_evidence"], history)
+        self.assertEqual((completed["status"], completed["active_agent"]), ("paused_ready", None))
 
     def test_checkpoint_rejects_free_text_and_dirty_tree(self):
         wt=self.f.claim_step(); (wt/"work.txt").write_text("dirty\n")

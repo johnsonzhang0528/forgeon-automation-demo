@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "stage": "HP-REC",
+  "ticket": "HP-REC-05",
+  "classification": "NON_VALIDATION_COMMAND_ERROR",
+  "reason": "Malformed shell quoting produced an invalid regular expression before product assertions executed.",
+  "authorization": "Human / ChatGPT explicit evidence adjudication authorization",
+  "record": {
+    "command": "env PLAYWRIGHT_BASE_URL=http://127.0.0.1:4331 pnpm exec playwright test tests/e2e/production-imagery.spec.ts --grep  YF-IMG-02 production image contract\\",
+    "exit_code": 1,
+    "started_at": "2026-08-27T18:18:12Z",
+    "finished_at": "2026-08-27T18:18:14Z",
+    "head": "d7eecbcabd157d63fae056eef4d2767199555cf3",
+    "output_digest": "aff4700e51325847d38c902476a8dc67b63e03f09a19eb65e646351b57177a07"
+  }
+}

@@ -24,6 +24,7 @@ PACKAGE = ROOT / "package.json"
 REGISTRY = ROOT / "docs/agents/TASK_REGISTRY.json"
 VERSIONED_STATE = ROOT / "docs/agents/CURRENT_TASK.json"
 VERSIONED_MD = ROOT / "docs/agents/CURRENT_TASK.md"
+EVIDENCE_ADJUDICATIONS = ROOT / "docs/agents/evidence-adjudications"
 VALID_AGENTS = ("claude", "codex")
 EXCLUDED = (
     "node_modules/**", "dist/**", ".astro/**", "test-results/**",
@@ -948,11 +949,68 @@ def cmd_resume(args):
     print(f"resume branch created: {name} from {commit}")
 
 
+EVIDENCE_RECORD_FIELDS = (
+    "command", "exit_code", "started_at", "finished_at", "head", "output_digest",
+)
+
+
+def evidence_record_identity(record: dict) -> tuple:
+    """Return the immutable exact-match identity for one evidence record."""
+    return tuple(record.get(field) for field in EVIDENCE_RECORD_FIELDS)
+
+
+def load_evidence_adjudications(stage: str, ticket: str) -> list[dict]:
+    """Load explicit, tracked adjudications without altering runtime history."""
+    if not EVIDENCE_ADJUDICATIONS.exists():
+        return []
+    records = []
+    for path in sorted(EVIDENCE_ADJUDICATIONS.glob("*.json")):
+        value = read_json(path)
+        if value.get("schema_version") != 1:
+            raise WorkflowError(f"unsupported evidence adjudication schema: {path.name}")
+        if value.get("classification") != "NON_VALIDATION_COMMAND_ERROR":
+            raise WorkflowError(f"unsupported evidence adjudication classification: {path.name}")
+        if value.get("stage") != stage or value.get("ticket") != ticket:
+            continue
+        record = value.get("record")
+        if not isinstance(record, dict) or set(record) != set(EVIDENCE_RECORD_FIELDS):
+            raise WorkflowError(f"invalid exact evidence record identity: {path.name}")
+        if not isinstance(value.get("reason"), str) or not value["reason"].strip():
+            raise WorkflowError(f"evidence adjudication reason is required: {path.name}")
+        if not isinstance(value.get("authorization"), str) or not value["authorization"].strip():
+            raise WorkflowError(f"evidence adjudication authorization is required: {path.name}")
+        records.append(record)
+    return records
+
+
+def latest_effective_test_evidence(evidence: list[dict], adjudications: list[dict]) -> list[dict]:
+    """Keep audit history intact while evaluating exact-command latest results."""
+    adjudicated = {evidence_record_identity(record) for record in adjudications}
+    latest = {}
+    for record in evidence:
+        if evidence_record_identity(record) in adjudicated:
+            continue
+        command = record.get("command")
+        if not isinstance(command, str) or not command:
+            command = ("__invalid_evidence__", evidence_record_identity(record))
+        latest[command] = record
+    return list(latest.values())
+
+
+def completion_evidence_passes(task: dict) -> bool:
+    evidence = task.get("test_evidence")
+    if not isinstance(evidence, list) or not evidence:
+        return False
+    adjudications = load_evidence_adjudications(task["current_stage"], task["current_ticket"])
+    effective = latest_effective_test_evidence(evidence, adjudications)
+    return bool(effective) and not any(record.get("exit_code") != 0 for record in effective)
+
+
 def cmd_complete(args):
     verify_repo(); task, lock = require_claim(args.agent)
     if task.get("current_step") or task.get("step_status") != "complete":
         raise WorkflowError("step must be completed")
-    if not task.get("test_evidence") or any(x["exit_code"] for x in task["test_evidence"]):
+    if not completion_evidence_passes(task):
         raise WorkflowError("all required tests must have passing structured evidence")
     commit = task.get("last_checkpoint_commit")
     if not commit or run(["git", "merge-base", "--is-ancestor", lock["base_commit"], commit], check=False).returncode:
