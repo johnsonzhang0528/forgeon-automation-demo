@@ -49,7 +49,9 @@ export interface Props {
 }
 
 const { locale } = Astro.props;
-const copy = getDictionary(locale).industrialReality;
+const dictionary = getDictionary(locale);
+const copy = dictionary.industrialReality;
+const productionImage = dictionary.productionImagery.automationIntegration;
 
 /*
  * Marker positions are authored against the actual pixel geometry of
@@ -74,7 +76,11 @@ const equipment = [
       <h2 id="ir-heading" class="ir-frame__statement">{copy.statement}</h2>
     </div>
 
-    <figure class="ir-frame__media">
+    <figure
+      class="ir-frame__media"
+      data-production-image="YF-IMG-02"
+      data-presentation="wide"
+    >
       <Picture
         src={industrialImage}
         formats={['avif', 'webp']}
@@ -82,9 +88,11 @@ const equipment = [
         sizes="100vw"
         alt={copy.imageAlt}
         loading="lazy"
+        fetchpriority="auto"
         decoding="async"
         quality={82}
       />
+      <figcaption class="visually-hidden">{productionImage.caption}</figcaption>
     </figure>
 
     <div class="ir-identifications">
