@@ -329,19 +329,21 @@
       "external_reviewer": "ChatGPT",
       "tickets": [
         {
-          "id": "HP-REC-05",
-          "title": "Industrial Context Callout Visual Recovery",
+          "id": "HP-REC-03",
+          "title": "VISION-X2 Macro Moment Visual Recovery",
           "status": "ready",
           "allowed_files": [
-            "src/components/sections/IndustrialReality.astro",
-            "tests/e2e/hp-rec-05-industrial-reality.spec.ts",
-            "docs/screenshots/hp-rec-05-industrial-context-gate/**"
+            "src/components/sections/VisionX2Signature.astro",
+            "src/data/locales/zh-tw.ts",
+            "src/data/locales/en.ts",
+            "tests/e2e/hp-rec-03-vision-x2-macro.spec.ts",
+            "docs/screenshots/hp-rec-03-vision-x2-macro-gate/**"
           ],
           "required_tests": [
             "pnpm build",
             "pnpm check:h1",
             "pnpm check:links",
-            "pnpm test:e2e -- tests/e2e/hp-rec-05-industrial-reality.spec.ts",
+            "pnpm test:e2e -- tests/e2e/hp-rec-03-vision-x2-macro.spec.ts",
             "pnpm test:e2e -- tests/e2e/responsive-overflow.spec.ts",
             "pnpm test:e2e -- tests/e2e/header.spec.ts",
             "pnpm test:e2e -- tests/e2e/cc02i-hero.spec.ts",
